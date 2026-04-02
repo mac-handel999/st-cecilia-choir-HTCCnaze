@@ -19,8 +19,8 @@ body {
   background: #f4f4f4;
   color: #333;
   font-weight: bold;
-  background-image: url( IMAGES/fcdc-logo2.png);
-  background-image: linear-gradient(50deg, purple, #fff );
+  background-image: url( );
+  background-image: linear-gradient(50deg, #4A0000, #fff );
   background-color: #fff;
   background-clip: cover;
   background-repeat: repeat;
@@ -33,7 +33,7 @@ backdrop-filter: opacity(100%) blur(100px) saturate(100px);
 header {
   margin: 0px;
   padding: 20px;
-  background: purple;
+  background: #4A0000;
   color: #fff;
   padding: 1rem 2rem;
   display: flex;
@@ -289,7 +289,7 @@ button:active {
 .hero {
   padding: 2rem;
   text-align: center;
-  background-image: url( IMAGES/cybersec.jpg);
+  background-image: url( /IMAGES/HTCC.png);
   background-clip: center;
   background-repeat: no-repeat;
   background-size: cover;
