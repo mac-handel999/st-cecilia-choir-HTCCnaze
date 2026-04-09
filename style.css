@@ -2,25 +2,27 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-size: 95%;
+  font-size: 90%;
   
 }
 
 
 body {
   font-optical-sizing: auto;
-  font-weight: bold;
+  
   font-style: normal;
 }
 
 
 body {
+
+  position: relative;
   font-family: 'Georgia', 'Times New Roman', Times, serif, cursive;
   background: #f4f4f4;
   color: #333;
-  font-weight: bold;
-  background-image: url( );
-  background-image: linear-gradient(50deg,#fff , #4A0000, whitesmoke );
+ 
+  background-image: url( IMAGES/logo.jpg);
+ /* background-image: linear-gradient(50deg,#fff , #4A0000, whitesmoke );*/
   background-color: #fff;
   background-clip: cover;
   background-repeat: repeat;
@@ -31,30 +33,35 @@ backdrop-filter: opacity(100%) blur(100px) saturate(100px);
 }
 
 header {
-  margin: 0px;
-  padding: 20px;
+  margin: 30px;
+  margin-bottom: 50px;
+  padding: 50px;
+  width: ;
+  height: 30%;
   background: #4A0000;
+  border-radius:50px;
   color: #fff;
   padding: 1rem 2rem;
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
- 
+  
 }
 
 
 .logo-img {
   margin: 3px;
   padding: 3px;
-  border-radius: 90px;
-  width: 155px;
-  height: 155px;
+  border-radius: 100%;
+  width: 100px;
+  height: 100px;
   box-shadow: 4px 5px 4px 5px black;
   border: 2px solid #fff;
   color: #fff;
   font-weight: bold;
   font-size: 1rem;
+  background-color: #4A0000;
   
 }
 
@@ -81,6 +88,8 @@ figure {
   border-radius: 100%;
   border: 3px solid #fff;
   box-shadow: 2px 3px 2px 3px #4A0000;
+  width: 150px;
+  height: 150px;
 }
 
 .powered-by {
@@ -141,8 +150,8 @@ a {
   text-align: center;
   background-color:#fff;
   border-radius: 100px;
-  height: 80px;
-  width: 80px;
+  height: 70px;
+  width: 70px;
   border: 1px 2px 1px solid #000;
   position: relative;
 }
@@ -179,11 +188,11 @@ button:hover {
 
 /* CORRECTED CSS */
 .selection {
-  display: grid;
-  flex-wrap: wrap;
-  flex-wrap: 4;
+  display: flex;
+  flex-wrap: ;
+  flex-wrap: ;
   align-items: center;
-  justify-content: center;
+  justify-content: space-evenly;
   /* Keep transform for animation */
   transform: translateX(-100%);
   text-align: center;
@@ -197,8 +206,8 @@ button:hover {
   top: 0;
   bottom: 0;
   z-index: 1000;
-  width: 48%;
-  height: 75%;
+  width: 60%;
+  height:80%;
   color: #fff;
   transition: transform 0.5s ease-in-out;
    /*background-color: ; /* Match parent background */
@@ -249,15 +258,12 @@ button:hover {
 
 
 
-
-
-
  .marquee {
    padding: 10px;
   color: #fff;
   border: 2px solid ;
   box-shadow: 2px 3px 2px 3px #4A0000;
-  border-radius: 10px;
+  border-radius: 20px;
   text-shadow: 5px 5px 5px #4A0000;
  }
  
@@ -300,31 +306,47 @@ footer {
 .road-map {
   margin: 20px;
   padding: 10px;
-  text-align: center;
+  text-align: left;
+  
+  height: 70%;
   color: #fff;
  background-color: #4A0000;
-  font-size: 1rem;
-  display: block;
+  font-size: 14px;
+  display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
+  justify-content: space-evenly;
   box-shadow: 2px 3px 2px 3px #000;
   border-radius: 20px;
-  backdrop-filter: blur(100px), saturate(100%);
+  
 }
+
+
 
 .Road-maps {
   margin: 10px;
   padding: 10px;
-  display: block;
+  width: 20%;
+  height: 70%;
+  
   flex-wrap: wrap;
   text-align: center;
   align-items: center;
-  justify-content: center;
+  justify-content: space-evenly;
   border: 2px solid #fff;
   border-radius: 10px;
   box-shadow: 2px 3px 2px 3px black;
 }
+.Road-maps > p , .road-map > p {
+  margin: 10px;
+  padding: 10px;
+  text-align: center;
+  color: #fff;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+
 
 
 
@@ -335,6 +357,7 @@ footer {
   font-size: 2rem;
   color: #fff;
   text-shadow: 2px 3px 5px #000;
+  text-align: center;
 }
 
 a {
@@ -381,7 +404,7 @@ outline: none;
   justify-content: space-evenly;
   overflow: hidden;
   font-family: 'Georgia', 'Times New Roman', Times, serif;
-  font-size: rem;
+
   font-weight: bold;
 }
 
@@ -403,19 +426,20 @@ outline: none;
   border: 2px solid #fff;
   border-radius: 20px;
   color: #fff;
-  background: blue;
+  background: #4A0000;
   text-align: center;
 }
 
 
 .vision-img, .mission-img, .aboutus-img {
   margin: 10px;
-  
+  width: 150px;
+  height: 150px;
   border: 2px solid #fff;
-  border-radius: 250px;
+  border-radius: 100%;
   box-shadow: 2px 3px 2px 3px black;
   text-align: center;
-  display: block;
+  display: ;
   align-items: center;
   justify-content: center;
   text-shadow: 2px 3px 5px #000;
@@ -432,12 +456,14 @@ outline: none;
 }
 
 .our-vision, .our-mission {
-  margin: 10px;
-  padding: 10px;
-  text-align: center
+  margin: 0px;
+  padding: 0px;
+  text-align: center;
   color: #fff;
-  font-size: 1.2rem;
+  font-size: 14px;
   font-weight: bolder;
+  align-items: center;
+  justify-content: center;
 }
 
 .about-us-detail {
@@ -454,4 +480,120 @@ outline: none;
 
 }
 
+.executives {
+  margin: 10px;
+  padding: 10px;
+  text-align: center;
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: bold;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-evenly;
 
+}
+
+.excos {
+  margin: 10px;
+  padding: 10px;
+  text-align: center;
+  word-wrap: break-word;
+  color: #4A0000;
+  font-size: 1.2rem;
+  font-weight: bold;
+  background-color: #f4f4f4;
+  border: 2px solid #000;
+  border-radius: 100px;
+  border: 2px solid #000;
+
+}
+
+.excos > p {
+  margin: 5px;
+  padding: 5px;
+  color: #4A0000;
+  font-size: 12px;
+  font-weight: bold;
+  
+  
+  
+
+}
+
+
+.choir-socials {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+
+}
+
+.social-icon {
+  font-size: 30px;
+  /* Adjust size */
+  text-decoration: none;
+  transition: transform 0.3s ease, color 0.3s ease;
+  color: #fff;
+  text-shadow: 2px 3px 5px #000;
+  /* Default neutral color */
+ 
+ 
+}
+
+/* Brand Colors on Hover */
+.social-icon:hover {
+  transform: translateY(-5px);
+  /* Gentle lift effect */
+}
+
+.fa-facebook-f:hover {
+  color: #1877F2;
+}
+
+.fa-tiktok:hover {
+  color: #010101;
+  text-shadow: 2px 3px 5px #fff;
+}
+
+.fa-youtube:hover {
+  color: #FF0000;
+}
+
+/* Add these to your existing hover styles */
+
+.fa-whatsapp:hover {
+  color: #25D366;
+}
+
+.fa-github:hover {
+  color: #333;
+  /* Classic GitHub Dark Grey/Black */
+}
+
+/* Optional: Pulse effect specifically for WhatsApp to make it look active */
+.fa-whatsapp:hover {
+  filter: drop-shadow(0 0 5px rgba(37, 211, 102, 0.5));
+}
+
+
+.score-btn {
+  margin: 100px;
+  padding: 100px;
+  color: #4A0000;
+  width: 90%;
+  height: 180%;
+/*  background-color: #4A0000; */
+  background-image: url(IMAGES/muzic-score.jpg );
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: fixed;
+  border: 3px solid #000;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 1.9rem;
+  text-shadow: 3px 3px 5px #000;
+  text-align: center;
+}

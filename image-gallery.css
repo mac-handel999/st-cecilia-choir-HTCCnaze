@@ -1,0 +1,125 @@
+:root {
+    --carousel-width: 100%;
+    /* Adjust this to your preferred size */
+    --transition-speed: 0.9s;
+}
+
+.image-carousel {
+    margin: 20px;
+   
+    padding: 20px;
+  
+    /* Full width of the container */
+   
+    
+    position: relative;
+}
+
+.carousel-viewport {
+    margin: 0px ;
+    padding: 0px;
+    width: 150%;
+    max-width: var(--carousel-width);
+    height: 590%;
+    /* Fixed height keeps UI stable */
+    margin: 20px auto;
+    position: relative;
+    overflow:  scroll;
+    /* This hides the other images */
+    border-radius: 12px;
+    background-color: #f0f0f0;
+    gap: 30px;
+}
+
+.carousel-slide {
+    display: flex;
+    gap: 30px;
+    height: 150%;
+    transition: transform var(--transition-speed) cubic-bezier(0.45, 0, 0.55, 1);
+}
+
+.carousel-slide img {
+    margin: 0px;
+    padding: 0px;
+    max-width: 200%;
+    /* Force each image to take up the whole viewport */
+    object-fit: cover;
+    /* Prevents "cranked up" or stretched images */
+    height: 90%;
+    border-radius: 20px;
+}
+
+/* UI Improvements for Buttons */
+.nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(5px);
+    border: none;
+    color: white;
+    font-size: 2rem;
+    padding: 10px 15px;
+    cursor: pointer;
+    transition: 0.3s;
+    z-index: 10;
+}
+
+.nav-btn:hover {
+    background: rgba(255, 255, 255, 0.6);
+    color: #333;
+}
+
+.prev {
+    left: 10px;
+    border-radius: 0 5px 5px 0;
+}
+
+.next {
+    right: 10px;
+    border-radius: 5px 0 0 5px;
+}
+
+    /* for the image scroll effect with Marquee Html element  */
+
+
+        .marquee-container {
+            width: 100%;
+            overflow: hidden;
+            background: #fff;
+            /* Or match your site's theme */
+            padding: 30px 0;
+            border-top: 1px solid #eee;
+            border-bottom: 1px solid #eee;
+        }
+    
+        .marquee-content {
+            display: flex;
+            gap: 30px;
+            width: max-content;
+            /* Critical: allows the div to be as wide as all images combined */
+            animation: scroll-left 550s linear infinite;
+        }
+    
+        .marquee-content img {
+            height: 350px;
+            width: 350px;;
+            border-radius: 20px;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+        }
+    
+        /* Pause the scrolling when a user wants to look closely at a photo */
+        .marquee-content:hover {
+            animation-play-state: paused;
+        }
+    
+        @keyframes scroll-left {
+            0% {
+                transform: translateX(0);
+            }
+    
+            100% {
+                /* We move it by half because we will duplicate the images in JS */
+                transform: translateX(-50%);
+            }
+        }

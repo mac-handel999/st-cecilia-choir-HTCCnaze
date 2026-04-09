@@ -18,13 +18,73 @@ document.addEventListener('DOMContentLoaded', function() {
       menuSelection.classList.add('show');
       menuIcon.src = ' /icons/cancel-icon.png';
       menuIcon.alt = 'Close';
+    };
+  })
+  
+});
+
+// for donate button , to hide or show the account number for donation
+   
+    const p = document.querySelector('.acctno');
+        
+    const donateBtn  = document.querySelector('.donate');
+
+  donateBtn.addEventListener('click', () => {
+    
+    if (p.innerHTML === " ") {
+      p.innerHTML ="<strong>St.Cecilia Choir Group HTCC,</br> 1234567891011,</br>G.T Bank </strong>";
+      p.style.fontSize = "20px";
+      p.style.fontWeight = "bold";
+      p.style.color = "#fff";
+    } else {
+      p.innerHTML = " ";
     }
-  });
-  
-  
+
+   });
+
+
+   //for the video at the hero section 
+
+   const video = document.getElementById('hero-video');
+const muteBtn = document.getElementById('mute-toggle');
+const muteIcon = document.getElementById('mute-icon');
+
+muteBtn.addEventListener('click', () => {
+    if (video.muted) {
+        video.muted = false;
+        muteIcon.classList.remove('fa-volume-mute');
+        muteIcon.classList.add('fa-volume-up');
+    } else {
+        video.muted = true;
+        muteIcon.classList.remove('fa-volume-up');
+        muteIcon.classList.add('fa-volume-mute');
+    }
+});
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
 
 //for the resourses  & search section page
 
@@ -108,3 +168,5 @@ btn.addEventListener("click", () => {
 })
 
 });
+
+*/
