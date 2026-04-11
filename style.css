@@ -23,23 +23,23 @@ body {
  
   background-image: url( IMAGES/logo.jpg);
  /* background-image: linear-gradient(50deg,#fff , #4A0000, whitesmoke );*/
-  background-color: #fff;
-  background-clip: cover;
+  
+  background-clip: center;
   background-repeat: repeat;
   background-size: 100%;
   background-attachment: fixed;
+  
   color: #fff;
 backdrop-filter: opacity(100%) blur(100px) saturate(100px);
 }
 
 header {
-  margin: 30px;
-  margin-bottom: 50px;
-  padding: 50px;
-  width: ;
+  margin: 0px;
+  padding: 0px;
+  
   height: 30%;
   background: #4A0000;
-  border-radius:50px;
+  
   color: #fff;
   padding: 1rem 2rem;
   display: flex;
@@ -95,7 +95,7 @@ figure {
 .powered-by {
   margin: 10px;
   padding: 5px;
-  border: 4px dotted blue;
+  border: 4px dotted #4A0000;
   background: #fff;
   border-radius: 20px;
 }
@@ -145,7 +145,7 @@ a {
 
 
 .menu {
-  margin:3px;
+  margin: 3px;
   padding: 5px;
   text-align: center;
   background-color:#fff;
@@ -189,10 +189,11 @@ button:hover {
 /* CORRECTED CSS */
 .selection {
   display: flex;
-  flex-wrap: ;
-  flex-wrap: ;
+  
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: space-evenly;
+  flex-direction: column;
   /* Keep transform for animation */
   transform: translateX(-100%);
   text-align: center;
@@ -314,6 +315,7 @@ footer {
   font-size: 14px;
   display: flex;
   flex-wrap: wrap;
+  
   align-items: center;
   justify-content: space-evenly;
   box-shadow: 2px 3px 2px 3px #000;
@@ -332,11 +334,14 @@ footer {
   flex-wrap: wrap;
   text-align: center;
   align-items: center;
-  justify-content: space-evenly;
+  justify-content: center;
   border: 2px solid #fff;
   border-radius: 10px;
   box-shadow: 2px 3px 2px 3px black;
+  word-break: 4;
+  word-wrap: wrap;
 }
+
 .Road-maps > p , .road-map > p {
   margin: 10px;
   padding: 10px;
@@ -344,6 +349,10 @@ footer {
   color: #fff;
   font-size: 12px;
   font-weight: bold;
+  line-height: 1.6;
+  max-width: 90%;
+  display: flex;
+  flex-direction: column;
 }
 
 
@@ -439,7 +448,7 @@ outline: none;
   border-radius: 100%;
   box-shadow: 2px 3px 2px 3px black;
   text-align: center;
-  display: ;
+  
   align-items: center;
   justify-content: center;
   text-shadow: 2px 3px 5px #000;
@@ -527,6 +536,7 @@ outline: none;
   gap: 20px;
   align-items: center;
   justify-content: space-between;
+  margin: 10px;
   padding: 20px;
 
 }
@@ -580,7 +590,7 @@ outline: none;
 
 
 .score-btn {
-  margin: 100px;
+  margin: 10px;
   padding: 100px;
   color: #4A0000;
   width: 90%;
@@ -590,10 +600,29 @@ outline: none;
   background-repeat: no-repeat;
   background-size: cover;
   background-attachment: fixed;
-  border: 3px solid #000;
+  border: 5px solid #000;
   border-radius: 20px;
   font-weight: bold;
-  font-size: 1.9rem;
+  font-size: 1.5rem;
   text-shadow: 3px 3px 5px #000;
   text-align: center;
+  word-wrap: wrap;
+}
+
+.score-btn:hover {
+  color: #fff;
+  text-shadow: 5px 5px 5px #4A0000;
+  transform: translateZ(15%);
+  font-size: 1.9rem;
+  border: 8px groove #000;
+}
+
+.score-categories {
+  margin: 100px;
+  padding: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  text-align: center;
+  align-items: center;
+  justify-content: center;
 }
