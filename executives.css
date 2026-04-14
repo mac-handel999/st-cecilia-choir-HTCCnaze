@@ -1,0 +1,73 @@
+.exec-section {
+    background-color: #4A0404;
+    /* Ox-blood */
+    padding: 20px;
+    text-align: center;
+}
+
+.search-container {
+    margin-bottom: 40px;
+}
+
+.search-container input {
+    padding: 12px;
+    width: 250px;
+    border-radius: 25px 0 0 25px;
+    border: none;
+    outline: none;
+}
+
+.search-container button {
+    padding: 12px 20px;
+    border-radius: 0 25px 25px 0;
+    border: none;
+    background: #fff;
+    color: #4A0404;
+    cursor: pointer;
+}
+
+.exec-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Card Styling from your Screenshot */
+.exec-card {
+    background: #fff;
+    border-radius: 20px;
+    /* Capsule shape */
+    padding: 30px ;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+
+.exec-image {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 5px solid #4A0404;
+    object-fit: cover;
+    margin-bottom: 15px;
+}
+
+.exec-card h4 {
+    color: #4A0404;
+    margin: 5px 0;
+    font-size: 1.1rem;
+}
+
+.exec-card p {
+    color: #333;
+    font-weight: bold;
+    margin: 2px 0;
+}
+
+.exec-card span {
+    color: #555;
+    font-size: 0.9rem;
+}

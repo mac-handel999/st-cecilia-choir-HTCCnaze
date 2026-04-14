@@ -86,7 +86,35 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
 
+// for hero animation section
 
+const container = document.getElementById('music-animation-container');
+// Using standard emojis so it works even without FontAwesome
+const notes = ['♩', '♪', '♫', '♬', '♭', '♮', '♯']; 
+
+function createNote() {
+    const note = document.createElement('div');
+    note.style.position = 'absolute';
+    note.style.bottom = '-50px';
+    note.style.color = 'rgba(255, 255, 255, 0.5)'; // White notes
+    note.style.fontSize = Math.random() * 20 + 20 + 'px';
+    note.style.left = Math.random() * 100 + 'vw';
+    note.style.animation = `floatUp ${Math.random() * 3 + 4}s linear forwards`;
+    note.style.pointerEvents = 'none';
+    note.style.zIndex = '5';
+    
+    note.innerText = notes[Math.floor(Math.random() * notes.length)];
+
+    container.appendChild(note);
+
+    // Clean up
+    setTimeout(() => {
+        note.remove();
+    }, 7000);
+}
+
+// Start creating notes
+setInterval(createNote, 600);
 
 
 
