@@ -37,6 +37,13 @@
 /* Card Styling from your Screenshot */
 .exec-card {
     background: #fff;
+  /* background-image: url(/IMAGES/Music-img.jpg );
+  background-repeat: no-repeat;*/     
+  background-size: cover;
+  background-attachment: fixed;
+  border: 5px solid #4A0404;
+  border-radius: 20px;
+  font-weight: bold;
     border-radius: 20px;
     /* Capsule shape */
     padding: 30px ;
@@ -65,6 +72,7 @@
     color: #333;
     font-weight: bold;
     margin: 2px 0;
+    font-size: 1rem;
 }
 
 .exec-card span {

@@ -88,38 +88,16 @@ document.addEventListener("DOMContentLoaded", function() {
 
 // for hero animation section
 
-const container = document.getElementById('music-animation-container');
-// Using standard emojis so it works even without FontAwesome
-const notes = ['♩', '♪', '♫', '♬', '♭', '♮', '♯']; 
+const logo = document.querySelector('.floating-logo');
 
-function createNote() {
-    const note = document.createElement('div');
-    note.style.position = 'absolute';
-    note.style.bottom = '-50px';
-    note.style.color = 'rgba(255, 255, 255, 0.5)'; // White notes
-    note.style.fontSize = Math.random() * 20 + 20 + 'px';
-    note.style.left = Math.random() * 100 + 'vw';
-    note.style.animation = `floatUp ${Math.random() * 3 + 4}s linear forwards`;
-    note.style.pointerEvents = 'none';
-    note.style.zIndex = '5';
-    
-    note.innerText = notes[Math.floor(Math.random() * notes.length)];
+document.addEventListener('mousemove', (e) => {
+    // This adds a very subtle "follow" effect to the mouse
+    let x = (window.innerWidth / 2 - e.pageX) / 50;
+    let y = (window.innerHeight / 2 - e.pageY) / 50;
 
-    container.appendChild(note);
-
-    // Clean up
-    setTimeout(() => {
-        note.remove();
-    }, 7000);
-}
-
-// Start creating notes
-setInterval(createNote, 600);
-
-
-
-
-
+    logo.style.marginRight = x + "px";
+    logo.style.marginTop = y + "px";
+});
 
 
 

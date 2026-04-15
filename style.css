@@ -20,8 +20,8 @@ body {
   font-family: 'Georgia', 'Times New Roman', Times, serif, cursive;
   background: #f4f4f4;
   color: #333;
- 
-  background-image: url( IMAGES/logo.jpg);
+ background-color: #fff;
+/*  background-image: url( IMAGES/logo.jpg);*/
  /* background-image: linear-gradient(50deg,#fff , #4A0000, whitesmoke );*/
   
   background-clip: center;
@@ -435,8 +435,8 @@ outline: none;
 
 .about-head-color2 {
   font-size: 1.9rem;
-  color: #4A0000;
-  text-shadow: 2px 3px 5px #fff;
+  color: #fff;
+  text-shadow: 3px 3px 5px #4A0000;
   font-weight: bold;
 }
 
@@ -473,6 +473,14 @@ outline: none;
   font-size: 1.2rem;
   font-weight: bold;
 
+}
+
+
+.mission-text, .aboutus-text, #support-us {
+  padding: 10px;
+  text-align: left;
+  word-break: 4px;
+  word-wrap: 4px;
 }
 
 .our-vision, .our-mission {
@@ -543,6 +551,8 @@ outline: none;
 }
 
 
+/*choir social media links icon */
+
 .choir-socials {
   display: flex;
   gap: 20px;
@@ -558,7 +568,7 @@ outline: none;
   /* Adjust size */
   text-decoration: none;
   transition: transform 0.3s ease, color 0.3s ease;
-  color: #fff;
+  color: #4A0000;
   text-shadow: 2px 3px 5px #000;
   /* Default neutral color */
  
@@ -600,6 +610,9 @@ outline: none;
   filter: drop-shadow(0 0 5px rgba(37, 211, 102, 0.5));
 }
 
+
+
+/*For choir musical scores or scripts section*/
 
 .score-btn {
   margin: 10px;
@@ -738,42 +751,56 @@ outline: none;
 /*for hero annimation section*/
 
 
-#music-animation-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  pointer-events: none;
-  /* Increase this to be higher than your hero background and overlay */
-  z-index: 99;
-  /* TEMPORARY: Remove this once you see it working */
-  border: 2px solid red;
+.hero-animation {
+     /* Ox-blood */
+     
+     background-color: transparent;
+    height: 180%;
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden ;
+    border-radius: 20%;
+    
 }
 
-.note {
-  position: ;
-  bottom: -50px;
-  color: rgba(255, 255, 255, 0.8) !important;
-  /* Make them brighter */
-  font-weight: bold;
-  user-select: none;
-  z-index: 100;
+.floating-logo-container {
+    margin: 20px;
+    display: flex;
+    justify-content: center;
 }
 
-@keyframes floatUp {
-  0% {
-    transform: translateY(0) rotate(0deg);
-    opacity: 0;
-  }
+.floating-logo {
+    width: 300px; /* Adjust size as needed */
+    height: 350px;
+    /* Apply the animation */
+    animation: floatMotion 6s ease-in-out infinite;
+    filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5));
+    border-radius: 50px;
+}
 
-  20% {
-    opacity: 1;
-  }
+.floating-logo:hover {
+  border: 3px solid #fff;
+  border-radius: 0px;
+  transform: translate(50px,-20px);
+}
 
-  100% {
-    transform: translateY(-100vh) rotate(360deg);
-    opacity: 0;
-  }
+/* The Animation Logic */
+@keyframes floatMotion {
+    0% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+    25% {
+        transform: translate(5px, -15px) rotate(2deg);
+    }
+    50% {
+        transform: translate(-5px, -25px) rotate(-2deg);
+    }
+    75% {
+        transform: translate(5px, -15px) rotate(2deg);
+    }
+    100% {
+        transform: translate(0, 0) rotate(0deg);
+    }
 }
