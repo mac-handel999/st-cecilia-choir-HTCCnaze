@@ -44,8 +44,8 @@ if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY) {
   }
 }
 
-// Multer for file uploads
-const upload = multer({ dest: 'uploads/' });
+// Multer for file uploads - use memory storage for serverless compatibility
+const upload = multer({ storage: multer.memoryStorage() });
 
 // JWT middleware
 function authMiddleware(req, res, next) {
@@ -679,17 +679,11 @@ app.post('/api/gallery/upload', authMiddleware, adminOrExco, upload.single('imag
           cloudinary.uploader.upload_stream({ folder: 'choir-gallery' }, (err, result) => {
             if (err) reject(err);
             else resolve(result);
-          }).end(fs.readFileSync(file.path));
+          }).end(file.buffer);
         });
         imageUrl = result.secure_url;
-        fs.unlinkSync(file.path);
       } else {
-        const uploadDir = path.join(__dirname, 'public', 'uploads');
-        if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-        const filename = Date.now() + '-' + file.originalname;
-        const dest = path.join(uploadDir, filename);
-        fs.renameSync(file.path, dest);
-        imageUrl = '/uploads/' + filename;
+        return res.status(500).json({ message: 'Image upload requires Cloudinary configuration' });
       }
     }
 
@@ -704,7 +698,6 @@ app.post('/api/gallery/upload', authMiddleware, adminOrExco, upload.single('imag
     res.status(201).json(data);
   } catch (err) {
     console.error('Gallery upload error:', err);
-    if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
     res.status(500).json({ message: 'Failed to upload image' });
   }
 });
