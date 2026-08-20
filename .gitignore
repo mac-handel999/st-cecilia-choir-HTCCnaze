@@ -10,5 +10,8 @@ dist/
 build/
 .vscode/
 .idea/
-st-cecilia-choir-htcc-naze-d7f5ae628c55.json/st-cecilia-choir-htcc-naze-d7f5ae628c55.json
-*.json
+*.key.json
+*-credentials.json
+*-secret.json
+service-account*.json
+client_secret*.json
