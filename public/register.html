@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register - St. Cecilia Choir HTCC Naze</title>
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#4A0000">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="STCECILIA">
+  <link rel="icon" type="image/jpeg" href="IMAGES/choir-logo.jpg">
+  <link rel="apple-touch-icon" href="IMAGES/choir-logo.jpg">
+</head>
+  <body class="auth-page">
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="header-logo">
+        <img src="IMAGES/choir-logo.jpg" alt="St. Cecilia Choir Logo" class="header-logo-img">
+        <span class="header-logo-text">St. Cecilia Choir</span>
+      </a>
+      <nav class="header-nav">
+        <a href="index.html">Home</a>
+        <a href="About.html">About</a>
+        <a href="members.html" class="active">Membership Portal</a>
+      </nav>
+    </div>
+  </header>
+
+  <header class="mobile-header">
+    <a href="index.html" class="mobile-logo">
+      <img src="IMAGES/choir-logo.jpg" alt="St. Cecilia Choir Logo" class="mobile-logo-img">
+      <span class="mobile-logo-text">Register</span>
+    </a>
+  </header>
+
+  <div class="auth-hero">
+      <img src="IMAGES/choir-logo.jpg" alt="St. Cecilia Choir Logo" class="auth-hero-logo">
+      <h1 class="font-display-lg text-display-lg" style="color: var(--color-primary);">St. Cecilia Choir</h1>
+      <p class="font-body-lg text-body-lg" style="color: var(--color-text-muted); max-width: 28rem;">Elevating hearts and minds through sacred choral tradition. Join our community of voices.</p>
+    </div>
+
+    <div class="auth-form-side">
+      <div class="auth-form-wrap">
+        <div class="auth-logo-mobile md:hidden">
+          <img src="IMAGES/choir-logo.jpg" alt="Choir Logo" class="page-logo" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+          <span class="font-headline-lg text-headline-lg-mobile font-semibold" style="color: var(--color-primary);">St. Cecilia Choir</span>
+        </div>
+
+        <div style="margin-bottom: 2rem;">
+          <h2 class="font-title-md text-title-md" style="color: var(--color-text);">Join the Choir</h2>
+          <p class="font-body-md text-body-md" style="color: var(--color-text-muted);">Create your membership account</p>
+        </div>
+
+        <div id="alert-container"></div>
+        <form id="register-form" style="display: flex; flex-direction: column; gap: 1.25rem;">
+          <div class="grid form-grid-2" style="gap: 1rem;">
+            <div>
+              <label class="form-label" for="reg-fullName">Full Name *</label>
+              <div class="input-icon-wrapper">
+                <span class="material-symbols-outlined input-icon">badge</span>
+                <input type="text" id="reg-fullName" class="form-control" placeholder="Enter your full name" required/>
+              </div>
+            </div>
+            <div>
+              <label class="form-label" for="reg-username">Username *</label>
+              <div class="input-icon-wrapper">
+                <span class="material-symbols-outlined input-icon">alternate_email</span>
+                <input type="text" id="reg-username" class="form-control" placeholder="Choose a username" required/>
+              </div>
+            </div>
+          </div>
+          <div>
+            <label class="form-label" for="reg-email">Email Address *</label>
+            <div class="input-icon-wrapper">
+              <span class="material-symbols-outlined input-icon">mail</span>
+              <input type="email" id="reg-email" class="form-control" placeholder="your@email.com" required/>
+            </div>
+          </div>
+          <div>
+            <label class="form-label" for="reg-password">Password *</label>
+            <div class="input-icon-wrapper">
+              <span class="material-symbols-outlined input-icon">lock</span>
+              <input type="password" id="reg-password" class="form-control" placeholder="Create a password" required minlength="6"/>
+            </div>
+          </div>
+          <div class="grid form-grid-2" style="gap: 1rem;">
+            <div>
+              <label class="form-label" for="reg-choirPart">Choir Part *</label>
+              <div class="input-icon-wrapper">
+                <span class="material-symbols-outlined input-icon">music_note</span>
+                <select id="reg-choirPart" class="form-control" required>
+                  <option value="">Select voice part</option>
+                  <option value="soprano">Soprano</option>
+                  <option value="alto">Alto</option>
+                  <option value="tenor">Tenor</option>
+                  <option value="bass">Bass</option>
+                  <option value="baritone">Baritone</option>
+                  <option value="others">Others</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label class="form-label" for="reg-address">Address *</label>
+              <div class="input-icon-wrapper">
+                <span class="material-symbols-outlined input-icon">location_on</span>
+                <input type="text" id="reg-address" class="form-control" placeholder="Enter your address" required/>
+              </div>
+            </div>
+          </div>
+          <div class="grid form-grid-2" style="gap: 1rem;">
+            <div>
+              <label class="form-label" for="reg-phoneNumber">Phone Number *</label>
+              <div class="input-icon-wrapper">
+                <span class="material-symbols-outlined input-icon">phone</span>
+                <input type="tel" id="reg-phoneNumber" class="form-control" placeholder="+234-xxx-xxx-xxxx" required/>
+              </div>
+            </div>
+            <div>
+              <label class="form-label" for="reg-dateOfBirth">Date of Birth</label>
+              <div class="input-icon-wrapper">
+                <span class="material-symbols-outlined input-icon">cake</span>
+                <input type="text" id="reg-dateOfBirth" class="form-control" placeholder="e.g., 03-15 for March 15"/>
+              </div>
+            </div>
+          </div>
+          <div class="grid form-grid-2" style="gap: 1rem;">
+            <div>
+              <label class="form-label" for="reg-maritalStatus">Marital Status</label>
+              <div class="input-icon-wrapper">
+                <span class="material-symbols-outlined input-icon">favorite</span>
+                <select id="reg-maritalStatus" class="form-control">
+                  <option value="">Select status</option>
+                  <option value="single">Single</option>
+                  <option value="married">Married</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label class="form-label" for="reg-executivePosition">Executive Position</label>
+              <div class="input-icon-wrapper">
+                <span class="material-symbols-outlined input-icon">admin_panel_settings</span>
+                <input type="text" id="reg-executivePosition" class="form-control" placeholder="e.g., Secretary, Treasurer"/>
+              </div>
+            </div>
+          </div>
+          <div>
+            <label class="form-label" for="reg-tenure">Tenure Duration</label>
+            <div class="input-icon-wrapper">
+              <span class="material-symbols-outlined input-icon">event</span>
+              <input type="text" id="reg-tenure" class="form-control" placeholder="e.g., 2025 - 2028"/>
+            </div>
+          </div>
+          <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+            <input type="checkbox" id="reg-pledge" required style="margin-top: 0.25rem; accent-color: var(--color-primary); width: 18px; height: 18px;">
+            <label for="reg-pledge" style="font-size: 0.9rem; color: var(--color-text-muted);">I pledge to abide by the By-Laws, rules and regulations of the Choir Organization *</label>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block" id="register-btn" style="padding: 0.875rem; font-size: 1rem;">Create Account</button>
+        </form>
+        <div class="text-center" style="margin-top: 1.5rem;">
+          <p style="color: var(--color-text-muted); font-size: 0.95rem;">
+            Already have an account? <button onclick="window.location.href='members.html'" class="link-accent" style="background: none; border: none; font-size: 0.95rem; font-weight: 600; color: var(--color-primary);">Login here</button>
+          </p>
+        </div>
+      </div>
+    </div>
+
+
+    <div id="toast-container"></div>
+
+    <script src="js/shared.js"></script>
+    <script src="js/register.js"></script>
+    <nav class="portal-bottom-nav">
+    <a href="member-home.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">home</span>
+      <span>Home</span>
+    </a>
+    <a href="cecilia-ai.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">psychology</span>
+      <span>Cecilia AI</span>
+    </a>
+    <a href="scores.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">library_music</span>
+      <span>Scores</span>
+    </a>
+    <a href="members-directory.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">groups</span>
+      <span>Members</span>
+    </a>
+    <a href="profile.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">person</span>
+      <span>Profile</span>
+    </a>
+  </nav>
+</body>
+</html>

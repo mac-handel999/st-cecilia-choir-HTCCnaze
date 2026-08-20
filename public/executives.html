@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Choir Leadership - St. Cecilia Choir HTCC Naze</title>
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#4A0000">
+  <link rel="icon" type="image/jpeg" href="IMAGES/choir-logo.jpg">
+  <link rel="apple-touch-icon" href="IMAGES/choir-logo.jpg">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="St. Cecilia Choir">
+</head>
+  <body class="portal-page">
+
+  <header class="portal-header">
+    <div class="portal-header-inner">
+      <a href="index.html" class="portal-logo">
+        <img src="IMAGES/choir-logo.jpg" alt="St. Cecilia Choir Logo" class="portal-logo-img">
+        <span class="portal-logo-text">St. Cecilia Choir</span>
+      </a>
+      <nav class="portal-nav">
+        <a href="member-home.html" class="portal-nav-link">Home</a>
+        <a href="scores.html" class="portal-nav-link">Scores</a>
+        <a href="attendance.html" class="portal-nav-link">Attendance</a>
+        <a href="executives.html" class="portal-nav-link active">Executives</a>
+      </nav>
+      <div class="portal-header-actions">
+        <a href="notifications.html" class="portal-icon-btn">
+          <span class="material-symbols-outlined">notifications</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-content portal-page-content">
+      <div class="container" style="padding-top: 2rem; padding-bottom: 3rem;">
+        <section class="text-center" style="margin-bottom: 2.5rem;">
+          <img src="IMAGES/choir-logo.jpg" alt="Choir Logo" class="page-logo" style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 3px solid var(--color-accent); margin-bottom: 1rem;">
+          <h1 class="page-title">Choir Leadership</h1>
+          <p class="page-subtitle" style="max-width: 42rem; margin: 0.75rem auto 0;">Guided by devotion and dedication, our executive committee serves the choir community to elevate our musical worship and foster a spirit of harmony.</p>
+        </section>
+
+        <div class="search-input-wrapper" style="margin-bottom: 2rem;">
+          <span class="material-symbols-outlined search-icon">search</span>
+          <input type="text" id="search-executives" placeholder="Search executives by name, role, or voice part..." />
+        </div>
+
+        <div id="executives-grid" class="executives-bento-grid"><div class="spinner"></div></div>
+      </div>
+    </main>
+
+
+  <div id="toast-container"></div>
+  <script src="js/shared.js"></script>
+  <script src="js/executives.js"></script>
+  <nav class="portal-bottom-nav">
+    <a href="member-home.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">home</span>
+      <span>Home</span>
+    </a>
+    <a href="cecilia-ai.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">psychology</span>
+      <span>Cecilia AI</span>
+    </a>
+    <a href="scores.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">library_music</span>
+      <span>Scores</span>
+    </a>
+    <a href="members-directory.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">groups</span>
+      <span>Members</span>
+    </a>
+    <a href="profile.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">person</span>
+      <span>Profile</span>
+    </a>
+  </nav>
+</body>
+</html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gallery - St. Cecilia Choir HTCC Naze</title>
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#4A0000">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="STCECILIA">
+  <link rel="icon" type="image/jpeg" href="IMAGES/choir-logo.jpg">
+  <link rel="apple-touch-icon" href="IMAGES/choir-logo.jpg">
+</head>
+  <body class="portal-page">
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="header-logo">
+        <img src="IMAGES/choir-logo.jpg" alt="St. Cecilia Choir Logo" class="header-logo-img">
+        <span class="header-logo-text">St. Cecilia Choir</span>
+      </a>
+      <nav class="header-nav">
+        <a href="member-home.html">Home</a>
+        <a href="About.html">About</a>
+        <a href="members.html">Membership Portal</a>
+      </nav>
+    </div>
+  </header>
+
+  <header class="mobile-header">
+    <a href="index.html" class="mobile-logo">
+      <img src="IMAGES/choir-logo.jpg" alt="St. Cecilia Choir Logo" class="mobile-logo-img">
+      <span class="mobile-logo-text">Gallery</span>
+    </a>
+  </header>
+
+  <main class="page-content">
+      <div class="container" style="padding-top: 2rem; padding-bottom: 3rem;">
+        <div style="text-align: center; margin-bottom: 2rem;">
+          <img src="IMAGES/choir-logo.jpg" alt="Choir Logo" class="page-logo" style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 3px solid var(--color-accent); margin-bottom: 1rem;">
+          <h1 class="page-title">Image Gallery</h1>
+          <p class="page-subtitle">Moments and memories</p>
+        </div>
+
+        <section style="margin-bottom: 3rem;">
+          <h2 class="section-heading" style="text-align: center; margin-bottom: 1.5rem;"><span class="material-symbols-outlined">view_carousel</span> Image Carousel</h2>
+          <div class="marquee-container" id="marquee-container">
+            <div class="marquee-content" id="marquee-content">
+              <div class="spinner"></div>
+            </div>
+          </div>
+        </section>
+
+        <section style="margin-bottom: 3rem;">
+          <h2 class="section-heading" style="text-align: center; margin-bottom: 1.5rem;"><span class="material-symbols-outlined">slideshow</span> Featured Photos</h2>
+          <div class="carousel-container">
+            <div class="carousel-viewport">
+              <div id="carousel-track" class="carousel-track">
+                <div class="spinner"></div>
+              </div>
+              <button class="carousel-btn prev" id="carousel-prev">&lt;</button>
+              <button class="carousel-btn next" id="carousel-next">&gt;</button>
+              <div class="carousel-dots" id="carousel-dots"></div>
+            </div>
+          </div>
+        </section>
+
+        <section style="margin-bottom: 3rem;">
+          <h2 class="section-heading" style="text-align: center; margin-bottom: 1.5rem;"><span class="material-symbols-outlined">videocam</span> Videos</h2>
+          <div class="video-carousel-container">
+            <div class="video-carousel-viewport">
+              <div id="video-track" class="video-track">
+                <div class="spinner"></div>
+              </div>
+              <button class="carousel-btn prev" id="video-prev">&lt;</button>
+              <button class="carousel-btn next" id="video-next">&gt;</button>
+              <div class="carousel-dots" id="video-dots"></div>
+              <button class="video-play-overlay" id="video-play-btn" title="Play Video">
+                <span class="material-symbols-outlined">play_arrow</span>
+              </button>
+            </div>
+            <div class="video-controls">
+              <button class="video-mute-btn" id="video-mute-btn">
+                <span class="material-symbols-outlined">volume_up</span>
+                <span>Mute</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h2 class="section-heading" style="text-align: center; margin-bottom: 1.5rem;"><span class="material-symbols-outlined">grid_view</span> All Photos</h2>
+          <div id="gallery-grid" class="gallery-grid"><div class="spinner"></div></div>
+        </section>
+      </div>
+    </main>
+
+    <div id="gallery-modal" class="gallery-modal" onclick="this.classList.remove('active')">
+      <button class="gallery-close">&times;</button>
+      <img id="gallery-modal-img" src="" alt="Gallery image"/>
+    </div>
+
+
+  <div id="toast-container"></div>
+
+  <script src="js/shared.js"></script>
+  <script src="js/image-gallery.js"></script>
+  <nav class="portal-bottom-nav">
+    <a href="member-home.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">home</span>
+      <span>Home</span>
+    </a>
+    <a href="cecilia-ai.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">psychology</span>
+      <span>Cecilia AI</span>
+    </a>
+    <a href="scores.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">library_music</span>
+      <span>Scores</span>
+    </a>
+    <a href="members-directory.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">groups</span>
+      <span>Members</span>
+    </a>
+    <a href="profile.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">person</span>
+      <span>Profile</span>
+    </a>
+  </nav>
+</body>
+</html>

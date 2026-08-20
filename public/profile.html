@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Profile - St. Cecilia Choir HTCC Naze</title>
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#4A0000">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="STCECILIA">
+  <link rel="icon" type="image/jpeg" href="IMAGES/choir-logo.jpg">
+  <link rel="apple-touch-icon" href="IMAGES/choir-logo.jpg">
+</head>
+  <body class="portal-page">
+
+  <header class="portal-header">
+    <div class="portal-header-inner">
+      <a href="index.html" class="portal-logo">
+        <img src="IMAGES/choir-logo.jpg" alt="St. Cecilia Choir Logo" class="portal-logo-img">
+        <span class="portal-logo-text">St. Cecilia Choir</span>
+      </a>
+      <nav class="portal-nav">
+        <a href="member-home.html" class="portal-nav-link">Home</a>
+        <a href="scores.html" class="portal-nav-link">Scores</a>
+        <a href="attendance.html" class="portal-nav-link">Attendance</a>
+        <a href="profile.html" class="portal-nav-link active">Profile</a>
+      </nav>
+      <div class="portal-header-actions">
+        <a href="notifications.html" class="portal-icon-btn">
+          <span class="material-symbols-outlined">notifications</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-content portal-page-content">
+      <div class="container-narrow" style="padding-top: 2rem; padding-bottom: 2rem;">
+        <div class="profile-header">
+          <div class="container-narrow" style="text-align: center;">
+            <div id="profile-avatar" style="width: 80px; height: 80px; border-radius: 50%; background: var(--color-primary); color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 700; margin: 0 auto 1rem; border: 4px solid var(--color-accent);">?</div>
+            <h1 id="profile-name" style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 700; color: #FFFFFF;">Loading...</h1>
+            <p id="profile-role" style="opacity: 0.9; font-size: 0.95rem; color: rgba(255,255,255,0.85);">Member</p>
+          </div>
+        </div>
+        <div class="container-narrow" style="padding-bottom: 3rem;">
+          <div class="card" style="margin-top: -2rem; position: relative; z-index: 2;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+              <h2 style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: var(--color-primary); margin: 0;">Personal Information</h2>
+              <button id="edit-profile-btn" class="btn btn-sm btn-outline">
+                <span class="material-symbols-outlined" style="font-size: 16px;">edit</span> Edit
+              </button>
+            </div>
+            <div id="profile-info"><div class="spinner"></div></div>
+          </div>
+          <div class="card" style="margin-top: 1rem;">
+            <h2 style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: var(--color-primary); margin-bottom: 1rem;">Account Actions</h2>
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+              <a href="settings.html" class="btn btn-outline" style="justify-content: flex-start; gap: 0.5rem;"><span class="material-symbols-outlined">settings</span> Account Settings</a>
+              <button onclick="Auth.logout().then(() => { window.location.href = 'members.html'; })" class="btn btn-outline" style="justify-content: flex-start; gap: 0.5rem; color: var(--color-error); border-color: var(--color-error);"><span class="material-symbols-outlined">logout</span> Log Out</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div class="modal-overlay" id="edit-profile-modal">
+      <div class="modal">
+        <div class="modal-header">
+          <h3 class="modal-title">Edit Profile</h3>
+          <button class="modal-close" id="close-edit-profile"><span class="material-symbols-outlined">close</span></button>
+        </div>
+        <div class="modal-body">
+          <div id="edit-profile-alert"></div>
+          <form id="edit-profile-form" style="display: flex; flex-direction: column; gap: 1rem;">
+            <div>
+              <label class="form-label" for="edit-fullName">Full Name</label>
+              <input type="text" id="edit-fullName" class="form-control" required autocomplete="name"/>
+            </div>
+            <div>
+              <label class="form-label" for="edit-username">Username</label>
+              <input type="text" id="edit-username" class="form-control" required autocomplete="username"/>
+            </div>
+            <div>
+              <label class="form-label" for="edit-phoneNumber">Phone Number</label>
+              <input type="tel" id="edit-phoneNumber" class="form-control" autocomplete="tel"/>
+            </div>
+            <div>
+              <label class="form-label" for="edit-address">Address</label>
+              <input type="text" id="edit-address" class="form-control" autocomplete="street-address"/>
+            </div>
+            <div>
+              <label class="form-label" for="edit-dateOfBirth">Date of Birth</label>
+              <input type="date" id="edit-dateOfBirth" class="form-control"/>
+            </div>
+            <div>
+              <label class="form-label" for="edit-maritalStatus">Marital Status</label>
+              <select id="edit-maritalStatus" class="form-select">
+                <option value="">Select</option>
+                <option value="single">Single</option>
+                <option value="married">Married</option>
+                <option value="divorced">Divorced</option>
+                <option value="widowed">Widowed</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label" for="edit-choirPart">Choir Part</label>
+              <select id="edit-choirPart" class="form-select">
+                <option value="">Select</option>
+                <option value="soprano">Soprano</option>
+                <option value="alto">Alto</option>
+                <option value="tenor">Tenor</option>
+                <option value="bass">Bass</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label" for="edit-executivePosition">Executive Position</label>
+              <input type="text" id="edit-executivePosition" class="form-control"/>
+            </div>
+            <div>
+              <label class="form-label" for="edit-tenure">Tenure</label>
+              <input type="text" id="edit-tenure" class="form-control"/>
+            </div>
+            <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem;">
+              <button type="button" id="cancel-edit-profile" class="btn btn-outline" style="flex: 1;">Cancel</button>
+              <button type="submit" class="btn btn-primary" style="flex: 1;">Save Changes</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+
+    <div id="toast-container"></div>
+
+    <script src="js/shared.js"></script>
+    <script src="js/profile.js"></script>
+    <nav class="portal-bottom-nav">
+    <a href="member-home.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">home</span>
+      <span>Home</span>
+    </a>
+    <a href="cecilia-ai.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">psychology</span>
+      <span>Cecilia AI</span>
+    </a>
+    <a href="scores.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">library_music</span>
+      <span>Scores</span>
+    </a>
+    <a href="members-directory.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">groups</span>
+      <span>Members</span>
+    </a>
+    <a href="profile.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">person</span>
+      <span>Profile</span>
+    </a>
+  </nav>
+</body>
+</html>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - St. Cecilia Choir HTCC Naze</title>
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#4A0000">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="STCECILIA">
+  <link rel="icon" type="image/jpeg" href="IMAGES/choir-logo.jpg">
+  <link rel="apple-touch-icon" href="IMAGES/choir-logo.jpg">
+</head>
+  <body class="portal-page">
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="header-logo">
+        <img src="IMAGES/choir-logo.jpg" alt="St. Cecilia Choir Logo" class="header-logo-img">
+        <span class="header-logo-text">St. Cecilia Choir</span>
+      </a>
+      <nav class="header-nav">
+        <a href="member-home.html">Home</a>
+        <a href="About.html">About</a>
+        <a href="dashboard.html" class="active">Dashboard</a>
+      </nav>
+    </div>
+  </header>
+
+  <header class="mobile-header">
+    <a href="index.html" class="mobile-logo">
+      <img src="IMAGES/choir-logo.jpg" alt="St. Cecilia Choir Logo" class="mobile-logo-img">
+      <span class="mobile-logo-text">Dashboard</span>
+    </a>
+  </header>
+
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <aside class="sidebar" id="sidebar">
+      <button class="sidebar-close" id="sidebar-close">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+      <a href="dashboard.html" class="active"><span class="material-symbols-outlined">dashboard</span> Dashboard</a>
+      <a href="scores.html"><span class="material-symbols-outlined">library_music</span> Scores</a>
+      <a href="members-directory.html"><span class="material-symbols-outlined">groups</span> Members</a>
+      <a href="attendance.html"><span class="material-symbols-outlined">fact_check</span> Attendance</a>
+      <a href="events.html"><span class="material-symbols-outlined">event</span> Events</a>
+      <a href="settings.html"><span class="material-symbols-outlined">settings</span> Settings</a>
+      <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
+        <button onclick="Auth.logout().then(() => { window.location.href = 'members.html'; })" style="display: flex; align-items: center; gap: 0.75rem; color: rgba(255,255,255,0.85); background: none; border: none; font-size: 0.95rem; cursor: pointer; width: 100%;">
+          <span class="material-symbols-outlined" style="font-size: 20px;">logout</span> Logout
+        </button>
+      </div>
+    </aside>
+
+    <main class="main-content" style="padding-top: calc(var(--header-height) + 1.5rem); padding-bottom: 3rem;">
+      <div class="content-area">
+        <div class="container" style="padding-bottom: 6rem;">
+          <div style="margin-bottom: 2rem; text-align: center;">
+            <img src="IMAGES/choir-logo.jpg" alt="Choir Logo" class="page-logo" style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 3px solid var(--color-accent); margin-bottom: 1rem;">
+            <h1 style="font-family: var(--font-heading); font-size: 1.75rem; font-weight: 700; color: var(--color-primary);">Admin Dashboard</h1>
+            <p style="color: var(--color-text-muted);">Manage choir operations and view statistics</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" style="gap: 1rem; margin-bottom: 2rem;">
+            <div class="stat-card">
+              <div class="stat-icon stat-icon-primary"><span class="material-symbols-outlined">groups</span></div>
+              <div><div class="stat-value" id="total-members">-</div><div class="stat-label">Total Members</div></div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon stat-icon-accent"><span class="material-symbols-outlined">library_music</span></div>
+              <div><div class="stat-value" id="total-scores">-</div><div class="stat-label">Total Scores</div></div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon stat-icon-success"><span class="material-symbols-outlined">pending</span></div>
+              <div><div class="stat-value" id="total-pending">-</div><div class="stat-label">Pending Attendance</div></div>
+            </div>
+          </div>
+
+          <h2 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: var(--color-primary); margin-bottom: 1rem;">Quick Actions</h2>
+          <div class="dashboard-actions" style="margin-bottom: 2rem;">
+            <a href="attendance.html" class="dashboard-action">
+              <div class="dashboard-action-icon"><span class="material-symbols-outlined">fact_check</span></div>
+              <div><div class="dashboard-action-title">Mark Attendance</div><div class="dashboard-action-desc">Record attendance</div></div>
+            </a>
+            <a href="scores.html" class="dashboard-action">
+              <div class="dashboard-action-icon"><span class="material-symbols-outlined">upload_file</span></div>
+              <div><div class="dashboard-action-title">Add New Score</div><div class="dashboard-action-desc">Upload sheet music</div></div>
+            </a>
+            <a href="notifications.html" class="dashboard-action">
+              <div class="dashboard-action-icon"><span class="material-symbols-outlined">campaign</span></div>
+              <div><div class="dashboard-action-title">Broadcast</div><div class="dashboard-action-desc">Send announcement</div></div>
+            </a>
+            <a href="members-directory.html" class="dashboard-action">
+              <div class="dashboard-action-icon"><span class="material-symbols-outlined">manage_accounts</span></div>
+              <div><div class="dashboard-action-title">Manage Members</div><div class="dashboard-action-desc">View member list</div></div>
+            </a>
+            <a href="scores.html" class="dashboard-action">
+              <div class="dashboard-action-icon"><span class="material-symbols-outlined">download</span></div>
+              <div><div class="dashboard-action-title">Export Data</div><div class="dashboard-action-desc">Download reports</div></div>
+            </a>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2" style="gap: 1.5rem;">
+            <div class="card">
+              <h3 style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: var(--color-primary); margin-bottom: 1rem;">Recent Members</h3>
+              <div id="recent-members"><div class="spinner"></div></div>
+            </div>
+            <div class="card">
+              <h3 style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: var(--color-primary); margin-bottom: 1rem;">Recent Scores</h3>
+              <div id="recent-scores"><div class="spinner"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+
+  <div id="toast-container"></div>
+
+  <script src="js/shared.js"></script>
+  <script src="js/dashboard.js"></script>
+  <nav class="portal-bottom-nav">
+    <a href="member-home.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">home</span>
+      <span>Home</span>
+    </a>
+    <a href="cecilia-ai.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">psychology</span>
+      <span>Cecilia AI</span>
+    </a>
+    <a href="scores.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">library_music</span>
+      <span>Scores</span>
+    </a>
+    <a href="members-directory.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">groups</span>
+      <span>Members</span>
+    </a>
+    <a href="profile.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">person</span>
+      <span>Profile</span>
+    </a>
+  </nav>
+</body>
+</html>

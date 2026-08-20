@@ -1,0 +1,21 @@
+[
+  { "name": "Alaribe Eziuche Mac-George Bruno", "position": "Musical Director", "image": "IMAGES/bruno.png", "contact": "+2347042799614", "choir_part": "Director" },
+  { "name": "Ochemba Chibuzor Collins", "position": "Chief Choir Master", "image": "IMAGES/choir-logo.jpg", "contact": "+2348139651114", "choir_part": "Tenor" },
+  { "name": "Nnaocha Jennifer Kelechi", "position": "Choir Master", "image": "IMAGES/jenny.jpg", "contact": "+2347063553107", "choir_part": "Director" },
+  { "name": "Ochemba Kosisochukwu Basil", "position": "Keyboardist / Organist", "image": "IMAGES/kosi.jpg", "contact": "+234-", "choir_part": "Organist" },
+  { "name": "Nwachukwu Assumpta", "position": "Financial Secretary", "image": "IMAGES/choir-logo.jpg", "contact": "+234-", "choir_part": "Soprano" },
+  { "name": "Bro Kenneth Ejiogu", "position": "Choir Media Manager", "image": "IMAGES/choir-logo.jpg", "contact": "+234-", "choir_part": "Tenor" },
+  { "name": "Chisaokwu Daberechi", "position": "Secretary General", "image": "IMAGES/choir-logo.jpg", "contact": "+2347017410481", "choir_part": "Bass" },
+  { "name": "Obimma Oluebube", "position": "Asst Secretary General", "image": "IMAGES/choir-logo.jpg", "contact": "+234-", "choir_part": "Alto" },
+  { "name": "Mr Emeaña Fabian Uche", "position": "Treasurer", "image": "IMAGES/bro-uche.jpg", "contact": "+2348065014545", "choir_part": "Tenor" },
+  { "name": "Osuji Chiamaka", "position": "Chief Welfare Officer", "image": "IMAGES/choir-logo.jpg", "contact": "+234-", "choir_part": "Alto" },
+  { "name": "Ikenna Victor", "position": "Choir Librarian", "image": "IMAGES/choir-logo.jpg", "contact": "+234-", "choir_part": "Tenor" },
+  { "name": "Sir Kenneth Ofurum", "position": "Chief Provost", "image": "IMAGES/arc-ken.jpg", "contact": "+234-", "choir_part": "Bass" },
+  { "name": "Chisaokwu Sorochukwu", "position": "Public Relations Officer (PRO) 1", "image": "IMAGES/sorochi.jpg", "contact": "+234-", "choir_part": "Tenor" },
+  { "name": "Diala Genevieve", "position": "Public Relations Officer (PRO) 2", "image": "IMAGES/choir-logo.jpg", "contact": "+234-", "choir_part": "Soprano" },
+  { "name": "Mrs Onwuzuruike Ogechi", "position": "Soprano Part Leader", "image": "IMAGES/choir-logo.jpg", "contact": "+234-", "choir_part": "Soprano" },
+  { "name": "Oduocha Paschalyn", "position": "Alto Part Leader", "image": "IMAGES/choir-logo.jpg", "contact": "+234-", "choir_part": "Alto" },
+  { "name": "Henry Akpa Kamsiyochukwu", "position": "Assistant Alto Part Leader", "image": "IMAGES/choir-logo.jpg", "contact": "+234-", "choir_part": "Alto" },
+  { "name": "Henry Akpa Yagazie", "position": "Assistant Tenor Part Leader", "image": "IMAGES/choir-logo.jpg", "contact": "+234-", "choir_part": "Tenor" },
+  { "name": "Emeana Ikechukwu Fabian {Fabian Codes HQ}", "position": "Software / Web Developer", "image": "IMAGES/ik.jpg", "contact": "+2347061652181", "choir_part": "Developer" }
+]

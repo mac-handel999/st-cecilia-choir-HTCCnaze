@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings - St. Cecilia Choir HTCC Naze</title>
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#4A0000">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="STCECILIA">
+  <link rel="icon" type="image/jpeg" href="IMAGES/choir-logo.jpg">
+  <link rel="apple-touch-icon" href="IMAGES/choir-logo.jpg">
+</head>
+  <body class="portal-page">
+
+  <header class="portal-header">
+    <div class="portal-header-inner">
+      <a href="index.html" class="portal-logo">
+        <img src="IMAGES/choir-logo.jpg" alt="St. Cecilia Choir Logo" class="portal-logo-img">
+        <span class="portal-logo-text">St. Cecilia Choir</span>
+      </a>
+      <nav class="portal-nav">
+        <a href="member-home.html" class="portal-nav-link">Home</a>
+        <a href="scores.html" class="portal-nav-link">Scores</a>
+        <a href="attendance.html" class="portal-nav-link">Attendance</a>
+        <a href="settings.html" class="portal-nav-link active">Settings</a>
+      </nav>
+      <div class="portal-header-actions">
+        <a href="notifications.html" class="portal-icon-btn">
+          <span class="material-symbols-outlined">notifications</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-content portal-page-content">
+      <div class="container-narrow" style="padding-top: 2rem; padding-bottom: 2rem;">
+        <div style="text-align: center; margin-bottom: 2rem;">
+          <img src="IMAGES/choir-logo.jpg" alt="Choir Logo" class="page-logo" style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 3px solid var(--color-accent); margin-bottom: 1rem;">
+          <h1 class="page-title">Settings</h1>
+          <p class="page-subtitle">Manage your account and preferences</p>
+        </div>
+
+        <div class="settings-section">
+          <h2 style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: var(--color-primary); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <span class="material-symbols-outlined filled">security</span> Account Security
+          </h2>
+          <button id="open-change-password" class="settings-row" style="background: none; border: none; width: 100%; cursor: pointer; padding: 1rem 0;">
+            <div style="text-align: left;">
+              <div class="settings-label">Change Password</div>
+              <div class="settings-desc">Update your account password</div>
+            </div>
+            <span class="material-symbols-outlined" style="color: var(--color-text-muted);">chevron_right</span>
+          </button>
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Two-Factor Authentication</div>
+              <div class="settings-desc">Add an extra layer of security to your account</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="two-factor-auth">
+              <span class="toggle-track"></span>
+              <span class="toggle-label" id="two-factor-label">Off</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h2 style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: var(--color-primary); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <span class="material-symbols-outlined filled">notifications_active</span> Notifications
+          </h2>
+          <div class="settings-row">
+            <div class="settings-label">Email Notifications</div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="email-notifications" checked>
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Push Notifications</div>
+              <div class="settings-desc" id="push-status">Browser permission required</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="push-notifications">
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h2 style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: var(--color-primary); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <span class="material-symbols-outlined filled">palette</span> App Appearance
+          </h2>
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Dark Mode</div>
+              <div class="settings-desc">Toggle between light and dark theme</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="dark-mode-toggle">
+              <span class="toggle-track"></span>
+              <span class="toggle-label" id="dark-mode-label">Off</span>
+            </label>
+          </div>
+          <div class="settings-row">
+            <div class="settings-label">Theme Preference</div>
+            <select id="theme-select" class="form-select" style="width: auto; min-width: 160px;">
+              <option value="Light">Light</option>
+              <option value="Dark">Dark</option>
+              <option value="System Default">System Default</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h2 style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: var(--color-primary); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <span class="material-symbols-outlined filled">language</span> Language
+          </h2>
+          <div class="settings-row">
+            <div class="settings-label">Display Language</div>
+            <select id="language-select" class="form-select" style="width: auto; min-width: 160px;">
+              <option value="en">English (US)</option>
+              <option value="ig">Igbo</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h2 style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: var(--color-primary); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <span class="material-symbols-outlined filled">info</span> About
+          </h2>
+          <div class="settings-row">
+            <div class="settings-label">Version</div>
+            <div style="font-size: 0.9rem; color: var(--color-text-muted);">v1.0</div>
+          </div>
+          <button onclick="window.location.href='terms.html'" class="settings-row" style="background: none; border: none; width: 100%; cursor: pointer; padding: 1rem 0;">
+            <div class="settings-label">Terms of Service</div>
+            <span class="material-symbols-outlined" style="color: var(--color-text-muted);">open_in_new</span>
+          </button>
+          <button onclick="window.location.href='privacy.html'" class="settings-row" style="background: none; border: none; width: 100%; cursor: pointer; padding: 1rem 0;">
+            <div class="settings-label">Privacy Policy</div>
+            <span class="material-symbols-outlined" style="color: var(--color-text-muted);">open_in_new</span>
+          </button>
+        </div>
+
+        <div class="settings-section">
+          <h2 style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: var(--color-primary); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <span class="material-symbols-outlined filled">dangerous</span> Danger Zone
+          </h2>
+          <div class="settings-row">
+            <div>
+              <div class="settings-label" style="color: var(--color-error);">Delete Account</div>
+              <div class="settings-desc">Permanently remove your account and all associated data</div>
+            </div>
+            <button id="delete-account-btn" class="btn btn-sm" style="background: var(--color-error); color: #FFFFFF; border: none;">
+              <span class="material-symbols-outlined" style="font-size: 16px;">delete_forever</span> Delete
+            </button>
+          </div>
+        </div>
+
+        <button onclick="Auth.logout().then(() => { window.location.href = 'members.html'; })" class="btn btn-outline btn-block" style="margin-top: 1rem; padding: 1rem;">
+          <span class="material-symbols-outlined" style="font-size: 20px;">logout</span> Log Out
+        </button>
+      </div>
+    </main>
+
+    <div class="modal-overlay" id="change-password-modal">
+      <div class="modal">
+        <div class="modal-header">
+          <h3 class="modal-title">Change Password</h3>
+          <button class="modal-close" id="close-change-password"><span class="material-symbols-outlined">close</span></button>
+        </div>
+        <div class="modal-body">
+          <div id="password-alert"></div>
+          <form id="change-password-form" style="display: flex; flex-direction: column; gap: 1rem;">
+            <div>
+              <label class="form-label" for="current-password">Current Password</label>
+              <input type="password" id="current-password" class="form-control" required autocomplete="current-password"/>
+            </div>
+            <div>
+              <label class="form-label" for="new-password">New Password</label>
+              <input type="password" id="new-password" class="form-control" required minlength="8" autocomplete="new-password"/>
+              <div style="font-size: 0.8rem; color: var(--color-text-muted); margin-top: 0.25rem;">Must be at least 8 characters</div>
+            </div>
+            <div>
+              <label class="form-label" for="confirm-password">Confirm New Password</label>
+              <input type="password" id="confirm-password" class="form-control" required autocomplete="new-password"/>
+            </div>
+            <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem;">
+              <button type="button" id="cancel-change-password" class="btn btn-outline" style="flex: 1;">Cancel</button>
+              <button type="submit" class="btn btn-primary" style="flex: 1;">Save Password</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+
+    <div id="toast-container"></div>
+
+    <script src="js/shared.js"></script>
+    <script src="js/settings.js"></script>
+    <nav class="portal-bottom-nav">
+    <a href="member-home.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">home</span>
+      <span>Home</span>
+    </a>
+    <a href="cecilia-ai.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">psychology</span>
+      <span>Cecilia AI</span>
+    </a>
+    <a href="scores.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">library_music</span>
+      <span>Scores</span>
+    </a>
+    <a href="members-directory.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">groups</span>
+      <span>Members</span>
+    </a>
+    <a href="profile.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">person</span>
+      <span>Profile</span>
+    </a>
+  </nav>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notifications - St. Cecilia Choir HTCC Naze</title>
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#4A0000">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="STCECILIA">
+  <link rel="icon" type="image/jpeg" href="IMAGES/choir-logo.jpg">
+  <link rel="apple-touch-icon" href="IMAGES/choir-logo.jpg">
+</head>
+  <body class="portal-page">
+
+  <header class="portal-header">
+    <div class="portal-header-inner">
+      <a href="index.html" class="portal-logo">
+        <img src="IMAGES/choir-logo.jpg" alt="St. Cecilia Choir Logo" class="portal-logo-img">
+        <span class="portal-logo-text">St. Cecilia Choir</span>
+      </a>
+      <nav class="portal-nav">
+        <a href="member-home.html" class="portal-nav-link">Home</a>
+        <a href="scores.html" class="portal-nav-link">Scores</a>
+        <a href="attendance.html" class="portal-nav-link">Attendance</a>
+        <a href="notifications.html" class="portal-nav-link active">Notifications</a>
+      </nav>
+      <div class="portal-header-actions">
+        <a href="notifications.html" class="portal-icon-btn">
+          <span class="material-symbols-outlined">notifications</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-content portal-page-content">
+      <div class="container" style="padding-top: 2rem; padding-bottom: 2rem;">
+        <div style="text-align: center; margin-bottom: 2rem;">
+          <img src="IMAGES/choir-logo.jpg" alt="Choir Logo" class="page-logo" style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 3px solid var(--color-accent); margin-bottom: 1rem;">
+          <h1 class="page-title">Notifications</h1>
+          <p class="page-subtitle">Stay updated with choir announcements</p>
+        </div>
+        <div class="card">
+          <div id="notifications-list"><div class="spinner"></div></div>
+        </div>
+      </div>
+    </main>
+
+
+  <div id="toast-container"></div>
+
+  <script src="js/shared.js"></script>
+  <script src="js/notifications.js"></script>
+  <nav class="portal-bottom-nav">
+    <a href="member-home.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">home</span>
+      <span>Home</span>
+    </a>
+    <a href="cecilia-ai.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">psychology</span>
+      <span>Cecilia AI</span>
+    </a>
+    <a href="scores.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">library_music</span>
+      <span>Scores</span>
+    </a>
+    <a href="members-directory.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">groups</span>
+      <span>Members</span>
+    </a>
+    <a href="profile.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">person</span>
+      <span>Profile</span>
+    </a>
+  </nav>
+</body>
+</html>

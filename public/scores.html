@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Choir Scores - St. Cecilia Choir HTCC Naze</title>
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#4A0000">
+  <link rel="icon" type="image/jpeg" href="IMAGES/choir-logo.jpg">
+  <link rel="apple-touch-icon" href="IMAGES/choir-logo.jpg">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="St. Cecilia Choir">
+</head>
+  <body class="portal-page">
+
+  <header class="portal-header">
+    <div class="portal-header-inner">
+      <a href="index.html" class="portal-logo">
+        <img src="IMAGES/choir-logo.jpg" alt="St. Cecilia Choir Logo" class="portal-logo-img">
+        <span class="portal-logo-text">St. Cecilia Choir</span>
+      </a>
+      <nav class="portal-nav">
+        <a href="member-home.html" class="portal-nav-link">Home</a>
+        <a href="scores.html" class="portal-nav-link active">Scores</a>
+        <a href="attendance.html" class="portal-nav-link">Attendance</a>
+        <a href="profile.html" class="portal-nav-link">Profile</a>
+      </nav>
+      <div class="portal-header-actions">
+        <a href="notifications.html" class="portal-icon-btn">
+          <span class="material-symbols-outlined">notifications</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-content portal-page-content">
+      <div class="container" style="padding-top: 2rem;">
+        <div class="scores-page-header">
+          <div>
+            <h1 class="page-title">Choir Scores</h1>
+            <p class="page-subtitle">Access sheet music for liturgies and performances.</p>
+          </div>
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <button type="button" id="sort-toggle" class="btn btn-outline btn-sm">
+              <span class="material-symbols-outlined" style="font-size: 16px;">sort_by_alpha</span> A-Z
+            </button>
+            <div class="search-container" style="max-width: 400px;">
+              <span class="material-symbols-outlined search-icon">search</span>
+              <input type="text" id="scores-search" class="search-input" placeholder="Search by title or composer..." />
+            </div>
+          </div>
+        </div>
+
+        <section style="margin: 2rem 0;">
+          <h2 class="section-heading"><span class="material-symbols-outlined">folder_open</span> Score Categories</h2>
+          <div class="folder-grid" id="score-categories" style="margin-top: 1.5rem;">
+            <!-- Injected via JS -->
+          </div>
+        </section>
+
+        <section style="margin: 3rem 0;">
+          <h2 class="section-heading">Available Scores</h2>
+          <div id="scores-list" style="margin-top: 1.5rem;">
+            <div class="spinner" style="margin: 3rem auto;"></div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+
+
+    <div id="toast-container"></div>
+
+    <script src="js/shared.js"></script>
+    <script src="js/scores.js"></script>
+    <nav class="portal-bottom-nav">
+    <a href="member-home.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">home</span>
+      <span>Home</span>
+    </a>
+    <a href="cecilia-ai.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">psychology</span>
+      <span>Cecilia AI</span>
+    </a>
+    <a href="scores.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">library_music</span>
+      <span>Scores</span>
+    </a>
+    <a href="members-directory.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">groups</span>
+      <span>Members</span>
+    </a>
+    <a href="profile.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">person</span>
+      <span>Profile</span>
+    </a>
+  </nav>
+</body>
+</html>

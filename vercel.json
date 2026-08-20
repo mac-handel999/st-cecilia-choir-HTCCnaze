@@ -1,0 +1,36 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "server.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/server.js"
+    },
+    {
+      "src": "/(.*).(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|webp|mp3|mp4|pdf)",
+      "headers": {
+        "cache-control": "public, max-age=31536000, immutable"
+      },
+      "dest": "/server.js"
+    },
+    {
+      "src": "/(index.html|member-home.html|scores.html|musical-score.html|cecilia-ai.html|attendance.html|image-gallery.html|executives.html|events.html|notifications.html|settings.html|members.html|members-directory.html|login.html|register.html|dashboard.html|profile.html|About.html|privacy.html|terms.html|manifest.json|service-worker.js)",
+      "headers": {
+        "cache-control": "public, max-age=0, must-revalidate"
+      },
+      "dest": "/server.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/server.js"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
+}

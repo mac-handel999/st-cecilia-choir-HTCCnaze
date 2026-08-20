@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Member Portal - St. Cecilia Choir HTCC Naze</title>
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#4A0000">
+  <link rel="icon" type="image/jpeg" href="IMAGES/choir-logo.jpg">
+  <link rel="apple-touch-icon" href="IMAGES/choir-logo.jpg">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="St. Cecilia Choir">
+</head>
+  <body class="portal-page">
+
+  <header class="portal-header">
+    <div class="portal-header-inner">
+      <a href="index.html" class="portal-logo">
+        <img src="IMAGES/choir-logo.jpg" alt="St. Cecilia Choir Logo" class="portal-logo-img">
+        <span class="portal-logo-text">St. Cecilia Choir</span>
+      </a>
+      <nav class="portal-nav">
+        <a href="member-home.html" class="portal-nav-link active">Home</a>
+        <a href="scores.html" class="portal-nav-link">Scores</a>
+        <a href="attendance.html" class="portal-nav-link">Attendance</a>
+        <a href="profile.html" class="portal-nav-link">Profile</a>
+      </nav>
+      <div class="portal-header-actions">
+        <a href="notifications.html" class="portal-icon-btn">
+          <span class="material-symbols-outlined">notifications</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-content portal-page-content">
+      <div class="container" style="padding-top: 2rem;">
+
+        <section class="member-hero">
+          <div id="dynamic-greeting" class="member-hero-badge">
+            <span class="pulse-dot"></span>
+            <span>Loading...</span>
+          </div>
+          <div style="text-align: center; margin-bottom: 1rem;">
+            <img src="IMAGES/choir-logo.jpg" alt="Choir Logo" class="page-logo" style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 3px solid var(--color-accent); margin-bottom: 1rem;">
+          </div>
+          <h1 id="welcome-username" class="member-hero-title text-center">Welcome back!</h1>
+          <p class="member-hero-subtitle text-center">Prepare your heart and voice for this Sunday's liturgy. Access scores, events, and choir resources from your portal.</p>
+        </section>
+
+        <section class="bento-grid member-bento-grid">
+          <article class="card bento-card-wide" id="next-rehearsal-card">
+            <div class="bento-card-header">
+              <div class="bento-icon-wrap"><span class="material-symbols-outlined">calendar_today</span></div>
+              <div>
+                <h3 class="bento-card-title">Next Rehearsal</h3>
+                <p class="bento-card-meta">Full Choir</p>
+              </div>
+              <span class="bento-badge" id="rehearsal-badge">Upcoming</span>
+            </div>
+            <div style="margin: 1.5rem 0;">
+              <p class="bento-highlight" id="rehearsal-time">Calculating...</p>
+              <p class="bento-location"><span class="material-symbols-outlined">location_on</span> Holy Trinity Catholic Church (HTCC) Naze</p>
+              <p class="bento-location" id="rehearsal-countdown" style="margin-top: 0.5rem; font-weight: 600; color: var(--color-accent);"></p>
+            </div>
+            <a href="events.html" class="nav-link" style="color: var(--color-accent); font-weight: bold;">View Details →</a>
+          </article>
+
+          <article class="card">
+            <div class="bento-card-header">
+              <div class="bento-icon-wrap bento-icon-gold"><span class="material-symbols-outlined">library_music</span></div>
+              <h3 class="bento-card-title">New Scores</h3>
+            </div>
+            <ul class="bento-list" id="recent-scores-list" style="margin-top: 1rem;">
+              <li><span class="material-symbols-outlined">description</span><div><strong>Loading...</strong></div></li>
+            </ul>
+            <a href="scores.html" class="nav-link" style="margin-top: 1rem; color: var(--color-primary); font-weight: bold;">Browse All Scores →</a>
+          </article>
+        </section>
+
+        <section style="margin: 3rem 0;">
+          <h2 class="section-heading text-center">Quick Actions</h2>
+          <div class="quick-actions" id="quick-actions">
+            <a href="members-directory.html" class="quick-action">
+              <span class="material-symbols-outlined">groups</span>
+              <span>Members Directory</span>
+            </a>
+            <a href="events.html" class="quick-action">
+              <span class="material-symbols-outlined">event</span>
+              <span>Events</span>
+            </a>
+            <a href="executives.html" class="quick-action">
+              <span class="material-symbols-outlined">badge</span>
+              <span>Executives</span>
+            </a>
+            <a href="image-gallery.html" class="quick-action">
+              <span class="material-symbols-outlined">photo_library</span>
+              <span>Image Gallery</span>
+            </a>
+            <a href="attendance.html" class="quick-action">
+              <span class="material-symbols-outlined">fact_check</span>
+              <span>Attendance</span>
+            </a>
+            <a href="constitution.html" class="quick-action">
+              <span class="material-symbols-outlined">menu_book</span>
+              <span>By Law / Constitution</span>
+            </a>
+            <a href="cecilia-ai.html" class="quick-action">
+              <span class="material-symbols-outlined">auto_awesome</span>
+              <span>Cecilia AI</span>
+            </a>
+            <a href="notifications.html" class="quick-action">
+              <span class="material-symbols-outlined">campaign</span>
+              <span>Notifications</span>
+            </a>
+            <a href="scores.html" class="quick-action">
+              <span class="material-symbols-outlined">library_music</span>
+              <span>Musical Scores</span>
+            </a>
+            <a href="musical-score.html" class="quick-action">
+              <span class="material-symbols-outlined">music_note</span>
+              <span>Score Categories</span>
+            </a>
+            <a href="profile.html" class="quick-action">
+              <span class="material-symbols-outlined">person</span>
+              <span>My Profile</span>
+            </a>
+            <a href="settings.html" class="quick-action">
+              <span class="material-symbols-outlined">settings</span>
+              <span>Settings</span>
+            </a>
+            <a href="dashboard.html" class="quick-action quick-action-admin hidden" id="admin-dashboard-link">
+              <span class="material-symbols-outlined">dashboard</span>
+              <span>Admin Dashboard</span>
+            </a>
+          </div>
+        </section>
+
+        <section class="member-two-col">
+          <div>
+            <h2 class="section-heading"><span class="material-symbols-outlined">campaign</span> Announcements</h2>
+            <div id="announcements-list" class="announcements-list">
+              <div class="spinner"></div>
+            </div>
+          </div>
+          <div>
+            <h2 class="section-heading"><span class="material-symbols-outlined">event</span> Upcoming Event</h2>
+            <div id="upcoming-event-card" class="card" style="padding: 0; overflow: hidden;">
+              <div class="spinner" style="margin: 2rem auto;"></div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+
+    <div id="toast-container"></div>
+
+
+    <script src="js/shared.js"></script>
+    <script src="js/member-home.js"></script>
+    <nav class="portal-bottom-nav">
+    <a href="member-home.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">home</span>
+      <span>Home</span>
+    </a>
+    <a href="cecilia-ai.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">psychology</span>
+      <span>Cecilia AI</span>
+    </a>
+    <a href="scores.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">library_music</span>
+      <span>Scores</span>
+    </a>
+    <a href="members-directory.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">groups</span>
+      <span>Members</span>
+    </a>
+    <a href="profile.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">person</span>
+      <span>Profile</span>
+    </a>
+  </nav>
+</body>
+</html>
