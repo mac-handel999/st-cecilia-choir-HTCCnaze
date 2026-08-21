@@ -1663,7 +1663,7 @@ a:hover {
    ABOUT PAGE
    -------------------------------------------- */
 .about-hero {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  background: linear-gradient(135deg, #4A0000 0%, #2D0000 100%);
   padding: 4rem 0;
   text-align: center;
   color: #FFFFFF;
@@ -2211,7 +2211,7 @@ a:hover {
 }
 
 .profile-header {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  background: linear-gradient(135deg, #4A0000 0%, #2D0000 100%);
   color: #fff;
   padding: 3rem 0 4rem;
   text-align: center;
@@ -2302,7 +2302,7 @@ a:hover {
 
 .profile-header {
   position: relative;
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  background: linear-gradient(135deg, #4A0000 0%, #2D0000 100%);
   padding: 2rem 0;
   margin-bottom: 2rem;
 }
@@ -2549,7 +2549,7 @@ a:hover {
 }
 
 .quick-action-admin {
-  background: linear-gradient(135deg, var(--color-primary), #1a0000);
+  background: linear-gradient(135deg, #4A0000, #1a0000);
   color: #FFFFFF;
   border-color: transparent;
 }
@@ -3533,7 +3533,7 @@ a:hover {
   position: relative;
   overflow: hidden;
   padding: 5rem 0;
-  background: linear-gradient(135deg, var(--color-primary) 0%, #1a0000 100%);
+  background: linear-gradient(135deg, #4A0000 0%, #1a0000 100%);
   color: #FFFFFF;
 }
 
@@ -3629,7 +3629,7 @@ a:hover {
 }
 
 .donate-card {
-  background: linear-gradient(135deg, var(--color-primary), #1a0000);
+  background: linear-gradient(135deg, #4A0000, #1a0000);
   color: #FFFFFF;
   border-radius: var(--radius-xl);
   padding: 2rem;

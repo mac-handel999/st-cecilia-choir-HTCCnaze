@@ -417,6 +417,18 @@
     background-color: #4A0000 !important;
     color: #FFFFFF !important;
   }
+
+  .donate-card, .quick-action-admin, .schedule-card, .schedule-card-alt {
+    background-color: #4A0000 !important;
+    color: #FFFFFF !important;
+    border-color: transparent !important;
+  }
+  .donate-card .material-symbols-outlined,
+  .quick-action-admin .material-symbols-outlined,
+  .schedule-card .material-symbols-outlined,
+  .schedule-card-alt .material-symbols-outlined {
+    color: #FFFFFF !important;
+  }
 }
 
 *,
