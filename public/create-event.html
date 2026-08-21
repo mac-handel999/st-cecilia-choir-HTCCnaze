@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Event - St. Cecilia Choir HTCC Naze</title>
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#4A0000">
+  <link rel="icon" type="image/jpeg" href="IMAGES/choir-logo.jpg">
+  <link rel="apple-touch-icon" href="IMAGES/choir-logo.jpg">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="St. Cecilia Choir">
+  <style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .icon-fill {
+      font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+  </style>
+</head>
+<body class="portal-page">
+
+  <header class="portal-header">
+    <div class="portal-header-inner">
+      <a href="admin-dashboard.html" class="portal-logo">
+        <img src="IMAGES/choir-logo.jpg" alt="St. Cecilia Choir Logo" class="portal-logo-img">
+        <span class="portal-logo-text">St. Cecilia Choir</span>
+      </a>
+      <nav class="portal-nav">
+        <a href="admin-dashboard.html" class="portal-nav-link">Dashboard</a>
+        <a href="create-event.html" class="portal-nav-link active">Create Event</a>
+        <a href="event-songs.html" class="portal-nav-link">Event Songs</a>
+        <a href="scores.html" class="portal-nav-link">Scores</a>
+      </nav>
+      <div class="portal-header-actions">
+        <a href="notifications.html" class="portal-icon-btn">
+          <span class="material-symbols-outlined">notifications</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-content portal-page-content">
+    <div class="container" style="padding-top: 2rem; padding-bottom: 3rem;">
+      <div style="display: grid; grid-template-columns: 1fr; gap: 2rem; max-width: 900px; margin: 0 auto;">
+
+        <div>
+          <div style="text-align: center; margin-bottom: 2rem;">
+            <h1 class="page-title">Create New Event</h1>
+            <p class="page-subtitle">Add rehearsals, masses, concerts, and other choir events</p>
+          </div>
+
+          <div class="card" style="padding: 2rem;">
+            <form id="create-event-form" style="display: flex; flex-direction: column; gap: 1.5rem;">
+              <div>
+                <label class="form-label" for="event-title">Event Title *</label>
+                <input type="text" id="event-title" class="form-control" placeholder="e.g., Sunday High Mass, Choir Rehearsal" required/>
+                <div class="form-error" id="title-error">Event title is required</div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2" style="gap: 1.5rem;">
+                <div>
+                  <label class="form-label" for="event-type">Event Type *</label>
+                  <select id="event-type" class="form-select" required>
+                    <option value="">Select type</option>
+                    <option value="Mass/Liturgy">Mass/Liturgy</option>
+                    <option value="Rehearsal">Rehearsal</option>
+                    <option value="Concert">Concert</option>
+                    <option value="Social Gathering">Social Gathering</option>
+                  </select>
+                  <div class="form-error" id="type-error">Please select an event type</div>
+                </div>
+                <div>
+                  <label class="form-label" for="event-date">Date *</label>
+                  <input type="date" id="event-date" class="form-control" required/>
+                  <div class="form-error" id="date-error">Date is required</div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2" style="gap: 1.5rem;">
+                <div>
+                  <label class="form-label" for="event-time">Start Time</label>
+                  <input type="time" id="event-time" class="form-control"/>
+                </div>
+                <div>
+                  <label class="form-label" for="event-location">Location</label>
+                  <input type="text" id="event-location" class="form-control" placeholder="e.g., Holy Trinity Catholic Church (HTCC) Naze"/>
+                </div>
+              </div>
+
+              <div>
+                <label class="form-label" for="event-description">Description / Notes</label>
+                <textarea id="event-description" class="form-control" rows="4" placeholder="Enter event details, special instructions, or notes..."></textarea>
+              </div>
+
+              <div>
+                <label class="form-label" for="event-image">Image URL</label>
+                <input type="url" id="event-image" class="form-control" placeholder="https://example.com/image.jpg"/>
+              </div>
+
+              <div style="display: flex; gap: 1rem; padding-top: 1rem;">
+                <button type="submit" class="btn btn-primary" style="flex: 1;">
+                  <span class="material-symbols-outlined" style="font-size: 18px;">add</span> Create Event
+                </button>
+                <a href="admin-dashboard.html" class="btn btn-outline" style="flex: 1; text-align: center;">Cancel</a>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <aside style="display: flex; flex-direction: column; gap: 1.5rem; max-width: 900px; margin: 0 auto; width: 100%;">
+          <div class="card" style="padding: 1.5rem;">
+            <h3 style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: var(--color-primary); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+              <span class="material-symbols-outlined">lightbulb</span> Scheduling Tips
+            </h3>
+            <ul style="display: flex; flex-direction: column; gap: 0.75rem; list-style: none; padding: 0; margin: 0;">
+              <li style="display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.9rem; color: var(--color-text-muted);">
+                <span class="material-symbols-outlined" style="font-size: 18px; color: var(--color-accent); margin-top: 2px;">check</span>
+                Schedule rehearsals at least 2 weeks before performances
+              </li>
+              <li style="display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.9rem; color: var(--color-text-muted);">
+                <span class="material-symbols-outlined" style="font-size: 18px; color: var(--color-accent); margin-top: 2px;">check</span>
+                Confirm venue availability before creating the event
+              </li>
+              <li style="display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.9rem; color: var(--color-text-muted);">
+                <span class="material-symbols-outlined" style="font-size: 18px; color: var(--color-accent); margin-top: 2px;">check</span>
+                Add relevant song selections once the event is created
+              </li>
+              <li style="display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.9rem; color: var(--color-text-muted);">
+                <span class="material-symbols-outlined" style="font-size: 18px; color: var(--color-accent); margin-top: 2px;">check</span>
+                Notify members through the announcements system
+              </li>
+            </ul>
+          </div>
+
+          <div class="card" style="padding: 1.5rem; background: var(--color-surface-container);">
+            <h3 style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: var(--color-primary); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+              <span class="material-symbols-outlined">calendar_month</span> Current Season
+            </h3>
+            <!-- TODO: Replace with dynamic season data based on liturgical calendar -->
+            <p style="font-size: 0.9rem; color: var(--color-text-muted); line-height: 1.6;">
+              Ordinary Time - Week 12<br>
+              <span style="font-size: 0.8rem; color: var(--color-text-light);">Focus: Growing in discipleship and service</span>
+            </p>
+          </div>
+        </aside>
+
+      </div>
+    </div>
+  </main>
+
+  <div id="toast-container"></div>
+
+  <script src="js/shared.js"></script>
+  <script src="js/create-event.js"></script>
+  <nav class="portal-bottom-nav">
+    <a href="admin-dashboard.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">home</span>
+      <span>Home</span>
+    </a>
+    <a href="create-event.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">event</span>
+      <span>Events</span>
+    </a>
+    <a href="event-songs.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">library_music</span>
+      <span>Songs</span>
+    </a>
+    <a href="members-directory.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">groups</span>
+      <span>Members</span>
+    </a>
+    <a href="profile.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">person</span>
+      <span>Profile</span>
+    </a>
+  </nav>
+</body>
+</html>

@@ -11,26 +11,34 @@
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#4A0000">
+  <link rel="icon" type="image/jpeg" href="IMAGES/choir-logo.jpg">
+  <link rel="apple-touch-icon" href="IMAGES/choir-logo.jpg">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="STCECILIA">
-  <link rel="icon" type="image/jpeg" href="IMAGES/choir-logo.jpg">
-  <link rel="apple-touch-icon" href="IMAGES/choir-logo.jpg">
+  <meta name="apple-mobile-web-app-title" content="St. Cecilia Choir">
+  <style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .icon-fill {
+      font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+  </style>
 </head>
-  <body class="portal-page">
+<body class="portal-page">
 
   <header class="portal-header">
     <div class="portal-header-inner">
-      <a href="index.html" class="portal-logo">
+      <a href="admin-dashboard.html" class="portal-logo">
         <img src="IMAGES/choir-logo.jpg" alt="St. Cecilia Choir Logo" class="portal-logo-img">
         <span class="portal-logo-text">St. Cecilia Choir</span>
       </a>
       <nav class="portal-nav">
-        <a href="member-home.html" class="portal-nav-link">Home</a>
-        <a href="scores.html" class="portal-nav-link">Scores</a>
+        <a href="admin-dashboard.html" class="portal-nav-link">Dashboard</a>
         <a href="attendance.html" class="portal-nav-link active">Attendance</a>
-        <a href="profile.html" class="portal-nav-link">Profile</a>
+        <a href="create-event.html" class="portal-nav-link">Events</a>
+        <a href="event-songs.html" class="portal-nav-link">Songs</a>
       </nav>
       <div class="portal-header-actions">
         <a href="notifications.html" class="portal-icon-btn">
@@ -41,68 +49,87 @@
   </header>
 
   <main class="page-content portal-page-content">
-      <div class="container" style="padding-top: 2rem; padding-bottom: 6rem;">
-        <div style="text-align: center; margin-bottom: 2rem;">
-          <img src="IMAGES/choir-logo.jpg" alt="Choir Logo" class="page-logo" style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 3px solid var(--color-accent); margin-bottom: 1rem;">
-          <h1 class="page-title">Mark Attendance</h1>
-          <p class="page-subtitle">Record attendance for rehearsals and events</p>
-        </div>
+    <div class="container" style="padding-top: 2rem; padding-bottom: 7rem; max-width: 900px;">
 
-        <div class="card" style="margin-bottom: 1.5rem;">
-          <h2 style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: var(--color-primary); margin-bottom: 1rem;">New Attendance Record</h2>
-          <form id="attendance-form" style="display: flex; flex-direction: column; gap: 1rem;">
-            <div class="grid grid-cols-1 sm:grid-cols-2" style="gap: 1rem;">
-              <div>
-                <label class="form-label" for="att-date">Date</label>
-                <input type="date" id="att-date" class="form-control" required/>
-              </div>
-              <div>
-                <label class="form-label" for="att-type">Type</label>
-                <select id="att-type" class="form-control">
-                  <option value="Rehearsal">Rehearsal</option>
-                  <option value="Mass">Mass</option>
-                </select>
-              </div>
-            </div>
-            <div>
-              <label class="form-label" for="att-member">Member</label>
-              <select id="att-member" class="form-control" required></select>
-            </div>
-            <div>
-              <label class="form-label" for="att-status">Status</label>
-              <select id="att-status" class="form-control">
-                <option value="present">Present</option>
-                <option value="absent">Absent</option>
-              </select>
-            </div>
-            <button type="submit" class="btn btn-primary">Save Attendance</button>
-          </form>
-        </div>
+      <div style="text-align: center; margin-bottom: 2rem;">
+        <h1 class="page-title">Mark Attendance</h1>
+        <p class="page-subtitle">Select an event and mark member attendance</p>
+      </div>
 
-        <h2 style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: var(--color-primary); margin-bottom: 1rem;">Recent Attendance</h2>
-        <div class="card">
-          <div id="attendance-list"><div class="spinner"></div></div>
+      <div class="card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+        <label class="form-label" for="att-event" style="font-size: 0.75rem; font-weight: 600; color: var(--color-text-light); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">Select Event</label>
+        <select id="att-event" class="form-select">
+          <option value="">Choose an event...</option>
+        </select>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6" id="attendance-stats">
+        <div class="card stat-card">
+          <span style="font-size: 0.75rem; font-weight: 600; color: var(--color-text-light); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.25rem;">Present</span>
+          <span style="font-size: 1.75rem; font-weight: 700; color: var(--color-primary); font-family: var(--font-heading);" id="stat-present">0</span>
+        </div>
+        <div class="card stat-card">
+          <span style="font-size: 0.75rem; font-weight: 600; color: var(--color-text-light); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.25rem;">Absent</span>
+          <span style="font-size: 1.75rem; font-weight: 700; color: var(--color-text); font-family: var(--font-heading);" id="stat-absent">0</span>
+        </div>
+        <div class="card stat-card">
+          <span style="font-size: 0.75rem; font-weight: 600; color: var(--color-text-light); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.25rem;">Excused</span>
+          <span style="font-size: 1.75rem; font-weight: 700; color: var(--color-text-muted); font-family: var(--font-heading);" id="stat-excused">0</span>
+        </div>
+        <div class="card stat-card">
+          <span style="font-size: 0.75rem; font-weight: 600; color: var(--color-text-light); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.25rem;">Total</span>
+          <span style="font-size: 1.75rem; font-weight: 700; color: var(--color-text-muted); font-family: var(--font-heading);" id="stat-total">0</span>
         </div>
       </div>
-    </main>
 
+      <div class="filter-chips mb-4" id="voice-filters">
+        <button class="filter-chip active" data-voice="all">All Voices</button>
+        <button class="filter-chip" data-voice="soprano">Soprano</button>
+        <button class="filter-chip" data-voice="alto">Alto</button>
+        <button class="filter-chip" data-voice="tenor">Tenor</button>
+        <button class="filter-chip" data-voice="bass">Bass</button>
+      </div>
+
+      <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 1.5rem;" id="member-list-container">
+        <div id="member-list">
+          <div class="empty-state">
+            <div class="empty-state-icon">event</div>
+            <div class="empty-state-title">Select an event</div>
+            <div class="empty-state-desc">Choose an event above to mark attendance</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <div style="position: fixed; bottom: 0; left: 0; width: 100%; background: var(--color-surface); border-top: 1px solid var(--color-border-light); padding: 1rem; z-index: 100; box-shadow: 0 -2px 10px rgba(0,0,0,0.05);">
+    <div style="max-width: 900px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+      <div style="flex: 1;">
+        <p style="font-size: 0.85rem; color: var(--color-text-light);" id="save-status">Ready to save</p>
+      </div>
+      <button id="save-attendance-btn" class="btn btn-primary" style="flex: 2; max-width: 300px;">
+        <span class="material-symbols-outlined" style="font-size: 20px;">save</span> Save Attendance
+      </button>
+    </div>
+  </div>
 
   <div id="toast-container"></div>
 
   <script src="js/shared.js"></script>
   <script src="js/attendance.js"></script>
   <nav class="portal-bottom-nav">
-    <a href="member-home.html" class="portal-bottom-link">
+    <a href="admin-dashboard.html" class="portal-bottom-link">
       <span class="material-symbols-outlined">home</span>
       <span>Home</span>
     </a>
-    <a href="cecilia-ai.html" class="portal-bottom-link">
-      <span class="material-symbols-outlined">psychology</span>
-      <span>Cecilia AI</span>
+    <a href="create-event.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">event</span>
+      <span>Events</span>
     </a>
-    <a href="scores.html" class="portal-bottom-link">
+    <a href="event-songs.html" class="portal-bottom-link">
       <span class="material-symbols-outlined">library_music</span>
-      <span>Scores</span>
+      <span>Songs</span>
     </a>
     <a href="members-directory.html" class="portal-bottom-link">
       <span class="material-symbols-outlined">groups</span>

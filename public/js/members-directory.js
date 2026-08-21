@@ -35,8 +35,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     container.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3" style="gap: 1rem;">${list.map(m => {
       const initials = getInitials(m.full_name || m.username);
       const isExco = m.role === 'exco' || m.role === 'admin' || m.executive_position;
+      const avatarHtml = m.avatar_url
+        ? `<img src="${escapeHtml(m.avatar_url)}" alt="${escapeHtml(m.full_name || m.username)}" class="member-avatar-img" />`
+        : `<div class="member-avatar ${isExco ? 'member-avatar-gold' : ''}">${initials}</div>`;
       return `<article class="member-card ${isExco ? 'member-card-exco' : ''}">
-        <div class="member-avatar ${isExco ? 'member-avatar-gold' : ''}">${initials}</div>
+        ${avatarHtml}
         <div style="flex: 1; min-width: 0;">
           <div style="font-weight: 600; color: var(--color-primary); font-size: 0.95rem;">${escapeHtml(m.full_name || m.username)}</div>
           <div style="font-size: 0.8rem; color: var(--color-text-muted);">@${escapeHtml(m.username || '')}</div>
@@ -46,6 +49,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           </div>
           ${m.address ? `<div style="font-size: 0.75rem; color: var(--color-text-light); margin-top: 0.25rem;">${escapeHtml(m.address)}</div>` : ''}
           ${m.date_of_birth ? `<div style="font-size: 0.75rem; color: var(--color-text-light);">🎂 ${escapeHtml(formatBirthday(m.date_of_birth))}</div>` : ''}
+          ${m.executive_position ? `<div style="font-size: 0.75rem; color: var(--color-accent); margin-top: 0.25rem; font-weight: 600;">${escapeHtml(m.executive_position)}</div>` : ''}
         </div>
         ${m.phone_number ? `<a href="tel:${escapeHtml(m.phone_number.replace(/\s/g, ''))}" class="member-contact-btn" title="Call"><span class="material-symbols-outlined">call</span></a>` : ''}
       </article>`;

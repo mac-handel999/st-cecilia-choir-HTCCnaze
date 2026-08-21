@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>St. Cecilia Choir - Admin Login</title>
+
+  <link href="https://fonts.googleapis.com" rel="preconnect" />
+  <link crossorigin href="https://fonts.gstatic.com" rel="preconnect" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="css/design-system.css" />
+  <link rel="stylesheet" href="css/admin-login.css" />
+</head>
+<body>
+
+  <div class="login-page">
+
+    <!-- Branding -->
+    <div class="login-branding">
+      <div class="login-branding__logo">
+        <img src="IMAGES/choir-logo.jpg" alt="St. Cecilia Choir logo" />
+      </div>
+      <h1>Admin Portal</h1>
+      <p>Restricted access for executives and administrators only</p>
+    </div>
+
+    <!-- Card -->
+    <div class="login-card">
+      <div id="loginError" class="form-error-banner" role="alert"></div>
+
+      <form id="loginForm" class="login-form" novalidate>
+        <!-- Email -->
+        <div class="form-field">
+          <label for="email">Email Address</label>
+          <div class="input-wrapper">
+            <span class="material-symbols-outlined icon-leading">mail</span>
+            <input type="email" id="email" name="email" placeholder="admin@stceciliachoir.org" required autocomplete="username" />
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="form-field">
+          <div class="form-field__label-row">
+            <label for="password">Password</label>
+            <a href="#" class="form-field__forgot-link" id="forgotPasswordLink">Forgot Password?</a>
+          </div>
+          <div class="input-wrapper">
+            <span class="material-symbols-outlined icon-leading">lock</span>
+            <input type="password" id="password" name="password" placeholder="Enter your password" required autocomplete="current-password" />
+            <button type="button" class="icon-trailing" id="togglePassword" aria-label="Toggle password visibility">
+              <span class="material-symbols-outlined" id="togglePasswordIcon">visibility_off</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Remember me -->
+        <div class="remember-row">
+          <input type="checkbox" id="rememberMe" name="rememberMe" />
+          <label for="rememberMe">Remember me for 30 days</label>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="btn-primary" id="submitBtn">
+          <span id="submitBtnText">Login to Admin Portal</span>
+        </button>
+      </form>
+    </div>
+
+    <!-- Footer -->
+    <div class="login-footer">
+      <p>&copy; 2026 St. Cecilia Choir. Authorized personnel only.</p>
+      <p><a href="index.html">Back to main site</a></p>
+    </div>
+
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script src="js/shared.js"></script>
+  <script src="js/admin-login.js"></script>
+</body>
+</html>

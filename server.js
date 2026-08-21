@@ -160,7 +160,7 @@ app.post('/api/auth/register', async (req, res) => {
 
 app.post('/api/auth/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, remember = false } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({ message: 'Email and password are required' });
@@ -184,7 +184,7 @@ app.post('/api/auth/login', async (req, res) => {
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role, username: user.username },
       process.env.JWT_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: remember ? '30d' : '7d' }
     );
 
     const { password: _, ...userWithoutPassword } = user;
@@ -273,7 +273,7 @@ app.post('/api/auth/update-password', authMiddleware, async (req, res) => {
 
 app.get('/api/users', authMiddleware, async (req, res) => {
   try {
-    const { data, error } = await buildQuery('users', req, 'id, email, username, full_name, phone_number, address, choir_part, executive_position, role, created_at');
+    const { data, error } = await buildQuery('users', req, 'id, email, username, full_name, phone_number, address, choir_part, executive_position, role, avatar_url, created_at');
 
     if (error) throw error;
     res.json(data || []);
@@ -287,7 +287,7 @@ app.get('/api/users/:id', authMiddleware, async (req, res) => {
   try {
     const { data, error } = await supabaseAdmin
       .from('users')
-      .select('id, email, username, full_name, phone_number, address, date_of_birth, marital_status, choir_part, executive_position, tenure, pledge_accepted, role, created_at, updated_at')
+      .select('id, email, username, full_name, phone_number, address, date_of_birth, marital_status, choir_part, executive_position, tenure, pledge_accepted, role, avatar_url, created_at, updated_at')
       .eq('id', req.params.id)
       .single();
 
@@ -312,7 +312,7 @@ app.put('/api/users/:id', authMiddleware, async (req, res) => {
       .from('users')
       .update(updates)
       .eq('id', req.params.id)
-      .select('id, email, username, full_name, phone_number, address, date_of_birth, marital_status, choir_part, executive_position, tenure, pledge_accepted, role, created_at, updated_at')
+      .select('id, email, username, full_name, phone_number, address, date_of_birth, marital_status, choir_part, executive_position, tenure, pledge_accepted, role, avatar_url, created_at, updated_at')
       .single();
 
     if (error || !data) return res.status(404).json({ message: 'User not found' });
@@ -335,6 +335,96 @@ app.delete('/api/users/:id', authMiddleware, async (req, res) => {
   } catch (err) {
     console.error('User delete error:', err);
     res.status(500).json({ message: 'Failed to delete user' });
+  }
+});
+
+// ==================== AVATAR ROUTES ====================
+
+const AVATAR_BUCKET = process.env.S3_BUCKET_NAME || 'avatars';
+
+app.post('/api/users/:id/avatar', authMiddleware, upload.single('avatar'), async (req, res) => {
+  try {
+    const userId = req.params.id;
+    if (req.user.id !== userId) {
+      return res.status(403).json({ message: 'You can only update your own avatar' });
+    }
+
+    const file = req.file;
+    if (!file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      return res.status(400).json({ message: 'Image size must not exceed 10MB' });
+    }
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+    if (!allowedTypes.includes(file.mimetype)) {
+      return res.status(400).json({ message: 'Only JPG, PNG, and WebP images are allowed' });
+    }
+
+    const fileExtension = file.originalname.split('.').pop() || 'jpg';
+    const fileName = `${userId}/avatar-${Date.now()}.${fileExtension}`;
+
+    const { data: uploadData, error: uploadError } = await supabaseAdmin
+      .storage
+      .from(AVATAR_BUCKET)
+      .upload(fileName, file.buffer, {
+        contentType: file.mimetype,
+        upsert: true
+      });
+
+    if (uploadError) {
+      console.error('Avatar upload error:', uploadError);
+      return res.status(500).json({ message: 'Failed to upload avatar' });
+    }
+
+    const { data: { publicUrl } } = supabaseAdmin
+      .storage
+      .from(AVATAR_BUCKET)
+      .getPublicUrl(fileName);
+
+    await supabaseAdmin
+      .from('users')
+      .update({ avatar_url: publicUrl })
+      .eq('id', userId);
+
+    res.json({ avatar_url: publicUrl });
+  } catch (err) {
+    console.error('Avatar upload error:', err);
+    res.status(500).json({ message: 'Failed to upload avatar' });
+  }
+});
+
+app.delete('/api/users/:id/avatar', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.params.id;
+    if (req.user.id !== userId) {
+      return res.status(403).json({ message: 'You can only delete your own avatar' });
+    }
+
+    const { data: user } = await supabaseAdmin
+      .from('users')
+      .select('avatar_url')
+      .eq('id', userId)
+      .single();
+
+    if (user?.avatar_url) {
+      const pathMatch = user.avatar_url.match(/\/avatars\/(.+)$/);
+      if (pathMatch) {
+        await supabaseAdmin.storage.from(AVATAR_BUCKET).remove([pathMatch[1]]);
+      }
+    }
+
+    await supabaseAdmin
+      .from('users')
+      .update({ avatar_url: null })
+      .eq('id', userId);
+
+    res.json({ message: 'Avatar deleted successfully' });
+  } catch (err) {
+    console.error('Avatar delete error:', err);
+    res.status(500).json({ message: 'Failed to delete avatar' });
   }
 });
 
@@ -522,6 +612,35 @@ app.put('/api/attendance/:id', authMiddleware, adminOrExco, async (req, res) => 
   }
 });
 
+app.post('/api/attendance/bulk', authMiddleware, adminOrExco, async (req, res) => {
+  try {
+    const { event_date, event_name, records } = req.body;
+    if (!records || !Array.isArray(records) || records.length === 0) {
+      return res.status(400).json({ message: 'No records provided' });
+    }
+
+    const payload = records.map(r => ({
+      event_name: event_name || r.event_name,
+      event_date: event_date || r.event_date,
+      member_id: r.member_id,
+      status: r.status || 'absent',
+      reason: r.reason || null,
+      marked_by: req.user.id
+    }));
+
+    const { data, error } = await supabaseAdmin
+      .from('attendance')
+      .upsert(payload, { onConflict: 'member_id,event_date' })
+      .select();
+
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    console.error('Attendance bulk upsert error:', err);
+    res.status(500).json({ message: 'Failed to bulk save attendance' });
+  }
+});
+
 // ==================== EVENTS ROUTES ====================
 
 app.get('/api/events', async (req, res) => {
@@ -538,10 +657,10 @@ app.get('/api/events', async (req, res) => {
 
 app.post('/api/events', authMiddleware, adminOrExco, async (req, res) => {
   try {
-    const { title, description, event_date, location, image_url } = req.body;
+    const { title, type, event_date, time, description, location, image_url, created_by } = req.body;
     const { data, error } = await supabaseAdmin
       .from('events')
-      .insert([{ title, description, event_date, location, image_url }])
+      .insert([{ title, type, event_date, time, description, location, image_url, created_by: created_by || req.user.id }])
       .select()
       .single();
 
@@ -585,6 +704,254 @@ app.delete('/api/events/:id', authMiddleware, adminOrExco, async (req, res) => {
   } catch (err) {
     console.error('Event delete error:', err);
     res.status(500).json({ message: 'Failed to delete event' });
+  }
+});
+
+// ==================== EVENT SONGS ROUTES ====================
+
+app.get('/api/event-songs', async (req, res) => {
+  try {
+    const { event_id } = req.query;
+    let query = supabaseAdmin.from('event_songs').select('*');
+    
+    if (event_id) {
+      query = query.eq('event_id', event_id);
+    }
+    
+    const { data, error } = await query.order('order_number', { ascending: true });
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    console.error('Event songs list error:', err);
+    res.status(500).json({ message: 'Failed to fetch event songs' });
+  }
+});
+
+app.post('/api/event-songs', authMiddleware, adminOrExco, async (req, res) => {
+  try {
+    const { event_id, title, category, order_number, notes } = req.body;
+    const { data, error } = await supabaseAdmin
+      .from('event_songs')
+      .insert([{ event_id, title, category, order_number: order_number || 1, notes }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.status(201).json(data);
+  } catch (err) {
+    console.error('Event song create error:', err);
+    res.status(500).json({ message: 'Failed to create event song' });
+  }
+});
+
+app.put('/api/event-songs/:id', authMiddleware, adminOrExco, async (req, res) => {
+  try {
+    const { title, category, order_number, notes } = req.body;
+    const { data, error } = await supabaseAdmin
+      .from('event_songs')
+      .update({ title, category, order_number, notes, updated_at: new Date().toISOString() })
+      .eq('id', req.params.id)
+      .select()
+      .single();
+
+    if (error || !data) return res.status(404).json({ message: 'Event song not found' });
+    res.json(data);
+  } catch (err) {
+    console.error('Event song update error:', err);
+    res.status(500).json({ message: 'Failed to update event song' });
+  }
+});
+
+app.delete('/api/event-songs/:id', authMiddleware, adminOrExco, async (req, res) => {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('event_songs')
+      .delete()
+      .eq('id', req.params.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    console.error('Event song delete error:', err);
+    res.status(500).json({ message: 'Failed to delete event song' });
+  }
+});
+
+// ==================== SONG LISTS ROUTES ====================
+
+app.get('/api/song-lists', async (req, res) => {
+  try {
+    const { event_id } = req.query;
+    let query = supabaseAdmin.from('song_lists').select('*');
+    
+    if (event_id) {
+      query = query.eq('event_id', event_id);
+    }
+    
+    const { data, error } = await query.order('created_at', { ascending: false });
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    console.error('Song lists list error:', err);
+    res.status(500).json({ message: 'Failed to fetch song lists' });
+  }
+});
+
+app.post('/api/song-lists', authMiddleware, adminOrExco, async (req, res) => {
+  try {
+    const { event_id, status } = req.body;
+    const { data, error } = await supabaseAdmin
+      .from('song_lists')
+      .insert([{ event_id, status: status || 'draft', created_by: req.user.id }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.status(201).json(data);
+  } catch (err) {
+    console.error('Song list create error:', err);
+    res.status(500).json({ message: 'Failed to create song list' });
+  }
+});
+
+app.put('/api/song-lists/:id', authMiddleware, adminOrExco, async (req, res) => {
+  try {
+    const { status } = req.body;
+    const { data, error } = await supabaseAdmin
+      .from('song_lists')
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq('id', req.params.id)
+      .select()
+      .single();
+
+    if (error || !data) return res.status(404).json({ message: 'Song list not found' });
+    res.json(data);
+  } catch (err) {
+    console.error('Song list update error:', err);
+    res.status(500).json({ message: 'Failed to update song list' });
+  }
+});
+
+// ==================== SONG LIST ITEMS ROUTES ====================
+
+app.get('/api/song-list-items', async (req, res) => {
+  try {
+    const { song_list_id } = req.query;
+    let query = supabaseAdmin.from('song_list_items').select('*');
+    
+    if (song_list_id) {
+      query = query.eq('song_list_id', song_list_id);
+    }
+    
+    const { data, error } = await query.order('order_number', { ascending: true });
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    console.error('Song list items list error:', err);
+    res.status(500).json({ message: 'Failed to fetch song list items' });
+  }
+});
+
+app.post('/api/song-list-items', authMiddleware, adminOrExco, async (req, res) => {
+  try {
+    const { song_list_id, mass_part, title, score_id, order_number, notes } = req.body;
+    const { data, error } = await supabaseAdmin
+      .from('song_list_items')
+      .insert([{ song_list_id, mass_part, title, score_id, order_number: order_number || 1, notes }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.status(201).json(data);
+  } catch (err) {
+    console.error('Song list item create error:', err);
+    res.status(500).json({ message: 'Failed to create song list item' });
+  }
+});
+
+app.put('/api/song-list-items/:id', authMiddleware, adminOrExco, async (req, res) => {
+  try {
+    const { mass_part, title, score_id, order_number, notes } = req.body;
+    const { data, error } = await supabaseAdmin
+      .from('song_list_items')
+      .update({ mass_part, title, score_id, order_number, notes, updated_at: new Date().toISOString() })
+      .eq('id', req.params.id)
+      .select()
+      .single();
+
+    if (error || !data) return res.status(404).json({ message: 'Song list item not found' });
+    res.json(data);
+  } catch (err) {
+    console.error('Song list item update error:', err);
+    res.status(500).json({ message: 'Failed to update song list item' });
+  }
+});
+
+app.delete('/api/song-list-items/:id', authMiddleware, adminOrExco, async (req, res) => {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('song_list_items')
+      .delete()
+      .eq('id', req.params.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    console.error('Song list item delete error:', err);
+    res.status(500).json({ message: 'Failed to delete song list item' });
+  }
+});
+
+// ==================== SONG SEARCH ROUTE ====================
+
+app.get('/api/song-search', async (req, res) => {
+  try {
+    const { q = '', category = '' } = req.query;
+    const results = [];
+    
+    const searchSupabase = async () => {
+      let query = supabaseAdmin.from('scores').select('id, title, category, file_url, file_type, created_at');
+      if (q) query = query.ilike('title', `%${q}%`);
+      if (category) query = query.eq('category', category);
+      const { data, error } = await query.limit(20);
+      if (error) throw error;
+      return (data || []).map(s => ({ ...s, source: 'supabase' }));
+    };
+    
+    const searchDrive = async () => {
+      try {
+        const files = await driveService.listScores({ search: q });
+        return files.map(f => ({ id: f.id, title: f.name || 'Untitled', category: f.properties?.category || '', file_url: f.webViewLink || '', file_type: 'pdf', source: 'drive' }));
+      } catch {
+        return [];
+      }
+    };
+    
+    const [supabaseResults, driveResults] = await Promise.all([searchSupabase(), searchDrive()]);
+    results.push(...supabaseResults, ...driveResults);
+
+    if (category) {
+      const filtered = results.filter(r => (r.category || '').toLowerCase() === category.toLowerCase());
+      results.length = 0;
+      results.push(...filtered);
+    }
+    
+    const seen = new Set();
+    const unique = results.filter(r => {
+      const key = `${r.title}-${r.source}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+    
+    res.json(unique);
+  } catch (err) {
+    console.error('Song search error:', err);
+    res.status(500).json({ message: 'Failed to search songs' });
   }
 });
 

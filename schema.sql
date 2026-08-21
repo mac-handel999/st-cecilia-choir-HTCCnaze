@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS users (
   tenure TEXT,
   pledge_accepted BOOLEAN DEFAULT FALSE,
   role TEXT NOT NULL DEFAULT 'member' CHECK (role IN ('member', 'exco', 'admin')),
+  avatar_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
@@ -49,10 +50,13 @@ CREATE TABLE IF NOT EXISTS scores (
 CREATE TABLE IF NOT EXISTS events (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   title TEXT NOT NULL,
-  description TEXT,
+  type TEXT CHECK (type IN ('Mass/Liturgy', 'Rehearsal', 'Concert', 'Social Gathering')),
   event_date TEXT NOT NULL,
+  time TEXT,
+  description TEXT,
   location TEXT,
   image_url TEXT,
+  created_by UUID REFERENCES users(id) ON DELETE SET NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
@@ -108,7 +112,8 @@ CREATE TABLE IF NOT EXISTS attendance (
   reason TEXT,
   marked_by UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+  UNIQUE(member_id, event_date)
 );
 
 -- ============================================
@@ -121,6 +126,47 @@ CREATE TABLE IF NOT EXISTS chat_history (
   response TEXT NOT NULL,
   mode TEXT NOT NULL DEFAULT 'general',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+-- ============================================
+-- EVENT SONGS TABLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS event_songs (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  event_id UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  category TEXT NOT NULL DEFAULT 'general',
+  order_number INTEGER NOT NULL DEFAULT 1,
+  notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+-- ============================================
+-- SONG LISTS TABLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS song_lists (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  event_id UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+  created_by UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+-- ============================================
+-- SONG LIST ITEMS TABLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS song_list_items (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  song_list_id UUID NOT NULL REFERENCES song_lists(id) ON DELETE CASCADE,
+  mass_part TEXT NOT NULL,
+  title TEXT NOT NULL,
+  score_id UUID REFERENCES scores(id) ON DELETE SET NULL,
+  order_number INTEGER NOT NULL DEFAULT 1,
+  notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
 -- ============================================
@@ -152,6 +198,13 @@ CREATE INDEX IF NOT EXISTS idx_chat_history_created_at ON chat_history(created_a
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_gallery_created_at ON gallery(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_event_songs_event_id ON event_songs(event_id);
+CREATE INDEX IF NOT EXISTS idx_event_songs_order ON event_songs(order_number);
+CREATE INDEX IF NOT EXISTS idx_song_lists_event_id ON song_lists(event_id);
+CREATE INDEX IF NOT EXISTS idx_song_lists_status ON song_lists(status);
+CREATE INDEX IF NOT EXISTS idx_song_list_items_song_list_id ON song_list_items(song_list_id);
+CREATE INDEX IF NOT EXISTS idx_song_list_items_order ON song_list_items(order_number);
+CREATE INDEX IF NOT EXISTS idx_events_created_by ON events(created_by);
 
 -- ============================================
 -- ROW LEVEL SECURITY
@@ -164,7 +217,10 @@ ALTER TABLE gallery ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE attendance ENABLE ROW LEVEL SECURITY;
 ALTER TABLE chat_history ENABLE ROW LEVEL SECURITY;
+ALTER TABLE event_songs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE song_lists ENABLE ROW LEVEL SECURITY;
+ALTER TABLE song_list_items ENABLE ROW LEVEL SECURITY;
 
 -- Drop existing policies before recreating (idempotent)
 DO $$
@@ -198,6 +254,13 @@ BEGIN
   DROP POLICY IF EXISTS "Users can view own settings" ON user_settings;
   DROP POLICY IF EXISTS "Users can update own settings" ON user_settings;
   DROP POLICY IF EXISTS "Users can insert own settings" ON user_settings;
+  DROP POLICY IF EXISTS "Anyone can view song lists" ON song_lists;
+  DROP POLICY IF EXISTS "Exco and admin can insert song lists" ON song_lists;
+  DROP POLICY IF EXISTS "Exco and admin can update song lists" ON song_lists;
+  DROP POLICY IF EXISTS "Anyone can view song list items" ON song_list_items;
+  DROP POLICY IF EXISTS "Exco and admin can insert song list items" ON song_list_items;
+  DROP POLICY IF EXISTS "Exco and admin can update song list items" ON song_list_items;
+  DROP POLICY IF EXISTS "Exco and admin can delete song list items" ON song_list_items;
 END $$;
 
 -- Users policies
@@ -263,6 +326,39 @@ CREATE POLICY "Exco and admin can update attendance" ON attendance FOR UPDATE US
   EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role IN ('exco', 'admin'))
 );
 
+-- Event songs policies
+CREATE POLICY "Anyone can view event songs" ON event_songs FOR SELECT USING (true);
+CREATE POLICY "Exco and admin can insert event songs" ON event_songs FOR INSERT WITH CHECK (
+  EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role IN ('exco', 'admin'))
+);
+CREATE POLICY "Exco and admin can update event songs" ON event_songs FOR UPDATE USING (
+  EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role IN ('exco', 'admin'))
+);
+CREATE POLICY "Exco and admin can delete event songs" ON event_songs FOR DELETE USING (
+  EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role IN ('exco', 'admin'))
+);
+
+-- Song lists policies
+CREATE POLICY "Anyone can view song lists" ON song_lists FOR SELECT USING (true);
+CREATE POLICY "Exco and admin can insert song lists" ON song_lists FOR INSERT WITH CHECK (
+  EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role IN ('exco', 'admin'))
+);
+CREATE POLICY "Exco and admin can update song lists" ON song_lists FOR UPDATE USING (
+  EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role IN ('exco', 'admin'))
+);
+
+-- Song list items policies
+CREATE POLICY "Anyone can view song list items" ON song_list_items FOR SELECT USING (true);
+CREATE POLICY "Exco and admin can insert song list items" ON song_list_items FOR INSERT WITH CHECK (
+  EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role IN ('exco', 'admin'))
+);
+CREATE POLICY "Exco and admin can update song list items" ON song_list_items FOR UPDATE USING (
+  EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role IN ('exco', 'admin'))
+);
+CREATE POLICY "Exco and admin can delete song list items" ON song_list_items FOR DELETE USING (
+  EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role IN ('exco', 'admin'))
+);
+
 -- Chat history policies
 CREATE POLICY "Users can view own chat history" ON chat_history FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Users can insert own chat history" ON chat_history FOR INSERT WITH CHECK (auth.uid() = user_id);
@@ -302,6 +398,15 @@ BEGIN
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'chat_history') THEN
     ALTER PUBLICATION supabase_realtime ADD TABLE chat_history;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'event_songs') THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE event_songs;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'song_lists') THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE song_lists;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'song_list_items') THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE song_list_items;
   END IF;
 END $$;
 

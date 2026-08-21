@@ -739,7 +739,7 @@
   left: 0;
   right: 0;
   height: var(--bottom-nav-height);
-  background-color: var(--color-primary);
+  background-color: #4A0000;
   display: flex;
   justify-content: space-around;
   align-items: center;
@@ -756,7 +756,7 @@
   justify-content: center;
   gap: 0.25rem;
   padding: 0.5rem 0.75rem;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.85);
   font-size: 0.7rem;
   font-weight: 500;
   text-decoration: none;
@@ -909,7 +909,7 @@
   right: 0;
   height: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px));
   padding-bottom: env(safe-area-inset-bottom, 0px);
-  background-color: var(--color-primary);
+  background-color: #4A0000;
   display: flex;
   justify-content: space-around;
   align-items: center;

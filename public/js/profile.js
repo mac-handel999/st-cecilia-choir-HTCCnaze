@@ -19,7 +19,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const data = await api.get(`/users/${user.id}`);
     const initials = getInitials(data.full_name || data.username);
-    document.getElementById('profile-avatar').textContent = initials;
+    
+    const avatarImg = document.getElementById('profile-avatar');
+    const avatarInitials = document.getElementById('profile-avatar-initials');
+    
+    if (data.avatar_url) {
+      avatarImg.src = data.avatar_url;
+      avatarImg.style.display = 'block';
+      avatarInitials.style.display = 'none';
+    } else {
+      avatarImg.style.display = 'none';
+      avatarInitials.style.display = 'flex';
+      avatarInitials.textContent = initials;
+    }
     document.getElementById('profile-name').textContent = data.full_name || data.username;
     document.getElementById('profile-role').textContent = (data.choir_part || data.role || 'member').toString();
 
@@ -94,6 +106,58 @@ document.addEventListener('DOMContentLoaded', async () => {
           window.location.reload();
         } catch (error) {
           showAlert('edit-profile-alert', error.message || 'Failed to update profile', 'error');
+        }
+      });
+    }
+
+    const avatarUploadBtn = document.getElementById('avatar-upload-btn');
+    const avatarInput = document.getElementById('avatar-input');
+    const avatarImg = document.getElementById('profile-avatar');
+    const avatarInitials = document.getElementById('profile-avatar-initials');
+
+    if (avatarUploadBtn && avatarInput) {
+      avatarUploadBtn.addEventListener('click', () => avatarInput.click());
+
+      avatarInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (file.size > 10 * 1024 * 1024) {
+          Toast.error('Image size must not exceed 10MB');
+          return;
+        }
+
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+        if (!allowedTypes.includes(file.type)) {
+          Toast.error('Only JPG, PNG, and WebP images are allowed');
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+          avatarImg.src = event.target.result;
+          avatarImg.style.display = 'block';
+          avatarInitials.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+
+        const formData = new FormData();
+        formData.append('avatar', file);
+
+        avatarUploadBtn.disabled = true;
+        avatarUploadBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 18px;">hourglass_empty</span>';
+
+        try {
+          await api.post(`/users/${user.id}/avatar`, formData);
+          Toast.success('Profile picture updated!');
+          setTimeout(() => window.location.reload(), 1000);
+        } catch (error) {
+          Toast.error(error.message || 'Failed to upload avatar');
+          avatarImg.style.display = 'none';
+          avatarInitials.style.display = 'flex';
+        } finally {
+          avatarUploadBtn.disabled = false;
+          avatarUploadBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 18px;">camera_alt</span>';
         }
       });
     }

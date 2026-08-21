@@ -19,6 +19,24 @@ document.addEventListener('DOMContentLoaded', async () => {
       const adminLink = document.getElementById('admin-dashboard-link');
       if (adminLink) adminLink.classList.remove('hidden');
     }
+
+    const avatarImg = document.getElementById('home-avatar-img');
+    const avatarInitials = document.getElementById('home-avatar-initials');
+    const choirLogo = document.getElementById('home-choir-logo');
+    
+    if (user?.id) {
+      try {
+        const profileData = await api.get(`/users/${user.id}`);
+        if (profileData?.avatar_url) {
+          avatarImg.src = profileData.avatar_url;
+          avatarImg.style.display = 'block';
+          avatarInitials.style.display = 'none';
+          if (choirLogo) choirLogo.style.display = 'none';
+        }
+      } catch (e) {
+        console.error('Failed to load avatar:', e);
+      }
+    }
   } catch (error) {
     const cached = Auth.getUser();
     const welcomeEl = document.getElementById('welcome-username');

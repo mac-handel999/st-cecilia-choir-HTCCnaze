@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Song List Builder - St. Cecilia Choir HTCC Naze</title>
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#4A0000">
+  <link rel="icon" type="image/jpeg" href="IMAGES/choir-logo.jpg">
+  <link rel="apple-touch-icon" href="IMAGES/choir-logo.jpg">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="St. Cecilia Choir">
+  <style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .icon-fill {
+      font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .autocomplete-list {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      z-index: 50;
+      max-height: 200px;
+      overflow-y: auto;
+      display: none;
+    }
+    .autocomplete-list.active {
+      display: block;
+    }
+    .autocomplete-item {
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+      color: var(--color-text);
+      border-bottom: 1px solid var(--color-border-light);
+      transition: background 0.2s;
+    }
+    .autocomplete-item:hover {
+      background: var(--color-surface-alt);
+    }
+    .autocomplete-item:last-child {
+      border-bottom: none;
+    }
+    .autocomplete-meta {
+      font-size: 0.75rem;
+      color: var(--color-text-light);
+    }
+  </style>
+</head>
+<body class="portal-page">
+
+  <header class="portal-header">
+    <div class="portal-header-inner">
+      <a href="admin-dashboard.html" class="portal-logo">
+        <img src="IMAGES/choir-logo.jpg" alt="St. Cecilia Choir Logo" class="portal-logo-img">
+        <span class="portal-logo-text">St. Cecilia Choir</span>
+      </a>
+      <nav class="portal-nav">
+        <a href="admin-dashboard.html" class="portal-nav-link">Dashboard</a>
+        <a href="create-event.html" class="portal-nav-link">Create Event</a>
+        <a href="event-songs.html" class="portal-nav-link active">Song List Builder</a>
+        <a href="scores.html" class="portal-nav-link">Scores</a>
+      </nav>
+      <div class="portal-header-actions">
+        <a href="notifications.html" class="portal-icon-btn">
+          <span class="material-symbols-outlined">notifications</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-content portal-page-content">
+    <div class="container" style="padding-top: 2rem; padding-bottom: 3rem; max-width: 900px;">
+
+      <div style="text-align: center; margin-bottom: 2rem;">
+        <h1 class="page-title">Song List Builder</h1>
+        <p class="page-subtitle">Build and publish song plans for choir events</p>
+      </div>
+
+      <div class="card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+        <label class="form-label" for="event-select" style="font-size: 0.75rem; font-weight: 600; color: var(--color-text-light); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">Select Event</label>
+        <select id="event-select" class="form-select">
+          <option value="">Choose an event...</option>
+        </select>
+        <div id="event-info" style="margin-top: 1rem; display: none;">
+          <div style="display: flex; flex-wrap: wrap; gap: 1rem; padding: 1rem; background: var(--color-surface-alt); border-radius: var(--radius-lg);">
+            <div>
+              <span style="font-size: 0.75rem; color: var(--color-text-light); text-transform: uppercase; letter-spacing: 0.05em;">Date</span>
+              <p style="font-weight: 600; color: var(--color-text);" id="info-date">-</p>
+            </div>
+            <div>
+              <span style="font-size: 0.75rem; color: var(--color-text-light); text-transform: uppercase; letter-spacing: 0.05em;">Time</span>
+              <p style="font-weight: 600; color: var(--color-text);" id="info-time">-</p>
+            </div>
+            <div>
+              <span style="font-size: 0.75rem; color: var(--color-text-light); text-transform: uppercase; letter-spacing: 0.05em;">Location</span>
+              <p style="font-weight: 600; color: var(--color-text);" id="info-location">-</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="padding: 1.5rem; margin-bottom: 1.5rem;" id="add-song-card">
+        <h2 style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: var(--color-primary); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+          <span class="material-symbols-outlined">add_circle</span> Add Song to Event
+        </h2>
+        <form id="add-song-form" style="display: flex; flex-direction: column; gap: 1rem;">
+          <div class="grid grid-cols-1 md:grid-cols-2" style="gap: 1rem;">
+            <div style="position: relative;">
+              <label class="form-label" for="song-title">Hymn Title *</label>
+              <input type="text" id="song-title" class="form-control" placeholder="Search hymns..." required autocomplete="off"/>
+              <div class="autocomplete-list" id="song-autocomplete"></div>
+            </div>
+            <div>
+              <label class="form-label" for="song-mass-part">Mass Part *</label>
+              <select id="song-mass-part" class="form-select" required>
+                <option value="">Select mass part</option>
+                <option value="Introit">Introit</option>
+                <option value="Kyrie">Kyrie</option>
+                <option value="Gloria">Gloria</option>
+                <option value="Responsorial Psalm">Responsorial Psalm</option>
+                <option value="Offertory Hymn">Offertory Hymn</option>
+                <option value="Communion">Communion</option>
+                <option value="Dismissal">Dismissal</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2" style="gap: 1rem;">
+            <div>
+              <label class="form-label" for="song-order">Order Number</label>
+              <input type="number" id="song-order" class="form-control" placeholder="1" min="1" value="1"/>
+            </div>
+            <div>
+              <label class="form-label" for="song-notes">Notes</label>
+              <input type="text" id="song-notes" class="form-control" placeholder="e.g., SATB, Organ accompaniment"/>
+            </div>
+          </div>
+          <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            <button type="submit" class="btn btn-primary" id="add-song-btn">
+              <span class="material-symbols-outlined" style="font-size: 18px;">add</span> Add Song
+            </button>
+            <button type="button" class="btn btn-outline" id="add-score-btn">
+              <span class="material-symbols-outlined" style="font-size: 18px;">library_music</span> Add Score
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 1.5rem;" id="songs-list-card">
+        <div style="padding: 1rem 1.5rem; border-bottom: 1px solid var(--color-border-light); display: flex; justify-content: space-between; align-items: center;">
+          <h2 style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: var(--color-primary); margin: 0;">Songs List</h2>
+          <span style="font-size: 0.85rem; color: var(--color-text-muted);" id="song-count">0 songs</span>
+        </div>
+        <div id="songs-list">
+          <div class="empty-state">
+            <div class="empty-state-icon">library_music</div>
+            <div class="empty-state-title">No event selected</div>
+            <div class="empty-state-desc">Select an event above to build a song list</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="song-list-actions" style="display: none; gap: 1rem; margin-bottom: 2rem;">
+        <button class="btn btn-outline" id="save-draft-btn" style="flex: 1;">
+          <span class="material-symbols-outlined" style="font-size: 18px;">edit_note</span> Save Draft
+        </button>
+        <button class="btn btn-primary" id="publish-plan-btn" style="flex: 1;">
+          <span class="material-symbols-outlined" style="font-size: 18px;">publish</span> Publish Plan
+        </button>
+      </div>
+
+    </div>
+  </main>
+
+  <div id="toast-container"></div>
+
+  <script src="js/shared.js"></script>
+  <script src="js/event-songs.js"></script>
+  <nav class="portal-bottom-nav">
+    <a href="admin-dashboard.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">home</span>
+      <span>Home</span>
+    </a>
+    <a href="create-event.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">event</span>
+      <span>Events</span>
+    </a>
+    <a href="event-songs.html" class="portal-bottom-link active">
+      <span class="material-symbols-outlined">library_music</span>
+      <span>Songs</span>
+    </a>
+    <a href="members-directory.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">groups</span>
+      <span>Members</span>
+    </a>
+    <a href="profile.html" class="portal-bottom-link">
+      <span class="material-symbols-outlined">person</span>
+      <span>Profile</span>
+    </a>
+  </nav>
+</body>
+</html>

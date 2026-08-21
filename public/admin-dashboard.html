@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - St. Cecilia Choir HTCC Naze</title>
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#4A0000">
+  <link rel="icon" type="image/jpeg" href="IMAGES/choir-logo.jpg">
+  <link rel="apple-touch-icon" href="IMAGES/choir-logo.jpg">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="St. Cecilia Choir">
+  <style>
+    .admin-sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 280px;
+      height: 100vh;
+      background: var(--color-primary);
+      color: #fff;
+      z-index: 200;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      overflow-y: auto;
+    }
+    .admin-sidebar.active {
+      transform: translateX(0);
+    }
+    .admin-sidebar-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 199;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .admin-sidebar-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .admin-sidebar-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .admin-sidebar-header img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--color-accent);
+    }
+    .admin-sidebar-nav {
+      padding: 1rem 0;
+    }
+    .admin-sidebar-nav a {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.875rem 1.5rem;
+      color: rgba(255,255,255,0.85);
+      text-decoration: none;
+      font-size: 0.95rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .admin-sidebar-nav a:hover,
+    .admin-sidebar-nav a.active {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+    }
+    .admin-sidebar-nav a.active {
+      border-left: 3px solid var(--color-accent);
+    }
+    .admin-sidebar-nav a .material-symbols-outlined {
+      font-size: 22px;
+    }
+    .admin-sidebar-footer {
+      padding: 1.5rem;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      margin-top: auto;
+    }
+    .admin-main {
+      margin-left: 0;
+      min-height: 100vh;
+      padding-top: calc(var(--header-height) + 1.5rem);
+      padding-bottom: 3rem;
+    }
+    @media (min-width: 1024px) {
+      .admin-sidebar {
+        transform: translateX(0);
+      }
+      .admin-main {
+        margin-left: 280px;
+      }
+      .admin-sidebar-overlay {
+        display: none;
+      }
+    }
+    .admin-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: var(--header-height);
+      background: var(--color-surface);
+      border-bottom: 1px solid var(--color-border-light);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.25rem;
+    }
+    @media (min-width: 1024px) {
+      .admin-header {
+        left: 280px;
+      }
+    }
+    .stat-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border-light);
+      border-radius: var(--radius-xl);
+      padding: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      transition: all 0.2s;
+    }
+    .stat-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .stat-icon-primary { background: rgba(74, 0, 0, 0.1); color: var(--color-primary); }
+    .stat-icon-accent { background: rgba(201, 154, 60, 0.15); color: var(--color-accent); }
+    .stat-icon-success { background: rgba(22, 163, 74, 0.1); color: var(--color-success); }
+    .stat-icon-info { background: rgba(37, 99, 235, 0.1); color: var(--color-info); }
+    .stat-value {
+      font-family: var(--font-heading);
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      line-height: 1;
+    }
+    .stat-label {
+      font-size: 0.85rem;
+      color: var(--color-text-muted);
+      margin-top: 0.25rem;
+    }
+  </style>
+</head>
+<body>
+  <!-- Admin Header -->
+  <header class="admin-header">
+    <div style="display: flex; align-items: center; gap: 1rem;">
+      <button id="sidebar-toggle" class="admin-sidebar-toggle" style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: var(--radius-lg); background: transparent; border: none; cursor: pointer; color: var(--color-text);">
+        <span class="material-symbols-outlined">menu</span>
+      </button>
+      <div>
+        <h1 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: var(--color-primary);">Admin Dashboard</h1>
+        <p style="font-size: 0.8rem; color: var(--color-text-muted);">Manage choir operations</p>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 1rem;">
+      <a href="index.html" class="btn btn-outline btn-sm">Exit Portal</a>
+      <button onclick="Auth.logout().then(() => { window.location.href = 'index.html'; })" class="btn btn-sm" style="background: var(--color-error); color: #fff;">Logout</button>
+    </div>
+  </header>
+
+  <!-- Sidebar Overlay -->
+  <div class="admin-sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- Admin Sidebar -->
+  <aside class="admin-sidebar" id="sidebar">
+    <div class="admin-sidebar-header">
+      <img src="IMAGES/choir-logo.jpg" alt="Choir Logo">
+      <div>
+        <div style="font-weight: 700; font-size: 0.95rem;">St. Cecilia Choir</div>
+        <div style="font-size: 0.75rem; opacity: 0.7;">Admin Portal</div>
+      </div>
+    </div>
+    <nav class="admin-sidebar-nav">
+      <a href="admin-dashboard.html" class="active">
+        <span class="material-symbols-outlined">dashboard</span> Dashboard
+      </a>
+      <a href="create-event.html">
+        <span class="material-symbols-outlined">event</span> Create Event
+      </a>
+      <a href="event-songs.html">
+        <span class="material-symbols-outlined">library_music</span> Event Songs
+      </a>
+      <a href="scores.html">
+        <span class="material-symbols-outlined">upload_file</span> Manage Scores
+      </a>
+      <a href="members-directory.html">
+        <span class="material-symbols-outlined">groups</span> Members
+      </a>
+      <a href="attendance.html">
+        <span class="material-symbols-outlined">fact_check</span> Attendance
+      </a>
+      <a href="executives.html">
+        <span class="material-symbols-outlined">badge</span> Executives
+      </a>
+      <a href="notifications.html">
+        <span class="material-symbols-outlined">campaign</span> Notifications
+      </a>
+    </nav>
+    <div class="admin-sidebar-footer">
+      <p style="font-size: 0.8rem; opacity: 0.7; margin-bottom: 0.5rem;">Logged in as</p>
+      <p style="font-weight: 600; font-size: 0.9rem;" id="admin-user-name">Admin</p>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="admin-main">
+    <div class="container" style="padding-top: 1.5rem; padding-bottom: 3rem;">
+      
+      <!-- Stats Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="stat-card">
+          <div class="stat-icon stat-icon-primary">
+            <span class="material-symbols-outlined">groups</span>
+          </div>
+          <div>
+            <div class="stat-value" id="stat-members">-</div>
+            <div class="stat-label">Total Members</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon stat-icon-accent">
+            <span class="material-symbols-outlined">library_music</span>
+          </div>
+          <div>
+            <div class="stat-value" id="stat-scores">-</div>
+            <div class="stat-label">Total Scores</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon stat-icon-success">
+            <span class="material-symbols-outlined">event</span>
+          </div>
+          <div>
+            <div class="stat-value" id="stat-events">-</div>
+            <div class="stat-label">Events</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon stat-icon-info">
+            <span class="material-symbols-outlined">fact_check</span>
+          </div>
+          <div>
+            <div class="stat-value" id="stat-attendance">-</div>
+            <div class="stat-label">Attendance Records</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="card" style="padding: 1.5rem; margin-bottom: 2rem;">
+        <h2 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: var(--color-primary); margin-bottom: 1.25rem;">Quick Actions</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <a href="create-event.html" class="card" style="padding: 1.25rem; text-align: center; text-decoration: none; transition: all 0.2s;">
+            <span class="material-symbols-outlined" style="font-size: 32px; color: var(--color-primary); display: block; margin-bottom: 0.5rem;">event</span>
+            <span style="font-weight: 600; color: var(--color-text); font-size: 0.9rem;">Create Event</span>
+          </a>
+          <a href="event-songs.html" class="card" style="padding: 1.25rem; text-align: center; text-decoration: none; transition: all 0.2s;">
+            <span class="material-symbols-outlined" style="font-size: 32px; color: var(--color-accent); display: block; margin-bottom: 0.5rem;">library_music</span>
+            <span style="font-weight: 600; color: var(--color-text); font-size: 0.9rem;">Manage Songs</span>
+          </a>
+          <a href="scores.html" class="card" style="padding: 1.25rem; text-align: center; text-decoration: none; transition: all 0.2s;">
+            <span class="material-symbols-outlined" style="font-size: 32px; color: var(--color-success); display: block; margin-bottom: 0.5rem;">upload_file</span>
+            <span style="font-weight: 600; color: var(--color-text); font-size: 0.9rem;">Upload Score</span>
+          </a>
+          <a href="notifications.html" class="card" style="padding: 1.25rem; text-align: center; text-decoration: none; transition: all 0.2s;">
+            <span class="material-symbols-outlined" style="font-size: 32px; color: var(--color-info); display: block; margin-bottom: 0.5rem;">campaign</span>
+            <span style="font-weight: 600; color: var(--color-text); font-size: 0.9rem;">Send Notice</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="card" style="padding: 1.5rem;">
+          <h3 style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: var(--color-primary); margin-bottom: 1rem;">Recent Members</h3>
+          <div id="recent-members"><div class="spinner"></div></div>
+        </div>
+        <div class="card" style="padding: 1.5rem;">
+          <h3 style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: var(--color-primary); margin-bottom: 1rem;">Upcoming Events</h3>
+          <div id="upcoming-events"><div class="spinner"></div></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <div id="toast-container"></div>
+
+  <script src="js/shared.js"></script>
+  <script src="js/admin-dashboard.js"></script>
+</body>
+</html>
