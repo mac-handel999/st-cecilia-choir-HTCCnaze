@@ -16,11 +16,31 @@ document.addEventListener('DOMContentLoaded', async () => {
   const username = user?.username || user?.full_name || 'You';
   const chatHistory = [];
 
+  let userAvatarUrl = null;
+
+  async function loadUserAvatar() {
+    try {
+      const userData = await api.get('/auth/me');
+      if (userData?.avatar_url) {
+        userAvatarUrl = userData.avatar_url;
+      }
+    } catch (e) {
+      console.warn('Failed to load user avatar for chat:', e);
+    }
+  }
+
+  loadUserAvatar();
+
   function addUserBubble(text) {
     const wrapper = document.createElement('div');
     wrapper.className = 'chat-row chat-row-user';
+    
+    const avatarHtml = userAvatarUrl
+      ? `<img src="${escapeHtml(userAvatarUrl)}?t=${Date.now()}" alt="${escapeHtml(username)}" class="chat-user-avatar-img" title="${escapeHtml(username)}" loading="lazy" />`
+      : `<div class="chat-user-avatar" title="${escapeHtml(username)}">${escapeHtml(getInitials(username))}</div>`;
+    
     wrapper.innerHTML = `
-      <div class="chat-user-avatar" title="${escapeHtml(username)}">${escapeHtml(getInitials(username))}</div>
+      ${avatarHtml}
       <div class="chat-bubble chat-bubble-user">
         <div class="chat-bubble-header">${escapeHtml(username)}</div>
         <div class="chat-bubble-body">${escapeHtml(text)}</div>

@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const response = await fetch('/api/drive/scores/upload', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${localStorage.getItem('token') || sessionStorage.getItem('token')}`
           },
           body: formData
         });

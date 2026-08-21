@@ -8,9 +8,8 @@ const API_BASE = (() => {
 
 const api = {
   async request(endpoint, options = {}) {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     const headers = {
-      'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {})
     };
 
@@ -20,8 +19,7 @@ const api = {
     });
 
     if (res.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      clearCurrentUser();
       window.location.href = 'login.html';
       throw new Error('Unauthorized');
     }
@@ -46,11 +44,27 @@ const api = {
   },
 
   post(endpoint, body) {
-    return this.request(endpoint, { method: 'POST', body: JSON.stringify(body) });
+    const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
+    const options = { method: 'POST' };
+    if (isFormData) {
+      options.body = body;
+    } else {
+      options.body = JSON.stringify(body);
+      options.headers = { 'Content-Type': 'application/json' };
+    }
+    return this.request(endpoint, options);
   },
 
   put(endpoint, body) {
-    return this.request(endpoint, { method: 'PUT', body: JSON.stringify(body) });
+    const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
+    const options = { method: 'PUT' };
+    if (isFormData) {
+      options.body = body;
+    } else {
+      options.body = JSON.stringify(body);
+      options.headers = { 'Content-Type': 'application/json' };
+    }
+    return this.request(endpoint, options);
   },
 
   delete(endpoint) {
@@ -59,17 +73,23 @@ const api = {
 };
 
 function getCurrentUser() {
-  const user = localStorage.getItem('user') || sessionStorage.getItem('user');
-  return user ? JSON.parse(user) : null;
+  const local = localStorage.getItem('user');
+  const session = sessionStorage.getItem('user');
+  const raw = local || session;
+  return raw ? JSON.parse(raw) : null;
 }
 
 function setCurrentUser(user, token, remember = false) {
   if (remember) {
     localStorage.setItem('user', JSON.stringify(user));
     localStorage.setItem('token', token);
+    sessionStorage.removeItem('user');
+    sessionStorage.removeItem('token');
   } else {
     sessionStorage.setItem('user', JSON.stringify(user));
     sessionStorage.setItem('token', token);
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
   }
 }
 
@@ -81,7 +101,7 @@ function clearCurrentUser() {
 }
 
 function requireAuth() {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
   if (!token) {
     window.location.href = 'login.html';
     return false;
@@ -175,7 +195,7 @@ const Auth = {
   },
 
   isLoggedIn() {
-    return !!localStorage.getItem('token');
+    return !!localStorage.getItem('token') || !!sessionStorage.getItem('token');
   },
 
   getUser() {
@@ -263,7 +283,7 @@ const Realtime = {
   },
 
   startConnection(table) {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     if (!token) return;
 
     const isExpressServer = window.location.port === '5000' || window.location.port === '';
@@ -387,7 +407,7 @@ function renderPortalHeader(activePage = '') {
   return `
     <header class="app-header portal-header">
       <a href="index.html" class="header-logo-wrap" title="Back to landing page">
-        <img src="IMAGES/choir-logo.jpg" alt="Choir Logo" class="header-logo">
+        <img loading="lazy" src="IMAGES/choir-logo.jpg" alt="Choir Logo" class="header-logo">
         <h1 class="font-bold" style="font-size: 1.2rem; color: #fff;">St. Cecilia Choir</h1>
       </a>
       <nav class="desktop-nav">${navLinks}</nav>
@@ -438,7 +458,7 @@ function renderPublicHeader(activePage = '') {
     <header class="site-header">
       <div class="header-inner">
         <a href="index.html" class="header-logo">
-          <img src="IMAGES/choir-logo.jpg" alt="St. Cecilia Choir Logo" class="header-logo-img">
+          <img loading="lazy" src="IMAGES/choir-logo.jpg" alt="St. Cecilia Choir Logo" class="header-logo-img">
           <span class="header-logo-text">St. Cecilia Choir</span>
         </a>
         <nav class="header-nav">
@@ -453,7 +473,7 @@ function renderPublicHeader(activePage = '') {
     </header>
     <header class="mobile-header">
       <a href="index.html" class="mobile-logo">
-        <img src="IMAGES/choir-logo.jpg" alt="St. Cecilia Choir Logo" class="mobile-logo-img">
+        <img loading="lazy" src="IMAGES/choir-logo.jpg" alt="St. Cecilia Choir Logo" class="mobile-logo-img">
         <span class="mobile-logo-text">St. Cecilia Choir</span>
       </a>
       <button class="mobile-menu-btn" id="mobile-menu-btn-mobile" aria-label="Open menu">
@@ -494,7 +514,7 @@ function renderHeader(options = {}) {
     <header class="site-header">
       <div class="header-inner">
         <a href="index.html" class="header-logo">
-          <img src="IMAGES/choir-logo.jpg" alt="St. Cecilia Choir Logo" class="header-logo-img">
+          <img loading="lazy" src="IMAGES/choir-logo.jpg" alt="St. Cecilia Choir Logo" class="header-logo-img">
           <span class="header-logo-text">St. Cecilia Choir</span>
         </a>
         <nav class="header-nav">
@@ -516,7 +536,7 @@ function renderMobileHeader(options = {}) {
   return `
     <header class="mobile-header">
       <a href="index.html" class="mobile-logo">
-        <img src="IMAGES/choir-logo.jpg" alt="St. Cecilia Choir Logo" class="mobile-logo-img">
+        <img loading="lazy" src="IMAGES/choir-logo.jpg" alt="St. Cecilia Choir Logo" class="mobile-logo-img">
         <span class="mobile-logo-text">St. Cecilia Choir</span>
       </a>
       ${showMenuBtn ? `<button class="mobile-menu-btn" id="mobile-menu-btn">${getIcon('menu', 24)}</button>` : ''}

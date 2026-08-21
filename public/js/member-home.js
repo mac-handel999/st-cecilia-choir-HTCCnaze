@@ -24,18 +24,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     const avatarInitials = document.getElementById('home-avatar-initials');
     const choirLogo = document.getElementById('home-choir-logo');
     
-    if (user?.id) {
-      try {
-        const profileData = await api.get(`/users/${user.id}`);
-        if (profileData?.avatar_url) {
-          avatarImg.src = profileData.avatar_url;
-          avatarImg.style.display = 'block';
-          avatarInitials.style.display = 'none';
-          if (choirLogo) choirLogo.style.display = 'none';
-        }
-      } catch (e) {
-        console.error('Failed to load avatar:', e);
-      }
+    const avatarUrl = user?.avatar_url;
+    if (avatarUrl) {
+      avatarImg.src = avatarUrl + '?t=' + Date.now();
+      avatarImg.style.display = 'block';
+      avatarInitials.style.display = 'none';
+      if (choirLogo) choirLogo.style.display = 'none';
+    } else {
+      avatarImg.style.display = 'none';
+      avatarInitials.style.display = 'inline-flex';
+      if (choirLogo) choirLogo.style.display = 'inline-block';
     }
   } catch (error) {
     const cached = Auth.getUser();
@@ -228,7 +226,7 @@ async function loadUpcomingEvent() {
     }
 
     container.innerHTML = `
-      ${upcoming.image_url ? `<img src="${escapeHtml(upcoming.image_url)}" alt="${escapeHtml(upcoming.title)}" class="upcoming-event-img">` : '<div class="upcoming-event-img upcoming-event-placeholder"><span class="material-symbols-outlined">church</span></div>'}
+      ${upcoming.image_url ? `<img src="${escapeHtml(upcoming.image_url)}" alt="${escapeHtml(upcoming.title)}" class="upcoming-event-img" loading="lazy">` : '<div class="upcoming-event-img upcoming-event-placeholder"><span class="material-symbols-outlined">church</span></div>'}
       <div class="upcoming-event-body">
         <span class="bento-badge">Upcoming</span>
         <h4>${escapeHtml(upcoming.title)}</h4>

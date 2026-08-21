@@ -17,14 +17,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     currentUser = user;
 
-    const data = await api.get(`/users/${user.id}`);
+    let data;
+    try {
+      data = await api.get(`/users/${user.id}`);
+    } catch (fetchError) {
+      if (fetchError.message?.includes('404') || fetchError.message?.includes('not found')) {
+        Toast.error('Profile not found in database. Using cached info.');
+        data = { ...user };
+      } else {
+        throw fetchError;
+      }
+    }
+
     const initials = getInitials(data.full_name || data.username);
     
     const avatarImg = document.getElementById('profile-avatar');
     const avatarInitials = document.getElementById('profile-avatar-initials');
     
     if (data.avatar_url) {
-      avatarImg.src = data.avatar_url;
+      avatarImg.src = data.avatar_url + '?t=' + Date.now();
       avatarImg.style.display = 'block';
       avatarInitials.style.display = 'none';
     } else {
@@ -112,8 +123,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const avatarUploadBtn = document.getElementById('avatar-upload-btn');
     const avatarInput = document.getElementById('avatar-input');
-    const avatarImg = document.getElementById('profile-avatar');
-    const avatarInitials = document.getElementById('profile-avatar-initials');
 
     if (avatarUploadBtn && avatarInput) {
       avatarUploadBtn.addEventListener('click', () => avatarInput.click());

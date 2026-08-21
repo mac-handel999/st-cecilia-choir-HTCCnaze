@@ -36,9 +36,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       const initials = getInitials(m.full_name || m.username);
       const isExco = m.role === 'exco' || m.role === 'admin' || m.executive_position;
       const avatarHtml = m.avatar_url
-        ? `<img src="${escapeHtml(m.avatar_url)}" alt="${escapeHtml(m.full_name || m.username)}" class="member-avatar-img" />`
+        ? `<img src="${escapeHtml(m.avatar_url)}?t=${Date.now()}" alt="${escapeHtml(m.full_name || m.username)}" class="member-avatar-img" loading="lazy" />`
         : `<div class="member-avatar ${isExco ? 'member-avatar-gold' : ''}">${initials}</div>`;
-      return `<article class="member-card ${isExco ? 'member-card-exco' : ''}">
+      return `<article class="member-card ${isExco ? 'member-card-exco' : ''}" data-member-id="${m.id}" onclick="openMemberProfile('${m.id}')">
         ${avatarHtml}
         <div style="flex: 1; min-width: 0;">
           <div style="font-weight: 600; color: var(--color-primary); font-size: 0.95rem;">${escapeHtml(m.full_name || m.username)}</div>
@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           ${m.date_of_birth ? `<div style="font-size: 0.75rem; color: var(--color-text-light);">🎂 ${escapeHtml(formatBirthday(m.date_of_birth))}</div>` : ''}
           ${m.executive_position ? `<div style="font-size: 0.75rem; color: var(--color-accent); margin-top: 0.25rem; font-weight: 600;">${escapeHtml(m.executive_position)}</div>` : ''}
         </div>
-        ${m.phone_number ? `<a href="tel:${escapeHtml(m.phone_number.replace(/\s/g, ''))}" class="member-contact-btn" title="Call"><span class="material-symbols-outlined">call</span></a>` : ''}
+        ${m.phone_number ? `<a href="tel:${escapeHtml(m.phone_number.replace(/\s/g, ''))}" class="member-contact-btn" title="Call" onclick="event.stopPropagation()"><span class="material-symbols-outlined">call</span></a>` : ''}
       </article>`;
     }).join('')}</div>`;
   }
@@ -98,3 +98,45 @@ document.addEventListener('DOMContentLoaded', async () => {
     }).catch(() => {});
   });
 });
+
+async function openMemberProfile(memberId) {
+  const modal = document.getElementById('member-profile-modal');
+  const content = document.getElementById('member-profile-content');
+  if (!modal || !content) return;
+
+  modal.classList.add('active');
+  content.innerHTML = '<div class="spinner" style="margin: 2rem auto;"></div>';
+
+  try {
+    const member = await api.get(`/users/${memberId}`);
+    const initials = getInitials(member.full_name || member.username);
+    const avatarHtml = member.avatar_url
+      ? `<img src="${escapeHtml(member.avatar_url)}?t=${Date.now()}" alt="${escapeHtml(member.full_name || member.username)}" style="width: 120px; height: 120px; border-radius: 50%; object-fit: contain; border: 4px solid var(--color-accent); margin-bottom: 1rem;" loading="lazy" />`
+      : `<div style="width: 120px; height: 120px; border-radius: 50%; background: var(--color-primary); color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; border: 4px solid var(--color-accent);">${initials}</div>`;
+
+    content.innerHTML = `
+      <div style="text-align: center; margin-bottom: 1.5rem;">
+        ${avatarHtml}
+        <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: var(--color-primary); margin-bottom: 0.25rem;">${escapeHtml(member.full_name || member.username)}</h3>
+        <p style="color: var(--color-text-muted); font-size: 0.9rem;">@${escapeHtml(member.username || '')}</p>
+        ${member.role === 'exco' || member.role === 'admin' || member.executive_position ? '<span class="badge badge-accent" style="margin-top: 0.5rem; display: inline-block;">Executive</span>' : ''}
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        ${member.choir_part ? `<div class="info-item"><div class="info-icon"><span class="material-symbols-outlined">music_note</span></div><div><div class="info-label">Choir Part</div><div class="info-value">${escapeHtml(member.choir_part)}</div></div></div>` : ''}
+        ${member.phone_number ? `<div class="info-item"><div class="info-icon"><span class="material-symbols-outlined">phone</span></div><div><div class="info-label">Phone</div><div class="info-value">${escapeHtml(member.phone_number)}</div></div></div>` : ''}
+        ${member.email ? `<div class="info-item"><div class="info-icon"><span class="material-symbols-outlined">mail</span></div><div><div class="info-label">Email</div><div class="info-value">${escapeHtml(member.email)}</div></div></div>` : ''}
+        ${member.address ? `<div class="info-item"><div class="info-icon"><span class="material-symbols-outlined">location_on</span></div><div><div class="info-label">Address</div><div class="info-value">${escapeHtml(member.address)}</div></div></div>` : ''}
+        ${member.date_of_birth ? `<div class="info-item"><div class="info-icon"><span class="material-symbols-outlined">cake</span></div><div><div class="info-label">Date of Birth</div><div class="info-value">${escapeHtml(member.date_of_birth)}</div></div></div>` : ''}
+        ${member.executive_position ? `<div class="info-item"><div class="info-icon"><span class="material-symbols-outlined">admin_panel_settings</span></div><div><div class="info-label">Executive Position</div><div class="info-value">${escapeHtml(member.executive_position)}</div></div></div>` : ''}
+        ${member.tenure ? `<div class="info-item"><div class="info-icon"><span class="material-symbols-outlined">event</span></div><div><div class="info-label">Tenure</div><div class="info-value">${escapeHtml(member.tenure)}</div></div></div>` : ''}
+      </div>
+    `;
+  } catch (error) {
+    content.innerHTML = `<div class="empty-state"><div class="empty-state-title">Failed to load profile</div><div class="empty-state-desc">${escapeHtml(error.message)}</div></div>`;
+  }
+}
+
+function closeMemberProfile() {
+  const modal = document.getElementById('member-profile-modal');
+  if (modal) modal.classList.remove('active');
+}

@@ -248,6 +248,10 @@ BEGIN
   DROP POLICY IF EXISTS "Users can view attendance" ON attendance;
   DROP POLICY IF EXISTS "Exco and admin can insert attendance" ON attendance;
   DROP POLICY IF EXISTS "Exco and admin can update attendance" ON attendance;
+  DROP POLICY IF EXISTS "Anyone can view event songs" ON event_songs;
+  DROP POLICY IF EXISTS "Exco and admin can insert event songs" ON event_songs;
+  DROP POLICY IF EXISTS "Exco and admin can update event songs" ON event_songs;
+  DROP POLICY IF EXISTS "Exco and admin can delete event songs" ON event_songs;
   DROP POLICY IF EXISTS "Users can view own chat history" ON chat_history;
   DROP POLICY IF EXISTS "Users can insert own chat history" ON chat_history;
   DROP POLICY IF EXISTS "Users can delete own chat history" ON chat_history;

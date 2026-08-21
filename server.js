@@ -203,15 +203,16 @@ app.get('/api/auth/me', authMiddleware, async (req, res) => {
   try {
     const { data: user, error } = await supabaseAdmin
       .from('users')
-      .select('id, email, username, full_name, phone_number, address, date_of_birth, marital_status, choir_part, executive_position, tenure, pledge_accepted, role, created_at, updated_at')
+      .select('id, email, username, full_name, phone_number, address, date_of_birth, marital_status, choir_part, executive_position, tenure, pledge_accepted, role, avatar_url, created_at, updated_at')
       .eq('id', req.user.id)
       .single();
 
     if (error || !user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: 'User not found in database' });
     }
 
-    res.json(user);
+    const { password: _, ...userWithoutPassword } = user;
+    res.json(userWithoutPassword);
   } catch (err) {
     console.error('Me error:', err);
     res.status(500).json({ message: 'Failed to fetch user' });
@@ -366,7 +367,33 @@ app.post('/api/users/:id/avatar', authMiddleware, upload.single('avatar'), async
     const fileExtension = file.originalname.split('.').pop() || 'jpg';
     const fileName = `${userId}/avatar-${Date.now()}.${fileExtension}`;
 
-    const { data: uploadData, error: uploadError } = await supabaseAdmin
+    // Delete old avatar if exists (non-fatal)
+    try {
+      const { data: existingUser } = await supabaseAdmin
+        .from('users')
+        .select('avatar_url')
+        .eq('id', userId)
+        .single();
+
+      if (existingUser?.avatar_url) {
+        const pathMatch = existingUser.avatar_url.match(/\/storage\/v1\/object\/public\/[^/]+\/(.+)$/);
+        if (pathMatch) {
+          await supabaseAdmin.storage.from(AVATAR_BUCKET).remove([pathMatch[1]]);
+        }
+      }
+    } catch (deleteError) {
+      console.warn('Old avatar deletion failed:', deleteError);
+    }
+
+    // Verify bucket exists
+    try {
+      await supabaseAdmin.storage.from(AVATAR_BUCKET).list('', { limit: 1 });
+    } catch (bucketError) {
+      console.error('Avatar bucket check error:', bucketError);
+      return res.status(500).json({ message: `Storage bucket "${AVATAR_BUCKET}" not found or not accessible. Please create it in Supabase Storage and set it to Public.` });
+    }
+
+    const { error: uploadError } = await supabaseAdmin
       .storage
       .from(AVATAR_BUCKET)
       .upload(fileName, file.buffer, {
@@ -376,13 +403,25 @@ app.post('/api/users/:id/avatar', authMiddleware, upload.single('avatar'), async
 
     if (uploadError) {
       console.error('Avatar upload error:', uploadError);
-      return res.status(500).json({ message: 'Failed to upload avatar' });
+      return res.status(500).json({ message: `Upload failed: ${uploadError.message || 'Storage error'}` });
     }
 
-    const { data: { publicUrl } } = supabaseAdmin
-      .storage
-      .from(AVATAR_BUCKET)
-      .getPublicUrl(fileName);
+    let publicUrl = '';
+    const publicUrlResult = supabaseAdmin.storage.from(AVATAR_BUCKET).getPublicUrl(fileName);
+    if (publicUrlResult?.data?.publicUrl) {
+      publicUrl = publicUrlResult.data.publicUrl;
+    } else if (publicUrlResult?.data?.publicURL) {
+      publicUrl = publicUrlResult.data.publicURL;
+    } else if (typeof publicUrlResult === 'string') {
+      publicUrl = publicUrlResult;
+    } else if (publicUrlResult?.publicUrl) {
+      publicUrl = publicUrlResult.publicUrl;
+    }
+
+    if (!publicUrl) {
+      console.error('Avatar public URL error:', publicUrlResult);
+      return res.status(500).json({ message: 'Failed to get avatar public URL' });
+    }
 
     await supabaseAdmin
       .from('users')
@@ -392,7 +431,7 @@ app.post('/api/users/:id/avatar', authMiddleware, upload.single('avatar'), async
     res.json({ avatar_url: publicUrl });
   } catch (err) {
     console.error('Avatar upload error:', err);
-    res.status(500).json({ message: 'Failed to upload avatar' });
+    res.status(500).json({ message: err.message || 'Failed to upload avatar' });
   }
 });
 

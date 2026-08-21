@@ -61,17 +61,29 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Marquee
   const marqueeContent = document.getElementById('marquee-content');
+  const marqueeContainer = document.getElementById('marquee-container');
   if (marqueeContent && imageJsonData.length > 0) {
     const items = imageJsonData.map(item => `
       <div style="flex-shrink: 0; width: 200px; margin-right: 1rem;">
-        <img src="${escapeHtml(item.url)}" alt="${escapeHtml(item.caption || '')}" style="width: 100%; height: 150px; object-fit: cover; border-radius: var(--radius-lg);" loading="lazy" onerror="this.style.display='none'">
+        <img src="${escapeHtml(item.url)}" alt="${escapeHtml(item.caption || '')}" style="width: 100%; height: 150px; object-fit: contain; border-radius: var(--radius-lg);" loading="lazy" onerror="this.style.display='none'">
       </div>
     `).join('');
     marqueeContent.innerHTML = `
-      <div style="display: flex; animation: marquee 30s linear infinite; width: max-content;">
+      <div class="marquee-track" style="display: flex; animation: marquee 60s linear infinite; width: max-content;">
         ${items}${items}
       </div>
     `;
+
+    if (marqueeContainer) {
+      marqueeContainer.addEventListener('mouseenter', () => {
+        const track = marqueeContent.querySelector('.marquee-track');
+        if (track) track.style.animationPlayState = 'paused';
+      });
+      marqueeContainer.addEventListener('mouseleave', () => {
+        const track = marqueeContent.querySelector('.marquee-track');
+        if (track) track.style.animationPlayState = 'running';
+      });
+    }
   }
 
   // Image Carousel
@@ -86,7 +98,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     carouselTrack.innerHTML = imageJsonData.map(item => `
       <div style="min-width: 100%; height: 400px;">
-        <img src="${escapeHtml(item.url)}" alt="${escapeHtml(item.caption || '')}" style="width: 100%; height: 100%; object-fit: cover;" loading="lazy" onerror="this.style.display='none'">
+        <img src="${escapeHtml(item.url)}" alt="${escapeHtml(item.caption || '')}" style="width: 100%; height: 100%; object-fit: contain;" loading="lazy" onerror="this.style.display='none'">
       </div>
     `).join('');
 
@@ -149,7 +161,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     videoTrack.innerHTML = videoData.map(item => `
       <div style="min-width: 100%; height: 400px; display: flex; align-items: center; justify-content: center; background: #000; position: relative;">
-        <video src="${escapeHtml(item.url)}" title="${escapeHtml(item.title || 'Video')}" controlsList="nodownload" style="width: 100%; height: 100%; object-fit: contain;" preload="metadata"></video>
+        <video src="${escapeHtml(item.url)}" title="${escapeHtml(item.title || 'Video')}" controlsList="nodownload" style="width: 100%; height: 100%; object-fit: contain;" preload="metadata" muted></video>
       </div>
     `).join('');
 
@@ -159,11 +171,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       `).join('');
     }
 
+    function getCurrentVideoElement() {
+      const videos = videoTrack.querySelectorAll('video');
+      return videos[currentVideo] || videos[0];
+    }
+
     function updateVideoCarousel() {
       videoTrack.style.transform = `translateX(-${currentVideo * 100}%)`;
-      const video = videoTrack.querySelector('video');
+      const video = getCurrentVideoElement();
       if (video) {
         video.muted = isMuted;
+        video.load();
       }
       if (videoDots) {
         videoDots.querySelectorAll('.carousel-dot').forEach((dot, i) => {
@@ -198,6 +216,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (videoMuteBtn) {
       videoMuteBtn.addEventListener('click', () => {
         isMuted = !isMuted;
+        const video = getCurrentVideoElement();
+        if (video) {
+          video.muted = isMuted;
+        }
         videoMuteBtn.innerHTML = isMuted
           ? '<span class="material-symbols-outlined">volume_off</span><span>Unmute</span>'
           : '<span class="material-symbols-outlined">volume_up</span><span>Mute</span>';
@@ -206,7 +228,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (videoPlayBtn) {
       videoPlayBtn.addEventListener('click', () => {
-        const video = videoTrack.querySelector('video');
+        const video = getCurrentVideoElement();
         if (video) {
           if (video.paused) {
             video.play();
@@ -218,8 +240,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       });
 
-      const video = videoTrack.querySelector('video');
-      if (video) {
+      const videos = videoTrack.querySelectorAll('video');
+      videos.forEach(video => {
         video.addEventListener('play', () => {
           videoPlayBtn.style.display = 'none';
         });
@@ -229,7 +251,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         video.addEventListener('ended', () => {
           videoPlayBtn.style.display = 'flex';
         });
-      }
+      });
     }
   }
 });

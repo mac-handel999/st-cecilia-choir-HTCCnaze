@@ -742,7 +742,7 @@ a:hover {
 .executive-card img {
   width: 100%;
   height: 200px;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .executive-card .card-body {
@@ -886,7 +886,7 @@ a:hover {
 
 .marquee-content {
   display: flex;
-  animation: marquee 60s linear infinite;
+  animation: marquee 90s linear infinite;
 }
 
 .marquee-container:hover .marquee-content {
@@ -954,7 +954,7 @@ a:hover {
 .event-image {
   width: 100%;
   height: 200px;
-  object-fit: cover;
+  object-fit: contain;
   background: var(--color-surface-alt);
 }
 
@@ -2028,7 +2028,7 @@ a:hover {
 .upcoming-event-img {
   width: 100%;
   height: 160px;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .upcoming-event-placeholder {
@@ -2174,6 +2174,16 @@ a:hover {
   font-size: 0.7rem;
   font-weight: 700;
   flex-shrink: 0;
+}
+
+.chat-user-avatar-img {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid var(--color-accent);
+  background: var(--color-surface-alt);
 }
 
 .chat-ai-avatar {
@@ -2324,6 +2334,64 @@ a:hover {
   color: var(--color-text-light);
   text-transform: uppercase;
   letter-spacing: 0.04em;
+}
+
+/* Member Profile Modal */
+.member-card {
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.member-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+#member-profile-modal .modal {
+  max-width: 500px;
+  width: 90%;
+}
+
+#member-profile-content .info-item {
+  display: flex;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--color-border-light);
+  align-items: center;
+}
+
+#member-profile-content .info-item:last-child {
+  border-bottom: none;
+}
+
+#member-profile-content .info-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-accent-light);
+  color: var(--color-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+#member-profile-content .info-icon .material-symbols-outlined {
+  font-size: 20px;
+}
+
+#member-profile-content .info-label {
+  font-size: 0.7rem;
+  color: var(--color-text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.15rem;
+}
+
+#member-profile-content .info-value {
+  font-size: 0.95rem;
+  color: var(--color-text);
+  font-weight: 500;
 }
 
 .info-value {
@@ -2813,7 +2881,7 @@ a:hover {
 .executive-card-bento .executive-card-image img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   transition: transform 0.4s ease;
 }
 
@@ -2855,7 +2923,7 @@ a:hover {
 .gallery-item img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
   transition: transform 0.3s;
 }
@@ -2913,7 +2981,7 @@ a:hover {
 
 .marquee-content {
   display: flex;
-  animation: marquee 60s linear infinite;
+  animation: marquee 90s linear infinite;
 }
 
 .marquee-container:hover .marquee-content {
@@ -2981,7 +3049,7 @@ a:hover {
 .event-image {
   width: 100%;
   height: 200px;
-  object-fit: cover;
+  object-fit: contain;
   background: var(--color-surface-alt);
 }
 
@@ -3864,14 +3932,14 @@ a:hover {
 .marquee-content {
   display: flex;
   gap: 1rem;
-  animation: marquee 60s linear infinite;
+  animation: marquee 90s linear infinite;
   width: max-content;
 }
 
 .marquee-content img {
   height: 180px;
   width: auto;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: var(--radius-lg);
   flex-shrink: 0;
   box-shadow: var(--shadow-sm);

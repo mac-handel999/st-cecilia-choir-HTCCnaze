@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     container.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3" style="gap: 1.5rem;">${list.map(e => `
       <div class="event-card">
         <div class="event-image" style="${e.image_url ? '' : 'display: flex; align-items: center; justify-content: center; color: var(--color-text-muted);'}">
-          ${e.image_url ? `<img src="${escapeHtml(e.image_url)}" alt="${escapeHtml(e.title || 'Event')}" style="width: 100%; height: 200px; object-fit: cover;" onerror="this.style.display='none'">` : `<span class="material-symbols-outlined" style="font-size: 48px; opacity: 0.3;">${getEventIcon(e.type)}</span>`}
+          ${e.image_url ? `<img src="${escapeHtml(e.image_url)}" alt="${escapeHtml(e.title || 'Event')}" style="width: 100%; height: 200px; object-fit: contain;" loading="lazy" onerror="this.style.display='none'">` : `<span class="material-symbols-outlined" style="font-size: 48px; opacity: 0.3;">${getEventIcon(e.type)}</span>`}
         </div>
         <div class="event-body">
           <div class="event-date"><span class="material-symbols-outlined" style="font-size: 16px;">calendar_today</span> ${formatDate(e.event_date)}${e.time ? ' at ' + escapeHtml(e.time) : ''}</div>
