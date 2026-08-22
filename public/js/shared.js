@@ -583,9 +583,10 @@ function renderFooter() {
         <p><strong>Address:</strong><br>Holy Trinity Catholic Church,<br>no.1 Umuakali Naze, Owerri North L.G.A,<br>Imo State, Nigeria.</p>
         <p><a href="https://maps.app.goo.gl/pfoVdd3JBxFNfYzA9" target="_blank" rel="noopener" class="btn btn-sm btn-accent" style="margin-top: 10px;">${getIcon('mapPin', 16)} Google Maps</a></p>
         <p style="margin-top: 15px;"><strong>Encountered Any Bugs?</strong><br>Report Or Email: <a href="mailto:fabikechukwuemeana@gmail.com">fabikechukwuemeana@gmail.com</a></p>
+        <p style="margin-top: 15px;"><strong>Choir Hotline:</strong> <a href="https://wa.me/yourphonenumber" target="_blank" rel="noopener">yourphonenumber</a></p>
         <div class="footer-bottom">
-          Built with love By FABIAN CODES HQ | For: ST.CECILIA CHOIR HTCC.<br>
-          &copy; 2026 All rights reserved | ST.CECILIA CHOIR HTCC
+          Built with love By FABIAN CODES HQ | For: ST. CECILIA CHOIR HTCC CHORAL VENTURE.<br>
+          &copy; 2026 All rights reserved | ST. CECILIA CHOIR HTCC
         </div>
       </div>
     </footer>
