@@ -428,3 +428,12 @@ VALUES (
   'Admin Address',
   'admin'
 ) ON CONFLICT (email) DO NOTHING;
+
+-- ============================================
+-- SCHEMA CACHE REFRESH
+-- ============================================
+-- If you renamed a column and Supabase still says it doesn't exist,
+-- run the two statements below to force PostgREST to reload the table schema.
+-- Then restart your Node server.
+ALTER TABLE events ADD COLUMN IF NOT EXISTS _schema_cache_refresh INTEGER;
+ALTER TABLE events DROP COLUMN IF EXISTS _schema_cache_refresh;
