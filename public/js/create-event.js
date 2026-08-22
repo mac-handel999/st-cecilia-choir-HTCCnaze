@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         title,
         type,
         event_date: date,
-        time,
+        event_time: time,
         description,
         location,
         image_url: imageUrl,

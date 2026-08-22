@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           ${e.image_url ? `<img src="${escapeHtml(e.image_url)}" alt="${escapeHtml(e.title || 'Event')}" style="width: 100%; height: 200px; object-fit: contain;" loading="lazy" onerror="this.style.display='none'">` : `<span class="material-symbols-outlined" style="font-size: 48px; opacity: 0.3;">${getEventIcon(e.type)}</span>`}
         </div>
         <div class="event-body">
-          <div class="event-date"><span class="material-symbols-outlined" style="font-size: 16px;">calendar_today</span> ${formatDate(e.event_date)}${e.time ? ' at ' + escapeHtml(e.time) : ''}</div>
+          <div class="event-date"><span class="material-symbols-outlined" style="font-size: 16px;">calendar_today</span> ${formatDate(e.event_date)}${e.event_time ? ' at ' + escapeHtml(e.event_time) : ''}</div>
           <h3 style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: var(--color-primary); margin-bottom: 0.5rem;">${escapeHtml(e.title)}</h3>
           <p style="color: var(--color-text-muted); font-size: 0.9rem;">${escapeHtml(e.description || '')}</p>
           ${e.location ? `<p style="font-size: 0.8rem; color: var(--color-text-light); margin-top: 0.5rem;"><span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">location_on</span> ${escapeHtml(e.location)}</p>` : ''}

@@ -150,7 +150,7 @@
 }
 
 .mobile-header .mobile-menu-btn:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: #4A0000;
 }
 
 @media (min-width: 768px) {
@@ -161,7 +161,7 @@
 .mobile-menu-overlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: #4A0000;
   z-index: 150;
   opacity: 0;
   visibility: hidden;
@@ -180,7 +180,7 @@
   bottom: 0;
   width: 280px;
   max-width: 80vw;
-  background-color: var(--color-primary);
+  background-color: #4A0000;
   z-index: 160;
   padding: 5rem 1.5rem 2rem;
   transform: translateX(100%);
@@ -225,7 +225,7 @@
 
 /* Footer */
 .site-footer {
-  background-color: var(--color-primary);
+  background-color: #4A0000;
   color: #FFFFFF;
   padding: 3rem 1.25rem 2rem;
   margin-top: 4rem;

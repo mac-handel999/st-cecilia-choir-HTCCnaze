@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     eventSelect.innerHTML = '<option value="">Choose an event...</option>' + events.map(e => {
       const dateStr = e.event_date ? new Date(e.event_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
-      return `<option value="${e.id}" data-date="${escapeHtml(e.event_date || '')}" data-time="${escapeHtml(e.time || '')}" data-location="${escapeHtml(e.location || '')}">${escapeHtml(e.title)}${dateStr ? ' - ' + dateStr : ''}</option>`;
+      return `<option value="${e.id}" data-date="${escapeHtml(e.event_date || '')}" data-event-time="${escapeHtml(e.event_time || '')}" data-location="${escapeHtml(e.location || '')}">${escapeHtml(e.title)}${dateStr ? ' - ' + dateStr : ''}</option>`;
     }).join('');
   } catch (error) {
     Toast.error('Failed to load events: ' + error.message);
@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const selectedEvent = eventSelect.options[eventSelect.selectedIndex];
     document.getElementById('info-date').textContent = selectedEvent.dataset.date || '-';
-    document.getElementById('info-time').textContent = selectedEvent.dataset.time || 'TBD';
+    document.getElementById('info-time').textContent = selectedEvent.dataset.eventTime || 'TBD';
     document.getElementById('info-location').textContent = selectedEvent.dataset.location || 'TBD';
     eventInfo.style.display = 'block';
 

@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS events (
   title TEXT NOT NULL,
   type TEXT CHECK (type IN ('Mass/Liturgy', 'Rehearsal', 'Concert', 'Social Gathering')),
   event_date TEXT NOT NULL,
-  time TEXT,
+  event_time TEXT,
   description TEXT,
   location TEXT,
   image_url TEXT,

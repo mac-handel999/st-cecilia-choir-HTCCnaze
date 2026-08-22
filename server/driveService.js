@@ -9,6 +9,26 @@ if (!FOLDER_ID) {
   console.warn('Warning: GOOGLE_DRIVE_FOLDER_ID is not set in .env');
 }
 
+async function withRetry(fn, retries = 3, delayMs = 1000) {
+  let lastError;
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastError = err;
+      const code = err?.code || err?.response?.status;
+      if (code === 'ETIMEDOUT' || code === 'ECONNRESET' || code === 'ENOTFOUND' || code === 'EAI_AGAIN') {
+        if (i < retries - 1) {
+          await new Promise(r => setTimeout(r, delayMs * Math.pow(2, i)));
+          continue;
+        }
+      }
+      throw err;
+    }
+  }
+  throw lastError;
+}
+
 /**
  * Upload a PDF to Google Drive
  */
@@ -21,32 +41,36 @@ async function uploadScore(fileBuffer, fileName, category = 'general') {
   bufferStream.push(fileBuffer);
   bufferStream.push(null);
 
-  const response = await drive.files.create({
-    requestBody: {
-      name: fileName,
-      parents: [FOLDER_ID],
-      properties: {
-        category: category,
+  const response = await withRetry(() =>
+    drive.files.create({
+      requestBody: {
+        name: fileName,
+        parents: [FOLDER_ID],
+        properties: {
+          category: category,
+        },
       },
-    },
-    media: {
-      mimeType: 'application/pdf',
-      body: bufferStream,
-    },
-    fields: 'id, name, webViewLink, webContentLink, createdTime, size, properties',
-  });
+      media: {
+        mimeType: 'application/pdf',
+        body: bufferStream,
+      },
+      fields: 'id, name, webViewLink, webContentLink, createdTime, size, properties',
+    })
+  );
 
   const fileId = response.data.id;
 
   // Make file readable by anyone with the link
   try {
-    await drive.permissions.create({
-      fileId,
-      requestBody: {
-        role: 'reader',
-        type: 'anyone',
-      },
-    });
+    await withRetry(() =>
+      drive.permissions.create({
+        fileId,
+        requestBody: {
+          role: 'reader',
+          type: 'anyone',
+        },
+      })
+    );
   } catch (permErr) {
     console.warn('Could not set public permission:', permErr.message);
   }
@@ -70,11 +94,13 @@ async function listScores({ search = '', sort = '-createdTime' } = {}) {
 
   const orderBy = sort === 'name' ? 'name asc' : (sort === '-name' ? 'name desc' : 'createdTime desc');
 
-  const response = await drive.files.list({
-    q: query,
-    fields: 'files(id, name, webViewLink, webContentLink, createdTime, size, properties)',
-    orderBy,
-  });
+  const response = await withRetry(() =>
+    drive.files.list({
+      q: query,
+      fields: 'files(id, name, webViewLink, webContentLink, createdTime, size, properties)',
+      orderBy,
+    })
+  );
 
   return response.data.files || [];
 }
@@ -83,7 +109,7 @@ async function listScores({ search = '', sort = '-createdTime' } = {}) {
  * Delete a score from Drive
  */
 async function deleteScore(fileId) {
-  await drive.files.delete({ fileId });
+  await withRetry(() => drive.files.delete({ fileId }));
 }
 
 /**

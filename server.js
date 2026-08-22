@@ -684,7 +684,7 @@ app.post('/api/attendance/bulk', authMiddleware, adminOrExco, async (req, res) =
 
 app.get('/api/events', async (req, res) => {
   try {
-    const { data, error } = await buildQuery('events', req, 'id, title, description, event_date, location, image_url, created_at');
+    const { data, error } = await buildQuery('events', req, 'id, title, description, event_date, event_time, location, image_url, created_at');
 
     if (error) throw error;
     res.json(data || []);
@@ -696,10 +696,10 @@ app.get('/api/events', async (req, res) => {
 
 app.post('/api/events', authMiddleware, adminOrExco, async (req, res) => {
   try {
-    const { title, type, event_date, time, description, location, image_url, created_by } = req.body;
+    const { title, type, event_date, event_time, description, location, image_url, created_by } = req.body;
     const { data, error } = await supabaseAdmin
       .from('events')
-      .insert([{ title, type, event_date, time, description, location, image_url, created_by: created_by || req.user.id }])
+      .insert([{ title, type, event_date, event_time, description, location, image_url, created_by: created_by || req.user.id }])
       .select()
       .single();
 
