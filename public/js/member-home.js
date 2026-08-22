@@ -45,6 +45,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   setDynamicGreeting();
   loadNextRehearsal();
+  startSundayMassCountdown();
   loadRecentScores();
   loadAnnouncements();
   loadUpcomingEvent();
@@ -93,6 +94,7 @@ function setDynamicGreeting() {
 async function loadNextRehearsal() {
   const timeEl = document.getElementById('rehearsal-time');
   const countdownEl = document.getElementById('rehearsal-countdown');
+  const badgeEl = document.getElementById('rehearsal-badge');
   if (!timeEl) return;
 
   try {
@@ -104,45 +106,87 @@ async function loadNextRehearsal() {
 
     const rehearsal = upcomingRehearsals.find(e => new Date(e.event_date) > now) || upcomingRehearsals[0];
 
-    if (!rehearsal) {
-      timeEl.textContent = 'No upcoming rehearsals';
-      if (countdownEl) countdownEl.textContent = '';
+    if (rehearsal) {
+      const eventDate = new Date(rehearsal.event_date);
+      const options = { weekday: 'short', hour: 'numeric', minute: '2-digit' };
+      timeEl.textContent = eventDate.toLocaleString('en-US', options);
+      if (badgeEl) badgeEl.textContent = 'Upcoming';
+      startCountdown(eventDate, countdownEl);
+      return;
+    }
+  } catch {}
+
+  const nextDate = getNextRehearsal();
+  if (nextDate && nextDate._slot) {
+    const slot = nextDate._slot;
+    const options = { weekday: 'short', hour: 'numeric', minute: '2-digit' };
+    timeEl.textContent = `${nextDate.toLocaleString('en-US', options)} — ${slot.label} (${slot.target})`;
+    if (badgeEl) badgeEl.textContent = 'Next Practice';
+    startCountdown(nextDate, countdownEl);
+  } else {
+    timeEl.textContent = 'Saturdays, 5:00 PM — All Choristers';
+    if (countdownEl) countdownEl.textContent = '';
+  }
+}
+
+function startSundayMassCountdown() {
+  const timeEl = document.getElementById('mass-time');
+  const countdownEl = document.getElementById('mass-countdown');
+  const badgeEl = document.getElementById('mass-badge');
+  if (!timeEl || !countdownEl) return;
+
+  function getNextSundayMass() {
+    const now = new Date();
+    const result = new Date(now);
+    result.setHours(8, 0, 0, 0);
+    const currentDay = now.getDay();
+    let daysUntil = (0 - currentDay + 7) % 7;
+    if (daysUntil === 0 && result <= now) daysUntil = 7;
+    result.setDate(now.getDate() + daysUntil);
+    return result;
+  }
+
+  const nextMass = getNextSundayMass();
+  const options = { weekday: 'long', month: 'short', day: 'numeric' };
+  timeEl.textContent = `Every Sunday, 8:00 AM — ${nextMass.toLocaleDateString('en-US', options)}`;
+  if (badgeEl) badgeEl.textContent = 'This Sunday';
+
+  startCountdown(nextMass, countdownEl);
+}
+
+function startCountdown(targetDate, countdownEl) {
+  if (!countdownEl) return;
+
+  const units = [
+    { label: 'Days', divisor: 1000 * 60 * 60 * 24 },
+    { label: 'Hrs', divisor: 1000 * 60 * 60 },
+    { label: 'Mins', divisor: 1000 * 60 },
+    { label: 'Secs', divisor: 1000 }
+  ];
+
+  let intervalId = null;
+
+  function render() {
+    const diff = targetDate - new Date();
+    if (diff <= 0) {
+      countdownEl.innerHTML = '<div class="countdown-block"><div class="countdown-value">Now</div><div class="countdown-label">Rehearsal</div></div>';
+      if (intervalId) clearInterval(intervalId);
       return;
     }
 
-    const eventDate = new Date(rehearsal.event_date);
-    const options = { weekday: 'short', hour: 'numeric', minute: '2-digit' };
-    timeEl.textContent = eventDate.toLocaleString('en-US', options);
+    const values = units.map(u => ({
+      label: u.label,
+      value: Math.max(0, Math.floor(diff / u.divisor))
+    }));
 
-    function updateCountdown() {
-      const current = new Date();
-      const diff = eventDate - current;
-
-      if (diff <= 0) {
-        if (countdownEl) countdownEl.textContent = 'Now';
-        return;
-      }
-
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-      let parts = [];
-      if (days > 0) parts.push(`${days}d`);
-      if (hours > 0) parts.push(`${hours}h`);
-      if (minutes > 0) parts.push(`${minutes}m`);
-      parts.push(`${seconds}s`);
-
-      if (countdownEl) countdownEl.textContent = `Countdown: ${parts.join(' ')}`;
-    }
-
-    updateCountdown();
-    setInterval(updateCountdown, 1000);
-  } catch {
-    timeEl.textContent = 'Rehearsal: Saturdays, 5:00 PM';
-    if (countdownEl) countdownEl.textContent = '';
+    countdownEl.innerHTML = values.map((v, i) => {
+      const sep = i < values.length - 1 ? '<div class="countdown-sep">:</div>' : '';
+      return `<div class="countdown-block"><div class="countdown-value">${v.value}</div><div class="countdown-label">${v.label}</div></div>${sep}`;
+    }).join('');
   }
+
+  render();
+  intervalId = setInterval(render, 1000);
 }
 
 async function loadRecentScores() {

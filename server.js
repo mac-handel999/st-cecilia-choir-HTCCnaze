@@ -1372,6 +1372,77 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// ==================== AUTOMATED NOTIFICATIONS ====================
+
+const REHEARSAL_SCHEDULE = [
+  { day: 3, label: 'Wednesdays', target: 'Children Cardet Choir', time: '17:00' },
+  { day: 5, label: 'Fridays', target: 'Adults', time: '17:00' },
+  { day: 6, label: 'Saturdays', target: 'All Choristers', time: '17:00' }
+];
+
+function getNextOccurrence(dayOfWeek, hour, minute) {
+  const now = new Date();
+  const result = new Date(now);
+  result.setHours(hour, minute, 0, 0);
+  const currentDay = now.getDay();
+  let daysUntil = (dayOfWeek - currentDay + 7) % 7;
+  if (daysUntil === 0 && result <= now) daysUntil = 7;
+  result.setDate(now.getDate() + daysUntil);
+  return result;
+}
+
+async function sendRehearsalReminders() {
+  try {
+    const now = new Date();
+    const notificationsToCreate = [];
+
+    for (const slot of REHEARSAL_SCHEDULE) {
+      const [hour, minute] = slot.time.split(':').map(Number);
+      const nextRehearsal = getNextOccurrence(slot.day, hour, minute);
+      const diffMs = nextRehearsal - now;
+      const diffHours = diffMs / (1000 * 60 * 60);
+
+      if (diffHours > 22 && diffHours < 26) {
+        notificationsToCreate.push({
+          title: `Reminder: ${slot.label} Rehearsal`,
+          message: `Join us for ${slot.target} choir practice today at ${slot.time === '17:00' ? '5:00 PM WAT' : slot.time}.`,
+          icon: 'notifications_active'
+        });
+      }
+
+      if (diffHours > 0 && diffHours < 2) {
+        const exists = await supabaseAdmin
+          .from('notifications')
+          .select('id')
+          .eq('title', `Reminder: ${slot.label} Rehearsal`)
+          .gte('created_at', new Date(now - 1000 * 60 * 60 * 24).toISOString())
+          .limit(1);
+
+        if (!exists.error && exists.data && exists.data.length === 0) {
+          notificationsToCreate.push({
+            title: `Coming Up: ${slot.label} Rehearsal in 1 hour`,
+            message: `Get ready! ${slot.target} rehearsal starts in 1 hour at ${slot.time === '17:00' ? '5:00 PM WAT' : slot.time}.`,
+            icon: 'event'
+          });
+        }
+      }
+    }
+
+    for (const note of notificationsToCreate) {
+      await supabaseAdmin.from('notifications').insert([{ ...note, user_id: null }]);
+    }
+
+    if (notificationsToCreate.length > 0) {
+      console.log(`[Notifications] Sent ${notificationsToCreate.length} rehearsal reminder(s)`);
+    }
+  } catch (err) {
+    console.error('[Notifications] Automation error:', err);
+  }
+}
+
+sendRehearsalReminders();
+setInterval(sendRehearsalReminders, 1000 * 60 * 60);
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);

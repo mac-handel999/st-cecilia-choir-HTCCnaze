@@ -1530,6 +1530,49 @@ a:hover {
 /* --------------------------------------------
    LOADING & STATES
    -------------------------------------------- */
+#page-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: #4A0000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  transition: opacity 0.4s ease, visibility 0.4s ease;
+}
+
+#page-loader.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+#page-loader img {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 40px rgba(201, 154, 60, 0.4);
+  animation: loaderPulse 1.5s ease-in-out infinite;
+}
+
+#page-loader .loader-text {
+  color: #FFFFFF;
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  opacity: 0.85;
+}
+
+@keyframes loaderPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.08); opacity: 0.85; }
+}
+
 .spinner {
   width: 40px;
   height: 40px;
@@ -4142,4 +4185,51 @@ a:hover {
   .marquee-content img {
     height: 140px;
   }
+}
+
+/* --------------------------------------------
+   COUNTDOWN TIMER
+   -------------------------------------------- */
+.countdown-wrap {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 0.75rem;
+}
+
+.countdown-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  padding: 0.5rem 0.75rem;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.countdown-value {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  line-height: 1;
+}
+
+.countdown-label {
+  font-size: 0.7rem;
+  color: var(--color-text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 0.25rem;
+}
+
+.countdown-sep {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  align-self: center;
+  padding-bottom: 1.25rem;
 }

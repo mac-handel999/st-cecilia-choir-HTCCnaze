@@ -363,6 +363,31 @@ function getInitials(name) {
   return name.split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 2);
 }
 
+const REHEARSAL_SCHEDULE = [
+  { day: 3, label: 'Wednesdays', target: 'Children Cardet Choir', time: '17:00', timeLabel: '5:00 PM WAT' },
+  { day: 5, label: 'Fridays', target: 'Adults', time: '17:00', timeLabel: '5:00 PM WAT' },
+  { day: 6, label: 'Saturdays', target: 'All Choristers', time: '17:00', timeLabel: '5:00 PM WAT' }
+];
+
+function getNextRehearsal() {
+  const now = new Date();
+  const currentDay = now.getDay();
+  let nextDate = null;
+
+  for (const slot of REHEARSAL_SCHEDULE) {
+    let candidate = new Date(now);
+    const daysUntil = (slot.day - currentDay + 7) % 7 || 7;
+    candidate.setDate(now.getDate() + daysUntil);
+    candidate.setHours(slot.time.split(':')[0], slot.time.split(':')[1], 0, 0);
+    if (!nextDate || candidate < nextDate) {
+      nextDate = candidate;
+      nextDate._slot = slot;
+    }
+  }
+
+  return nextDate;
+}
+
 const SCORE_CATEGORIES = [
   { id: 'all', label: 'All Scores', icon: 'library_music', url: '' },
   { id: 'choir-images', label: 'Choir Images', icon: 'image', url: 'https://drive.google.com/open?id=18YQK6kqSrO23v-zeNqSR2MfWtsvcTo1i&usp=drive_copy' },
@@ -806,4 +831,26 @@ function initAnimatedStats() {
 
   stats.forEach(stat => observer.observe(stat));
 }
+
+function hidePageLoader() {
+  const loader = document.getElementById('page-loader');
+  if (!loader) return;
+  const startTime = Date.now();
+  const minDisplay = 1500;
+  function tryHide() {
+    const elapsed = Date.now() - startTime;
+    const remaining = Math.max(0, minDisplay - elapsed);
+    setTimeout(() => {
+      loader.classList.add('hidden');
+      setTimeout(() => loader.remove(), 500);
+    }, remaining);
+  }
+  if (document.readyState === 'complete') {
+    tryHide();
+  } else {
+    window.addEventListener('load', tryHide);
+  }
+}
+
+hidePageLoader();
 

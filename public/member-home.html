@@ -20,6 +20,11 @@
 </head>
   <body class="portal-page">
 
+  <div id="page-loader">
+    <img src="IMAGES/choir-logo.jpg" alt="Loading...">
+    <span class="loader-text">St. Cecilia Choir</span>
+  </div>
+
   <header class="portal-header">
     <div class="portal-header-inner">
       <a href="index.html" class="portal-logo">
@@ -70,9 +75,25 @@
             <div style="margin: 1.5rem 0;">
               <p class="bento-highlight" id="rehearsal-time">Calculating...</p>
               <p class="bento-location"><span class="material-symbols-outlined">location_on</span> Holy Trinity Catholic Church (HTCC) Naze</p>
-              <p class="bento-location" id="rehearsal-countdown" style="margin-top: 0.5rem; font-weight: 600; color: var(--color-accent);"></p>
+              <div id="rehearsal-countdown" class="countdown-wrap"></div>
             </div>
             <a href="events.html" class="nav-link" style="color: var(--color-accent); font-weight: bold;">View Details →</a>
+          </article>
+
+          <article class="card" id="sunday-mass-card">
+            <div class="bento-card-header">
+              <div class="bento-icon-wrap"><span class="material-symbols-outlined">church</span></div>
+              <div>
+                <h3 class="bento-card-title">Sunday Mass</h3>
+                <p class="bento-card-meta">Holy Trinity Catholic Church</p>
+              </div>
+              <span class="bento-badge" id="mass-badge">Sunday</span>
+            </div>
+            <div style="margin: 1.5rem 0;">
+              <p class="bento-highlight" id="mass-time">Every Sunday, 8:00 AM</p>
+              <p class="bento-location"><span class="material-symbols-outlined">location_on</span> HTCC Naze, Owerri North</p>
+              <div id="mass-countdown" class="countdown-wrap"></div>
+            </div>
           </article>
 
           <article class="card">
