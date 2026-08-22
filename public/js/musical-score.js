@@ -157,7 +157,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       file_url: file.webViewLink || file.webContentLink || '#',
       file_type: 'pdf',
       public_id: file.id,
-      uploaded_by: null,
+      uploaded_by: file.properties?.uploaded_by || null,
       created_at: file.createdTime,
       source: 'drive',
     })).filter(s => scoreMatchesCategory(s, activeCategory));
@@ -183,6 +183,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
             <h3 class="score-title">${escapeHtml(s.title)}</h3>
             <p class="score-meta">${escapeHtml(s.description || 'Choir score')}</p>
+            ${s.uploaded_by ? `<p class="score-meta"><span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">person</span> Uploaded by ${escapeHtml(s.uploaded_by)}</p>` : ''}
             <p class="score-meta">${formatDate(s.created_at)}</p>
             <div class="score-actions">
               ${s.file_url ? `<a href="${escapeHtml(s.file_url)}" target="_blank" rel="noopener" class="btn btn-outline btn-sm"><span class="material-symbols-outlined">visibility</span> View</a>` : ''}

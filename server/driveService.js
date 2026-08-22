@@ -32,7 +32,7 @@ async function withRetry(fn, retries = 3, delayMs = 1000) {
 /**
  * Upload a PDF to Google Drive
  */
-async function uploadScore(fileBuffer, fileName, category = 'general') {
+async function uploadScore(fileBuffer, fileName, category = 'general', uploadedBy = '') {
   if (!FOLDER_ID) {
     throw new Error('Google Drive folder ID not configured');
   }
@@ -41,15 +41,21 @@ async function uploadScore(fileBuffer, fileName, category = 'general') {
   bufferStream.push(fileBuffer);
   bufferStream.push(null);
 
+  const requestBody = {
+    name: fileName,
+    parents: [FOLDER_ID],
+    properties: {
+      category: category,
+    },
+  };
+
+  if (uploadedBy) {
+    requestBody.properties.uploaded_by = uploadedBy;
+  }
+
   const response = await withRetry(() =>
     drive.files.create({
-      requestBody: {
-        name: fileName,
-        parents: [FOLDER_ID],
-        properties: {
-          category: category,
-        },
-      },
+      requestBody,
       media: {
         mimeType: 'application/pdf',
         body: bufferStream,
@@ -119,9 +125,34 @@ function getDirectDownloadUrl(fileId) {
   return `https://drive.google.com/uc?export=download&id=${fileId}`;
 }
 
+/**
+ * Check if a file with the given name already exists in the Drive folder
+ */
+async function fileExists(fileName) {
+  if (!FOLDER_ID) {
+    return false;
+  }
+
+  const query = `'${FOLDER_ID}' in parents and name='${fileName.replace(/'/g, "\\'")}' and trashed=false`;
+
+  try {
+    const response = await withRetry(() =>
+      drive.files.list({
+        q: query,
+        fields: 'files(id, name)',
+      })
+    );
+    return (response.data.files || []).length > 0;
+  } catch (err) {
+    console.error('Drive fileExists error:', err);
+    return false;
+  }
+}
+
 module.exports = {
   uploadScore,
   listScores,
   deleteScore,
   getDirectDownloadUrl,
+  fileExists,
 };

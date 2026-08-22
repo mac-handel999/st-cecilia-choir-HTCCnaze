@@ -545,7 +545,24 @@ app.post('/api/drive/scores/upload', authMiddleware, driveUpload.single('score')
     const { category } = req.body;
     const fileName = req.file.originalname;
 
-    const driveFile = await driveService.uploadScore(req.file.buffer, fileName, category);
+    const exists = await driveService.fileExists(fileName);
+    if (exists) {
+      return res.status(409).json({ error: `A score named "${fileName}" already exists. Please rename the file or choose a different score.` });
+    }
+
+    let uploadedByName = '';
+    try {
+      const { data: user } = await supabaseAdmin
+        .from('users')
+        .select('full_name')
+        .eq('id', req.user.id)
+        .single();
+      uploadedByName = user?.full_name || '';
+    } catch (userErr) {
+      console.error('Failed to fetch uploader name:', userErr);
+    }
+
+    const driveFile = await driveService.uploadScore(req.file.buffer, fileName, category, uploadedByName);
 
     // Optional: save metadata to Supabase
     try {
