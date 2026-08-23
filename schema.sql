@@ -437,3 +437,51 @@ VALUES (
 -- Then restart your Node server.
 ALTER TABLE events ADD COLUMN IF NOT EXISTS _schema_cache_refresh INTEGER;
 ALTER TABLE events DROP COLUMN IF EXISTS _schema_cache_refresh;
+
+-- ============================================
+-- REAPPLY EVENTS TABLE WITH EXPLICIT SCHEMA
+-- ============================================
+-- Recreate the events table with explicit public schema reference
+CREATE TABLE IF NOT EXISTS public.events (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  title TEXT NOT NULL,
+  type TEXT CHECK (type IN ('Mass/Liturgy', 'Rehearsal', 'Concert', 'Social Gathering')),
+  event_date TEXT NOT NULL,
+  event_time TEXT,
+  description TEXT,
+  location TEXT,
+  image_url TEXT,
+  created_by UUID REFERENCES public.users(id) ON DELETE SET NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+-- Enable Row Level Security
+ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
+
+-- Re-apply Indexes
+CREATE INDEX IF NOT EXISTS idx_events_event_date ON public.events(event_date);
+CREATE INDEX IF NOT EXISTS idx_events_created_by ON public.events(created_by);
+
+-- Re-apply RLS Policies
+DROP POLICY IF EXISTS "Anyone can view events" ON public.events;
+DROP POLICY IF EXISTS "Exco and admin can insert events" ON public.events;
+DROP POLICY IF EXISTS "Exco and admin can update events" ON public.events;
+DROP POLICY IF EXISTS "Exco and admin can delete events" ON public.events;
+
+CREATE POLICY "Anyone can view events" ON public.events FOR SELECT USING (true);
+
+CREATE POLICY "Exco and admin can insert events" ON public.events FOR INSERT WITH CHECK (
+  EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role IN ('exco', 'admin'))
+);
+
+CREATE POLICY "Exco and admin can update events" ON public.events FOR UPDATE USING (
+  EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role IN ('exco', 'admin'))
+);
+
+CREATE POLICY "Exco and admin can delete events" ON public.events FOR DELETE USING (
+  EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role IN ('exco', 'admin'))
+);
+
+-- Force PostgREST to reload schema cache
+NOTIFY pgrst, 'reload schema';
