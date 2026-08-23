@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           type: 'song-list',
           id: sl.id,
           title: status + ' Song Plan',
-          message: `Event ID: ${sl.event_id}`,
+          message: `Event: ${sl.event_title || sl.event_id || 'Unknown Event'}`,
           icon: sl.status === 'published' ? 'publish' : 'edit_note',
           timestamp: sl.created_at,
           read: true,

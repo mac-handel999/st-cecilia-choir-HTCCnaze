@@ -886,10 +886,35 @@
   color: #FFFFFF;
   text-decoration: none;
   transition: background-color 0.2s ease;
+  position: relative;
 }
 
 .portal-icon-btn:hover {
   background-color: rgba(255, 255, 255, 0.12);
+}
+
+.notification-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background: #EF4444;
+  color: #FFFFFF;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  border-radius: 9999px;
+  border: 2px solid #4A0000;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  display: none;
+  z-index: 10;
+}
+
+.notification-badge:empty {
+  display: none !important;
 }
 
 .portal-header-mobile {

@@ -909,15 +909,21 @@ app.delete('/api/event-songs/:id', authMiddleware, adminOrExco, async (req, res)
 app.get('/api/song-lists', async (req, res) => {
   try {
     const { event_id } = req.query;
-    let query = supabaseAdmin.from('song_lists').select('*');
-    
+    let query = supabaseAdmin.from('song_lists').select('*, events(title)');
+
     if (event_id) {
       query = query.eq('event_id', event_id);
     }
-    
+
     const { data, error } = await query.order('created_at', { ascending: false });
     if (error) throw error;
-    res.json(data || []);
+
+    const normalized = (data || []).map(item => ({
+      ...item,
+      event_title: item.events?.title || null
+    }));
+
+    res.json(normalized || []);
   } catch (err) {
     console.error('Song lists list error:', err);
     res.status(500).json({ message: 'Failed to fetch song lists' });
@@ -955,9 +961,21 @@ app.put('/api/song-lists/:id', authMiddleware, adminOrExco, async (req, res) => 
 
     if (status === 'published') {
       try {
+        let eventTitle = data.event_id;
+        try {
+          const { data: event } = await supabaseAdmin
+            .from('events')
+            .select('title')
+            .eq('id', data.event_id)
+            .single();
+          if (event?.title) eventTitle = event.title;
+        } catch (eventErr) {
+          console.error('Failed to fetch event title for notification:', eventErr);
+        }
+
         await supabaseAdmin.from('notifications').insert([{
           title: 'Song Plan Published',
-          message: `A new song plan has been published for event ${data.event_id}`,
+          message: `A new song plan has been published for "${eventTitle}"`,
           icon: 'publish',
           user_id: null
         }]);

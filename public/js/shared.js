@@ -853,5 +853,35 @@ function hidePageLoader() {
   }
 }
 
+function updateNotificationBadge(count) {
+  const badges = document.querySelectorAll('.notification-badge');
+  badges.forEach(badge => {
+    if (count > 0) {
+      badge.textContent = count > 99 ? '99+' : count;
+      badge.style.display = 'flex';
+    } else {
+      badge.style.display = 'none';
+    }
+  });
+}
+
+async function loadNotificationBadge() {
+  try {
+    const notifications = asArray(await api.get('/notifications'));
+    const unreadCount = notifications.filter(n => !n.read).length;
+    updateNotificationBadge(unreadCount);
+  } catch {
+    // Silently fail - badge will just not show
+  }
+}
+
 hidePageLoader();
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    loadNotificationBadge();
+  });
+} else {
+  loadNotificationBadge();
+}
 
