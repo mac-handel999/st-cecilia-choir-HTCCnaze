@@ -723,7 +723,7 @@ app.post('/api/attendance/bulk', authMiddleware, adminOrExco, async (req, res) =
 
 app.get('/api/events', async (req, res) => {
   try {
-    const { data, error } = await buildQuery('public.events', req, 'id, title, description, event_date, event_time, location, image_url, created_at');
+    const { data, error } = await buildQuery('events', req, 'id, title, description, event_date, event_time, location, image_url, created_at');
 
     if (error) throw error;
     res.json(data || []);
@@ -737,7 +737,7 @@ app.post('/api/events', authMiddleware, adminOrExco, async (req, res) => {
   try {
     const { title, type, event_date, event_time, description, location, image_url, created_by } = req.body;
     const { data, error } = await supabaseAdmin
-      .from('public.events')
+      .from('events')
       .insert([{ title, type, event_date, event_time, description, location, image_url, created_by: created_by || req.user.id }])
       .select()
       .single();
@@ -768,7 +768,7 @@ app.put('/api/events/:id', authMiddleware, adminOrExco, async (req, res) => {
   try {
     const updates = { ...req.body, updated_at: new Date().toISOString() };
     const { data, error } = await supabaseAdmin
-      .from('public.events')
+      .from('events')
       .update(updates)
       .eq('id', req.params.id)
       .select()
@@ -785,7 +785,7 @@ app.put('/api/events/:id', authMiddleware, adminOrExco, async (req, res) => {
 app.delete('/api/events/:id', authMiddleware, adminOrExco, async (req, res) => {
   try {
     const { data, error } = await supabaseAdmin
-      .from('public.events')
+      .from('events')
       .delete()
       .eq('id', req.params.id)
       .select()
@@ -1365,7 +1365,7 @@ app.get('/api/dashboard/stats', authMiddleware, async (req, res) => {
     const [usersResult, scoresResult, eventsResult, attendanceResult, pendingResult] = await Promise.all([
       supabaseAdmin.from('users').select('id', { count: 'exact', head: true }),
       supabaseAdmin.from('scores').select('id', { count: 'exact', head: true }),
-      supabaseAdmin.from('public.events').select('id', { count: 'exact', head: true }),
+      supabaseAdmin.from('events').select('id', { count: 'exact', head: true }),
       supabaseAdmin.from('attendance').select('id', { count: 'exact', head: true }),
       supabaseAdmin.from('users').select('id', { count: 'exact', head: true }).eq('pledge_accepted', false)
     ]);
