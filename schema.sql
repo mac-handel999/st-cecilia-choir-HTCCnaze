@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS scores (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   title TEXT NOT NULL,
   description TEXT,
+  category TEXT NOT NULL DEFAULT 'general',
   file_url TEXT NOT NULL,
   file_type TEXT NOT NULL,
   public_id TEXT,
