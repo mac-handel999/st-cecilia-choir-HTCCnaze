@@ -582,6 +582,17 @@ app.post('/api/drive/scores/upload', authMiddleware, driveUpload.single('score')
       message: 'Score uploaded successfully.',
       file: driveFile,
     });
+
+    try {
+      await supabaseAdmin.from('notifications').insert([{
+        title: 'New Score Uploaded',
+        message: `${fileName} was uploaded to ${category || 'General'} by ${uploadedByName || 'a member'}`,
+        icon: 'library_music',
+        user_id: null
+      }]);
+    } catch (notifErr) {
+      console.error('Failed to create score upload notification:', notifErr);
+    }
   } catch (err) {
     console.error('Drive upload error:', err);
     res.status(500).json({ error: 'Failed to upload score.' });
@@ -691,6 +702,17 @@ app.post('/api/attendance/bulk', authMiddleware, adminOrExco, async (req, res) =
 
     if (error) throw error;
     res.json(data || []);
+
+    try {
+      await supabaseAdmin.from('notifications').insert([{
+        title: 'Attendance Recorded',
+        message: `Attendance marked for ${event_name || 'event'} - ${records.length} records updated`,
+        icon: 'fact_check',
+        user_id: null
+      }]);
+    } catch (notifErr) {
+      console.error('Failed to create attendance notification:', notifErr);
+    }
   } catch (err) {
     console.error('Attendance bulk upsert error:', err);
     res.status(500).json({ message: 'Failed to bulk save attendance' });
@@ -721,6 +743,20 @@ app.post('/api/events', authMiddleware, adminOrExco, async (req, res) => {
       .single();
 
     if (error) throw error;
+
+    if (data) {
+      try {
+        await supabaseAdmin.from('notifications').insert([{
+          title: 'New Event Created',
+          message: `${title} - ${type || 'Event'} on ${event_date || 'TBD'}${event_time ? ' at ' + event_time : ''}`,
+          icon: 'event',
+          user_id: null
+        }]);
+      } catch (notifErr) {
+        console.error('Failed to create event notification:', notifErr);
+      }
+    }
+
     res.status(201).json(data);
   } catch (err) {
     console.error('Event create error:', err);
@@ -883,6 +919,20 @@ app.put('/api/song-lists/:id', authMiddleware, adminOrExco, async (req, res) => 
       .single();
 
     if (error || !data) return res.status(404).json({ message: 'Song list not found' });
+
+    if (status === 'published') {
+      try {
+        await supabaseAdmin.from('notifications').insert([{
+          title: 'Song Plan Published',
+          message: `A new song plan has been published for event ${data.event_id}`,
+          icon: 'publish',
+          user_id: null
+        }]);
+      } catch (notifErr) {
+        console.error('Failed to create song list notification:', notifErr);
+      }
+    }
+
     res.json(data);
   } catch (err) {
     console.error('Song list update error:', err);
