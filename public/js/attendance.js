@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   let selectedEventName = '';
   let activeVoiceFilter = 'all';
   const attendanceState = {};
+  let savedAttendanceRecords = [];
 
   try {
     const events = asArray(await api.get('/events'));
@@ -36,7 +37,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     eventSelect.innerHTML = '<option value="">Choose an event...</option>' + events.map(e => {
       const dateStr = e.event_date ? new Date(e.event_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
-      return `<option value="${e.id}">${escapeHtml(e.title)}${dateStr ? ' - ' + dateStr : ''}</option>`;
+      return `<option value="${e.id}" data-date="${escapeHtml(e.event_date || '')}" data-event-time="${escapeHtml(e.event_time || '')}" data-location="${escapeHtml(e.location || '')}">${escapeHtml(e.title)}${dateStr ? ' - ' + dateStr : ''}</option>`;
     }).join('');
 
     eventSelect.addEventListener('change', async () => {
@@ -51,9 +52,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             <div class="empty-state-desc">Choose an event to mark attendance</div>
           </div>
         `;
+        document.getElementById('event-info').style.display = 'none';
         updateStats(0, 0, 0, 0);
         return;
       }
+
+      const selectedEvent = eventSelect.options[eventSelect.selectedIndex];
+      document.getElementById('info-date').textContent = selectedEvent.dataset.date || '-';
+      document.getElementById('info-time').textContent = selectedEvent.dataset.eventTime || 'TBD';
+      document.getElementById('info-location').textContent = selectedEvent.dataset.location || 'TBD';
+      document.getElementById('event-info').style.display = 'block';
 
       await loadMembers();
       await loadExistingAttendance();
@@ -62,6 +70,114 @@ document.addEventListener('DOMContentLoaded', async () => {
     Toast.error('Failed to load events: ' + error.message);
     eventSelect.innerHTML = '<option value="">Failed to load events</option>';
   }
+
+  async function loadSavedAttendance() {
+    const container = document.getElementById('saved-attendance-list');
+    if (!container) return;
+
+    try {
+      const records = asArray(await api.get('/attendance'));
+      const events = asArray(await api.get('/events'));
+      
+      const grouped = {};
+      records.forEach(r => {
+        if (!grouped[r.event_date]) {
+          grouped[r.event_date] = {
+            event_date: r.event_date,
+            event_name: r.event_name,
+            records: []
+          };
+        }
+        grouped[r.event_date].records.push(r);
+      });
+
+      const sortedKeys = Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a));
+      savedAttendanceRecords = sortedKeys.map(k => grouped[k]);
+
+      if (savedAttendanceRecords.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">fact_check</div>
+            <div class="empty-state-title">No attendance records</div>
+            <div class="empty-state-desc">Attendance records will appear here after saving</div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = savedAttendanceRecords.map(group => {
+        const event = events.find(e => e.event_date === group.event_date) || {};
+        const present = group.records.filter(r => r.status === 'present').length;
+        const absent = group.records.filter(r => r.status === 'absent').length;
+        const excused = group.records.filter(r => r.status === 'excused').length;
+        const total = group.records.length;
+
+        return `
+          <div class="card" style="padding: 1.5rem; margin-bottom: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+              <div style="flex: 1;">
+                <h3 style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: var(--color-primary); margin-bottom: 0.5rem;">
+                  ${escapeHtml(group.event_name || 'Unknown Event')}
+                </h3>
+                <div style="display: flex; flex-wrap: wrap; gap: 1rem; font-size: 0.85rem; color: var(--color-text-muted);">
+                  <span><span class="material-symbols-outlined" style="font-size: 16px; vertical-align: middle;">calendar_today</span> ${escapeHtml(group.event_date || 'TBD')}</span>
+                  ${event.event_time ? `<span><span class="material-symbols-outlined" style="font-size: 16px; vertical-align: middle;">schedule</span> ${escapeHtml(event.event_time)}</span>` : ''}
+                  ${event.location ? `<span><span class="material-symbols-outlined" style="font-size: 16px; vertical-align: middle;">location_on</span> ${escapeHtml(event.location)}</span>` : ''}
+                </div>
+              </div>
+              <button class="btn-icon delete-attendance-event" data-event-date="${escapeHtml(group.event_date)}" title="Delete all attendance for this event" style="color: var(--color-error);">
+                <span class="material-symbols-outlined">delete</span>
+              </button>
+            </div>
+            <div style="display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+              <span class="badge badge-success">Present: ${present}</span>
+              <span class="badge badge-error">Absent: ${absent}</span>
+              <span class="badge badge-accent">Excused: ${excused}</span>
+              <span class="badge">Total: ${total}</span>
+            </div>
+            <div style="border-top: 1px solid var(--color-border-light); padding-top: 1rem;">
+              <h4 style="font-size: 0.85rem; font-weight: 600; color: var(--color-text-light); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem;">Attendees</h4>
+              <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                ${group.records.map(r => {
+                  const member = members.find(m => m.id === r.member_id) || {};
+                  const statusColors = {
+                    present: 'color: var(--color-success);',
+                    absent: 'color: var(--color-error);',
+                    excused: 'color: var(--color-accent);'
+                  };
+                  return `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid var(--color-border-light);">
+                      <span style="font-weight: 500; color: var(--color-text);">${escapeHtml(member.full_name || member.username || 'Unknown')}</span>
+                      <span style="font-size: 0.8rem; font-weight: 600; ${statusColors[r.status] || ''} text-transform: capitalize;">${r.status}${r.reason ? ' (' + escapeHtml(r.reason) + ')' : ''}</span>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      document.querySelectorAll('.delete-attendance-event').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const eventDate = btn.dataset.eventDate;
+          if (!confirm('Delete all attendance records for this event?')) return;
+          
+          try {
+            await api.delete('/attendance/event/' + encodeURIComponent(eventDate));
+            Toast.success('Attendance records deleted');
+            await loadSavedAttendance();
+          } catch (error) {
+            Toast.error('Failed to delete: ' + error.message);
+          }
+        });
+      });
+    } catch (error) {
+      container.innerHTML = `<div class="empty-state"><div class="empty-state-title">Error loading records</div></div>`;
+    }
+  }
+
+  loadSavedAttendance();
 
   async function loadMembers() {
     try {
@@ -297,6 +413,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const count = Array.isArray(result) ? result.length : records.length;
       Toast.success('Attendance saved for ' + count + ' members!');
       saveStatus.textContent = 'Saved ' + count + ' records';
+      await loadSavedAttendance();
     } catch (error) {
       Toast.error('Failed to save attendance: ' + error.message);
       saveStatus.textContent = 'Save failed';
@@ -305,4 +422,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       saveBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 20px;">save</span> Save Attendance';
     }
   });
+
+  async function deleteAttendanceRecord(recordId) {
+    try {
+      await api.delete('/attendance/' + recordId);
+      Toast.success('Record deleted');
+      await loadSavedAttendance();
+    } catch (error) {
+      Toast.error('Failed to delete: ' + error.message);
+    }
+  }
 });

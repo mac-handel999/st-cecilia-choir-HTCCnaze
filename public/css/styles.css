@@ -953,8 +953,31 @@ a:hover {
 
 .event-image {
   width: 100%;
+.delete-event {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--color-error);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+  z-index: 10;
+}
+
+.delete-event:hover {
+  background: #FFFFFF;
+  box-shadow: var(--shadow-md);
+}
   height: 200px;
   object-fit: contain;
+  position: relative;
   background: var(--color-surface-alt);
 }
 

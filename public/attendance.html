@@ -66,6 +66,22 @@
         <select id="att-event" class="form-select">
           <option value="">Choose an event...</option>
         </select>
+        <div id="event-info" style="margin-top: 1rem; display: none;">
+          <div style="display: flex; flex-wrap: wrap; gap: 1rem; padding: 1rem; background: var(--color-surface-alt); border-radius: var(--radius-lg);">
+            <div>
+              <span style="font-size: 0.75rem; color: var(--color-text-light); text-transform: uppercase; letter-spacing: 0.05em;">Date</span>
+              <p style="font-weight: 600; color: var(--color-text);" id="info-date">-</p>
+            </div>
+            <div>
+              <span style="font-size: 0.75rem; color: var(--color-text-light); text-transform: uppercase; letter-spacing: 0.05em;">Time</span>
+              <p style="font-weight: 600; color: var(--color-text);" id="info-time">-</p>
+            </div>
+            <div>
+              <span style="font-size: 0.75rem; color: var(--color-text-light); text-transform: uppercase; letter-spacing: 0.05em;">Location</span>
+              <p style="font-weight: 600; color: var(--color-text);" id="info-location">-</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6" id="attendance-stats">
@@ -102,6 +118,15 @@
             <div class="empty-state-title">Select an event</div>
             <div class="empty-state-desc">Choose an event above to mark attendance</div>
           </div>
+        </div>
+      </div>
+
+      <div id="saved-attendance-section" style="margin-top: 2rem;">
+        <h2 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: var(--color-primary); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+          <span class="material-symbols-outlined">history</span> Saved Attendance Records
+        </h2>
+        <div id="saved-attendance-list">
+          <div class="spinner"></div>
         </div>
       </div>
 

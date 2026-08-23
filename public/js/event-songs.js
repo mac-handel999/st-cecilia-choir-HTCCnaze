@@ -295,4 +295,30 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
   }
+
+  const deleteSongListBtn = document.getElementById('delete-song-list-btn');
+  if (deleteSongListBtn) {
+    deleteSongListBtn.addEventListener('click', async () => {
+      if (!currentSongListId) return;
+      if (!confirm('Delete this song plan? This action cannot be undone.')) return;
+      try {
+        await api.delete('/song-lists/' + currentSongListId);
+        Toast.success('Song plan deleted');
+        currentSongListId = null;
+        songListActions.style.display = 'none';
+        songsList.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">library_music</div>
+            <div class="empty-state-title">No event selected</div>
+            <div class="empty-state-desc">Select an event above to build a song list</div>
+          </div>
+        `;
+        songCount.textContent = '0 songs';
+        eventSelect.value = '';
+        eventInfo.style.display = 'none';
+      } catch (error) {
+        Toast.error('Failed to delete: ' + error.message);
+      }
+    });
+  }
 });

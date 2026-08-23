@@ -34,10 +34,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
+    const user = getCurrentUser();
+    const canDelete = user && (user.role === 'admin' || user.role === 'exco');
+
     container.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3" style="gap: 1.5rem;">${list.map(e => `
-      <div class="event-card">
+      <div class="event-card" data-event-id="${e.id}">
         <div class="event-image" style="${e.image_url ? '' : 'display: flex; align-items: center; justify-content: center; color: var(--color-text-muted);'}">
           ${e.image_url ? `<img src="${escapeHtml(e.image_url)}" alt="${escapeHtml(e.title || 'Event')}" style="width: 100%; height: 200px; object-fit: contain;" loading="lazy" onerror="this.style.display='none'">` : `<span class="material-symbols-outlined" style="font-size: 48px; opacity: 0.3;">${getEventIcon(e.type)}</span>`}
+          ${canDelete ? `<button class="btn-icon delete-event" data-id="${e.id}" title="Delete event" style="position: absolute; top: 0.5rem; right: 0.5rem; background: rgba(255,255,255,0.9); color: var(--color-error);"><span class="material-symbols-outlined">delete</span></button>` : ''}
         </div>
         <div class="event-body">
           <div class="event-date"><span class="material-symbols-outlined" style="font-size: 16px;">calendar_today</span> ${formatDate(e.event_date)}${e.event_time ? ' at ' + escapeHtml(e.event_time) : ''}</div>
@@ -48,6 +52,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         </div>
       </div>
     `).join('')}</div>`;
+
+    if (canDelete) {
+      document.querySelectorAll('.delete-event').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const id = btn.dataset.id;
+          if (!confirm('Delete this event? This will also remove related song lists and attendance records.')) return;
+          try {
+            await api.delete('/events/' + id);
+            Toast.success('Event deleted');
+            eventsData = eventsData.filter(ev => ev.id !== id);
+            render(eventsData);
+          } catch (error) {
+            Toast.error('Failed to delete: ' + error.message);
+          }
+        });
+      });
+    }
   }
 
   const FALLBACK_EVENTS = [

@@ -719,6 +719,39 @@ app.post('/api/attendance/bulk', authMiddleware, adminOrExco, async (req, res) =
   }
 });
 
+app.delete('/api/attendance/:id', authMiddleware, adminOrExco, async (req, res) => {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('attendance')
+      .delete()
+      .eq('id', req.params.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data || { message: 'Attendance record deleted' });
+  } catch (err) {
+    console.error('Attendance delete error:', err);
+    res.status(500).json({ message: 'Failed to delete attendance record' });
+  }
+});
+
+app.delete('/api/attendance/event/:eventDate', authMiddleware, adminOrExco, async (req, res) => {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('attendance')
+      .delete()
+      .eq('event_date', req.params.eventDate)
+      .select();
+
+    if (error) throw error;
+    res.json({ message: 'Attendance records deleted', count: data?.length || 0 });
+  } catch (err) {
+    console.error('Attendance bulk delete error:', err);
+    res.status(500).json({ message: 'Failed to delete attendance records' });
+  }
+});
+
 // ==================== EVENTS ROUTES ====================
 
 app.get('/api/events', async (req, res) => {
@@ -1009,6 +1042,23 @@ app.delete('/api/song-list-items/:id', authMiddleware, adminOrExco, async (req, 
   } catch (err) {
     console.error('Song list item delete error:', err);
     res.status(500).json({ message: 'Failed to delete song list item' });
+  }
+});
+
+app.delete('/api/song-lists/:id', authMiddleware, adminOrExco, async (req, res) => {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('song_lists')
+      .delete()
+      .eq('id', req.params.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data || { message: 'Song list deleted' });
+  } catch (err) {
+    console.error('Song list delete error:', err);
+    res.status(500).json({ message: 'Failed to delete song list' });
   }
 });
 
