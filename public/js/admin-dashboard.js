@@ -38,64 +38,52 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Load stats
   try {
-    const [members, scores, events, attendance] = await Promise.all([
-      api.get('/users?limit=1').catch(() => []),
-      api.get('/scores?limit=1').catch(() => []),
-      api.get('/events?limit=1').catch(() => []),
-      api.get('/attendance?limit=1').catch(() => [])
-    ]);
-
-    document.getElementById('stat-members').textContent = Array.isArray(members) ? members.length : (members?.length || 0);
-    document.getElementById('stat-scores').textContent = Array.isArray(scores) ? scores.length : (scores?.length || 0);
-    document.getElementById('stat-events').textContent = Array.isArray(events) ? events.length : (events?.length || 0);
-    document.getElementById('stat-attendance').textContent = Array.isArray(attendance) ? attendance.length : (attendance?.length || 0);
+    const stats = await api.get('/dashboard/stats');
+    document.getElementById('stat-members').textContent = stats.members || 0;
+    document.getElementById('stat-scores').textContent = stats.scores || 0;
+    document.getElementById('stat-events').textContent = stats.events || 0;
+    document.getElementById('stat-attendance').textContent = stats.attendance || 0;
+    document.getElementById('stat-pending').textContent = stats.pending || 0;
   } catch (error) {
     Toast.error('Failed to load stats: ' + error.message);
   }
 
   // Recent members
   try {
-    const members = asArray(await api.get('/users?order=created_at&ascending=false&limit=5'));
-    const container = document.getElementById('recent-members');
-    if (members.length === 0) {
-      container.innerHTML = '<p style="color: var(--color-text-muted); text-align: center; padding: 1rem;">No members yet</p>';
-    } else {
-      container.innerHTML = members.map(m => `
+    const { data: members } = await api.get('/users?select=username,full_name,created_at&order=created_at&ascending=false&limit=5');
+    const membersContainer = document.getElementById('recent-members');
+    if (members && members.length > 0) {
+      membersContainer.innerHTML = members.map(m => `
         <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--color-border-light);">
           <div>
             <div style="font-weight: 600; color: var(--color-text); font-size: 0.9rem;">${escapeHtml(m.full_name || m.username)}</div>
             <div style="font-size: 0.8rem; color: var(--color-text-muted);">@${escapeHtml(m.username)}</div>
           </div>
-          <span class="badge badge-accent">${escapeHtml(m.role || 'member')}</span>
+          <div style="font-size: 0.75rem; color: var(--color-text-light);">${formatDate(m.created_at)}</div>
         </div>
       `).join('');
+    } else {
+      membersContainer.innerHTML = '<p style="color: var(--color-text-muted); text-align: center; padding: 1rem;">No members yet</p>';
     }
   } catch (error) {
     document.getElementById('recent-members').innerHTML = '<p style="color: var(--color-text-muted); text-align: center; padding: 1rem;">Failed to load</p>';
   }
 
-  // Upcoming events
+  // Recent scores
   try {
-    const events = asArray(await api.get('/events'));
-    const upcoming = events
-      .filter(e => e.event_date)
-      .sort((a, b) => new Date(a.event_date) - new Date(b.event_date))
-      .slice(0, 5);
-
-    const container = document.getElementById('upcoming-events');
-    if (upcoming.length === 0) {
-      container.innerHTML = '<p style="color: var(--color-text-muted); text-align: center; padding: 1rem;">No upcoming events</p>';
-    } else {
-      container.innerHTML = upcoming.map(e => `
+    const { data: scores } = await api.get('/scores?select=title,created_at&order=created_at&ascending=false&limit=5');
+    const scoresContainer = document.getElementById('recent-scores');
+    if (scores && scores.length > 0) {
+      scoresContainer.innerHTML = scores.map(s => `
         <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--color-border-light);">
-          <div>
-            <div style="font-weight: 600; color: var(--color-text); font-size: 0.9rem;">${escapeHtml(e.title)}</div>
-            <div style="font-size: 0.8rem; color: var(--color-text-muted);">${formatDate(e.event_date)}${e.location ? ' • ' + escapeHtml(e.location) : ''}</div>
-          </div>
+          <div style="font-weight: 600; color: var(--color-text); font-size: 0.9rem;">${escapeHtml(s.title)}</div>
+          <div style="font-size: 0.75rem; color: var(--color-text-light);">${formatDate(s.created_at)}</div>
         </div>
       `).join('');
+    } else {
+      scoresContainer.innerHTML = '<p style="color: var(--color-text-muted); text-align: center; padding: 1rem;">No scores yet</p>';
     }
   } catch (error) {
-    document.getElementById('upcoming-events').innerHTML = '<p style="color: var(--color-text-muted); text-align: center; padding: 1rem;">Failed to load</p>';
+    document.getElementById('recent-scores').innerHTML = '<p style="color: var(--color-text-muted); text-align: center; padding: 1rem;">Failed to load</p>';
   }
 });

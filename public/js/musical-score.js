@@ -5,15 +5,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   const container = document.getElementById('scores-list');
   const uploadForm = document.getElementById('upload-score-form');
   const uploadAlert = document.getElementById('upload-alert');
-  const searchInput = document.getElementById('scores-search');
   const sortToggle = document.getElementById('sort-toggle');
 
-  let activeCategory = 'all';
   let searchQuery = '';
   let sortAsc = true;
   let allScores = [];
-
-  renderCategoryFolders();
 
   if (uploadForm) {
     uploadForm.addEventListener('submit', async (e) => {
@@ -72,13 +68,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  if (searchInput) {
-    searchInput.addEventListener('input', debounce(() => {
-      searchQuery = searchInput.value.trim().toLowerCase();
-      renderScoresList();
-    }, 250));
-  }
-
   if (sortToggle) {
     sortToggle.addEventListener('click', () => {
       sortAsc = !sortAsc;
@@ -95,7 +84,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
       const params = new URLSearchParams();
-      if (searchQuery) params.set('search', searchQuery);
       params.set('sort', sortAsc ? 'name' : '-name');
 
       const data = await api.get(`/drive/scores?${params.toString()}`);
@@ -106,50 +94,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  function renderCategoryFolders() {
-    const container = document.getElementById('score-categories');
-    if (!container) return;
-
-    container.innerHTML = SCORE_CATEGORIES.map(cat => {
-      if (cat.url) {
-        return `
-          <a href="${escapeHtml(cat.url)}" target="_blank" rel="noopener" class="score-category score-category-link" data-category="${cat.id}">
-            <span class="material-symbols-outlined">${cat.icon}</span>
-            <span>${escapeHtml(cat.label)}</span>
-            <span class="material-symbols-outlined" style="font-size: 16px; margin-left: auto;">open_in_new</span>
-          </a>
-        `;
-      }
-      return `
-        <button type="button" class="score-category ${cat.id === activeCategory ? 'active' : ''}" data-category="${cat.id}">
-          <span class="material-symbols-outlined">${cat.icon}</span>
-          <span>${escapeHtml(cat.label)}</span>
-        </button>
-      `;
-    }).join('');
-
-    container.querySelectorAll('.score-category:not(.score-category-link)').forEach(btn => {
-      btn.addEventListener('click', () => {
-        activeCategory = btn.dataset.category;
-        container.querySelectorAll('.score-category').forEach(b => b.classList.toggle('active', b.dataset.category === activeCategory));
-        renderScoresList();
-      });
-    });
-  }
-
-  function scoreMatchesCategory(score, categoryId) {
-    if (categoryId === 'all') return true;
-    const haystack = `${score.name || score.title || ''} ${score.category || ''}`.toLowerCase();
-    const cat = SCORE_CATEGORIES.find(c => c.id === categoryId);
-    if (!cat) return true;
-    return haystack.includes(categoryId.replace(/-/g, ' ')) || haystack.includes(cat.label.toLowerCase());
-  }
-
   function renderScoresList() {
     const container = document.getElementById('scores-list');
     if (!container) return;
 
-    let filtered = allScores.map(file => ({
+    const filtered = allScores.map(file => ({
       id: file.id,
       title: file.name || 'Untitled',
       description: '',
@@ -160,17 +109,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       uploaded_by: file.properties?.uploaded_by || null,
       created_at: file.createdTime,
       source: 'drive',
-    })).filter(s => scoreMatchesCategory(s, activeCategory));
-
-    if (searchQuery) {
-      filtered = filtered.filter(s => {
-        const haystack = `${s.title || ''} ${s.category || ''}`.toLowerCase();
-        return haystack.includes(searchQuery);
-      });
-    }
+    }));
 
     if (filtered.length === 0) {
-      showEmpty('scores-list', 'No scores found', activeCategory === 'all' ? 'Scores will appear here when uploaded.' : 'No scores in this category yet.');
+      showEmpty('scores-list', 'No scores found', 'Scores will appear here when uploaded.');
       return;
     }
 
@@ -182,8 +124,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               <span class="badge badge-accent">${escapeHtml(s.category || 'General')}</span>
             </div>
             <h3 class="score-title">${escapeHtml(s.title)}</h3>
-            <p class="score-meta">${escapeHtml(s.description || 'Choir score')}</p>
-            ${s.uploaded_by ? `<p class="score-meta"><span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">person</span> Uploaded by ${escapeHtml(s.uploaded_by)}</p>` : ''}
+            <p class="score-meta"><span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">person</span> ${s.uploaded_by ? escapeHtml(s.uploaded_by) : 'Unknown uploader'}</p>
             <p class="score-meta">${formatDate(s.created_at)}</p>
             <div class="score-actions">
               ${s.file_url ? `<a href="${escapeHtml(s.file_url)}" target="_blank" rel="noopener" class="btn btn-outline btn-sm"><span class="material-symbols-outlined">visibility</span> View</a>` : ''}
@@ -206,4 +147,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     container.appendChild(alertDiv);
     setTimeout(() => alertDiv.remove(), 5000);
   }
+
+  await loadScores();
 });

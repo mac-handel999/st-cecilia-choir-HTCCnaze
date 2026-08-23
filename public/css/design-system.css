@@ -355,6 +355,7 @@
   /* Dark mode overrides: --color-primary is now white for text/icons.
      Below we explicitly restore dark backgrounds for UI elements that should remain colored. */
   .site-header, .portal-header, .admin-sidebar, .admin-header,
+  .mobile-header,
   .bottom-nav, .portal-bottom-nav,
   .btn-primary, .btn-accent,
   .badge-primary,

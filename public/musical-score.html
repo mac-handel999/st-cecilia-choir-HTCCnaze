@@ -49,32 +49,11 @@
       <div class="container" style="padding-top: 2rem; padding-bottom: 3rem;">
         <div style="text-align: center; margin-bottom: 2rem;">
           <img loading="lazy" src="IMAGES/choir-logo.jpg" alt="Choir Logo" class="page-logo" style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 3px solid var(--color-accent); margin-bottom: 1rem;">
-          <h1 class="page-title">Musical Scores Upload</h1>
-          <p class="page-subtitle">Upload and download repertoire</p>
+          <h1 class="page-title">Upload Musical Scores</h1>
+          <p class="page-subtitle">Upload and manage choir repertoire</p>
         </div>
 
-        <div class="search-container" style="max-width: 500px; margin: 0 auto 2rem;">
-          <span class="material-symbols-outlined search-icon">search</span>
-          <input type="text" id="scores-search" class="search-input" placeholder="Search scores by name or category..." />
-        </div>
-
-        <section style="margin-bottom: 2rem;">
-          <h2 class="section-heading" style="font-size: 1rem; font-weight: 600; color: var(--color-primary); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-            <span class="material-symbols-outlined">folder_open</span> Categories
-          </h2>
-          <div class="folder-grid" id="score-categories" style="margin-top: 0.5rem;"></div>
-        </section>
-
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
-          <h2 class="section-heading" style="font-size: 1.25rem; font-weight: 700; color: var(--color-primary); margin: 0;">
-            <span class="material-symbols-outlined">library_music</span> Available Scores
-          </h2>
-          <button type="button" id="sort-toggle" class="btn btn-outline btn-sm">
-            <span class="material-symbols-outlined" style="font-size: 16px;">sort_by_alpha</span> A-Z
-          </button>
-        </div>
-
-        <div class="card" style="padding: 1.5rem; margin-bottom: 2rem;">
+        <div class="card" style="padding: 1.5rem; margin-bottom: 2rem; max-width: 700px; margin-left: auto; margin-right: auto;">
           <h2 style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: var(--color-primary); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
             <span class="material-symbols-outlined filled">upload_file</span> Upload Score
           </h2>
@@ -112,6 +91,15 @@
             </button>
             <div id="upload-alert"></div>
           </form>
+        </div>
+
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+          <h2 class="section-heading" style="font-size: 1.25rem; font-weight: 700; color: var(--color-primary); margin: 0;">
+            <span class="material-symbols-outlined">library_music</span> Uploaded Scores
+          </h2>
+          <button type="button" id="sort-toggle" class="btn btn-outline btn-sm">
+            <span class="material-symbols-outlined" style="font-size: 16px;">sort_by_alpha</span> A-Z
+          </button>
         </div>
 
         <div id="scores-list" class="scores-list"><div class="spinner"></div></div>

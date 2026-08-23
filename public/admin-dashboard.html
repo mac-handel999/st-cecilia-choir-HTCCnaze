@@ -240,7 +240,7 @@
     <div class="container" style="padding-top: 1.5rem; padding-bottom: 3rem;">
       
       <!-- Stats Grid -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         <div class="stat-card">
           <div class="stat-icon stat-icon-primary">
             <span class="material-symbols-outlined">groups</span>
@@ -261,20 +261,11 @@
         </div>
         <div class="stat-card">
           <div class="stat-icon stat-icon-success">
-            <span class="material-symbols-outlined">event</span>
+            <span class="material-symbols-outlined">pending</span>
           </div>
           <div>
-            <div class="stat-value" id="stat-events">-</div>
-            <div class="stat-label">Events</div>
-          </div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon stat-icon-info">
-            <span class="material-symbols-outlined">fact_check</span>
-          </div>
-          <div>
-            <div class="stat-value" id="stat-attendance">-</div>
-            <div class="stat-label">Attendance Records</div>
+            <div class="stat-value" id="stat-pending">-</div>
+            <div class="stat-label">Pending Attendance</div>
           </div>
         </div>
       </div>
@@ -289,15 +280,31 @@
           </a>
           <a href="event-songs.html" class="card" style="padding: 1.25rem; text-align: center; text-decoration: none; transition: all 0.2s;">
             <span class="material-symbols-outlined" style="font-size: 32px; color: var(--color-accent); display: block; margin-bottom: 0.5rem;">library_music</span>
-            <span style="font-weight: 600; color: var(--color-text); font-size: 0.9rem;">Manage Songs</span>
+            <span style="font-weight: 600; color: var(--color-text); font-size: 0.9rem;">Song List Builder</span>
           </a>
-          <a href="scores.html" class="card" style="padding: 1.25rem; text-align: center; text-decoration: none; transition: all 0.2s;">
-            <span class="material-symbols-outlined" style="font-size: 32px; color: var(--color-success); display: block; margin-bottom: 0.5rem;">upload_file</span>
+          <a href="attendance.html" class="card" style="padding: 1.25rem; text-align: center; text-decoration: none; transition: all 0.2s;">
+            <span class="material-symbols-outlined" style="font-size: 32px; color: var(--color-success); display: block; margin-bottom: 0.5rem;">fact_check</span>
+            <span style="font-weight: 600; color: var(--color-text); font-size: 0.9rem;">Choir Attendance</span>
+          </a>
+          <a href="musical-score.html" class="card" style="padding: 1.25rem; text-align: center; text-decoration: none; transition: all 0.2s;">
+            <span class="material-symbols-outlined" style="font-size: 32px; color: var(--color-info); display: block; margin-bottom: 0.5rem;">upload_file</span>
             <span style="font-weight: 600; color: var(--color-text); font-size: 0.9rem;">Upload Score</span>
           </a>
+          <a href="members-directory.html" class="card" style="padding: 1.25rem; text-align: center; text-decoration: none; transition: all 0.2s;">
+            <span class="material-symbols-outlined" style="font-size: 32px; color: var(--color-primary); display: block; margin-bottom: 0.5rem;">groups</span>
+            <span style="font-weight: 600; color: var(--color-text); font-size: 0.9rem;">Members Directory</span>
+          </a>
           <a href="notifications.html" class="card" style="padding: 1.25rem; text-align: center; text-decoration: none; transition: all 0.2s;">
-            <span class="material-symbols-outlined" style="font-size: 32px; color: var(--color-info); display: block; margin-bottom: 0.5rem;">campaign</span>
+            <span class="material-symbols-outlined" style="font-size: 32px; color: var(--color-accent); display: block; margin-bottom: 0.5rem;">campaign</span>
             <span style="font-weight: 600; color: var(--color-text); font-size: 0.9rem;">Send Notice</span>
+          </a>
+          <a href="executives.html" class="card" style="padding: 1.25rem; text-align: center; text-decoration: none; transition: all 0.2s;">
+            <span class="material-symbols-outlined" style="font-size: 32px; color: var(--color-success); display: block; margin-bottom: 0.5rem;">badge</span>
+            <span style="font-weight: 600; color: var(--color-text); font-size: 0.9rem;">Executives</span>
+          </a>
+          <a href="image-gallery.html" class="card" style="padding: 1.25rem; text-align: center; text-decoration: none; transition: all 0.2s;">
+            <span class="material-symbols-outlined" style="font-size: 32px; color: var(--color-info); display: block; margin-bottom: 0.5rem;">photo_library</span>
+            <span style="font-weight: 600; color: var(--color-text); font-size: 0.9rem;">Image Gallery</span>
           </a>
         </div>
       </div>
@@ -309,8 +316,8 @@
           <div id="recent-members"><div class="spinner"></div></div>
         </div>
         <div class="card" style="padding: 1.5rem;">
-          <h3 style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: var(--color-primary); margin-bottom: 1rem;">Upcoming Events</h3>
-          <div id="upcoming-events"><div class="spinner"></div></div>
+          <h3 style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: var(--color-primary); margin-bottom: 1rem;">Recent Scores</h3>
+          <div id="recent-scores"><div class="spinner"></div></div>
         </div>
       </div>
 
