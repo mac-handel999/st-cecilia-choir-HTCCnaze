@@ -441,8 +441,10 @@ ALTER TABLE events DROP COLUMN IF EXISTS _schema_cache_refresh;
 -- ============================================
 -- REAPPLY EVENTS TABLE WITH EXPLICIT SCHEMA
 -- ============================================
--- Recreate the events table with explicit public schema reference
-CREATE TABLE IF NOT EXISTS public.events (
+-- Drop and recreate the events table to force schema cache refresh
+DROP TABLE IF EXISTS public.events CASCADE;
+
+CREATE TABLE public.events (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   title TEXT NOT NULL,
   type TEXT CHECK (type IN ('Mass/Liturgy', 'Rehearsal', 'Concert', 'Social Gathering')),
@@ -460,8 +462,8 @@ CREATE TABLE IF NOT EXISTS public.events (
 ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
 
 -- Re-apply Indexes
-CREATE INDEX IF NOT EXISTS idx_events_event_date ON public.events(event_date);
-CREATE INDEX IF NOT EXISTS idx_events_created_by ON public.events(created_by);
+CREATE INDEX idx_events_event_date ON public.events(event_date);
+CREATE INDEX idx_events_created_by ON public.events(created_by);
 
 -- Re-apply RLS Policies
 DROP POLICY IF EXISTS "Anyone can view events" ON public.events;
@@ -483,5 +485,7 @@ CREATE POLICY "Exco and admin can delete events" ON public.events FOR DELETE USI
   EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role IN ('exco', 'admin'))
 );
 
--- Force PostgREST to reload schema cache
+-- Force PostgREST to reload schema cache multiple times
+NOTIFY pgrst, 'reload schema';
+NOTIFY pgrst, 'reload schema';
 NOTIFY pgrst, 'reload schema';
