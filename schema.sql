@@ -435,10 +435,25 @@ VALUES (
 -- ============================================
 -- Run these after any column/table changes to force PostgREST to reload.
 -- Then restart your Node server.
+
+-- Ensure attendance has the unique constraint for ON CONFLICT upserts
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'attendance'::regclass
+    AND conname = 'attendance_member_id_event_date_key'
+  ) THEN
+    ALTER TABLE attendance ADD CONSTRAINT attendance_member_id_event_date_key UNIQUE (member_id, event_date);
+  END IF;
+END $$;
+
 ALTER TABLE events ADD COLUMN IF NOT EXISTS _schema_cache_refresh INTEGER;
 ALTER TABLE events DROP COLUMN IF EXISTS _schema_cache_refresh;
 ALTER TABLE song_lists ADD COLUMN IF NOT EXISTS _schema_cache_refresh INTEGER;
 ALTER TABLE song_lists DROP COLUMN IF EXISTS _schema_cache_refresh;
 ALTER TABLE scores ADD COLUMN IF NOT EXISTS _schema_cache_refresh INTEGER;
 ALTER TABLE scores DROP COLUMN IF EXISTS _schema_cache_refresh;
+ALTER TABLE attendance ADD COLUMN IF NOT EXISTS _schema_cache_refresh INTEGER;
+ALTER TABLE attendance DROP COLUMN IF EXISTS _schema_cache_refresh;
 NOTIFY pgrst, 'reload schema';
