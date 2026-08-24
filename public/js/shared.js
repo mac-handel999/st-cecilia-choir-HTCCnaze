@@ -834,22 +834,41 @@ function initAnimatedStats() {
 }
 
 function hidePageLoader() {
-  const loader = document.getElementById('page-loader');
-  if (!loader) return;
-  const startTime = Date.now();
-  const minDisplay = 1500;
-  function tryHide() {
-    const elapsed = Date.now() - startTime;
-    const remaining = Math.max(0, minDisplay - elapsed);
-    setTimeout(() => {
-      loader.classList.add('hidden');
-      setTimeout(() => loader.remove(), 500);
-    }, remaining);
-  }
-  if (document.readyState === 'complete') {
-    tryHide();
-  } else {
-    window.addEventListener('load', tryHide);
+  try {
+    const loader = document.getElementById('page-loader');
+    if (!loader) return;
+    const startTime = Date.now();
+    const minDisplay = 1500;
+    const maxDisplay = 5000;
+    function tryHide() {
+      const elapsed = Date.now() - startTime;
+      const remaining = Math.max(0, Math.min(minDisplay - elapsed, maxDisplay - elapsed));
+      setTimeout(() => {
+        try {
+          loader.classList.add('hidden');
+          setTimeout(() => {
+            try {
+              if (loader.parentNode) loader.parentNode.removeChild(loader);
+            } catch (e) {
+              // Ignore removal errors
+            }
+          }, 500);
+        } catch (e) {
+          // Ignore class addition errors
+        }
+      }, remaining);
+    }
+    if (document.readyState === 'complete') {
+      tryHide();
+    } else {
+      window.addEventListener('load', tryHide);
+    }
+  } catch (e) {
+    // Fallback: remove loader if any error occurs
+    const loader = document.getElementById('page-loader');
+    if (loader && loader.parentNode) {
+      loader.parentNode.removeChild(loader);
+    }
   }
 }
 

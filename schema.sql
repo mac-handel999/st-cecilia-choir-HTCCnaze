@@ -437,4 +437,8 @@ VALUES (
 -- Then restart your Node server.
 ALTER TABLE events ADD COLUMN IF NOT EXISTS _schema_cache_refresh INTEGER;
 ALTER TABLE events DROP COLUMN IF EXISTS _schema_cache_refresh;
+ALTER TABLE song_lists ADD COLUMN IF NOT EXISTS _schema_cache_refresh INTEGER;
+ALTER TABLE song_lists DROP COLUMN IF EXISTS _schema_cache_refresh;
+ALTER TABLE scores ADD COLUMN IF NOT EXISTS _schema_cache_refresh INTEGER;
+ALTER TABLE scores DROP COLUMN IF EXISTS _schema_cache_refresh;
 NOTIFY pgrst, 'reload schema';

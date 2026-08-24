@@ -108,7 +108,39 @@ async function loadScores() {
       source: 'drive',
     }));
 
-    allScores = [...asArray(supabaseScores), ...normalizedDrive];
+    const supabaseMap = new Map();
+    asArray(supabaseScores).forEach(s => {
+      supabaseMap.set(s.public_id || s.id, s);
+    });
+
+    const merged = [];
+    const seen = new Set();
+
+    normalizedDrive.forEach(driveItem => {
+      const key = driveItem.public_id || driveItem.id;
+      if (supabaseMap.has(key)) {
+        const supabaseItem = supabaseMap.get(key);
+        merged.push({
+          ...supabaseItem,
+          uploaded_by: supabaseItem.uploaded_by || driveItem.uploaded_by,
+          source: 'supabase+drive'
+        });
+        seen.add(key);
+      } else if (!seen.has(key)) {
+        merged.push(driveItem);
+        seen.add(key);
+      }
+    });
+
+    supabaseScores.forEach(s => {
+      const key = s.public_id || s.id;
+      if (!seen.has(key)) {
+        merged.push(s);
+        seen.add(key);
+      }
+    });
+
+    allScores = merged;
     renderScoresList();
   } catch (error) {
     Toast.error('Failed to load scores: ' + error.message);
