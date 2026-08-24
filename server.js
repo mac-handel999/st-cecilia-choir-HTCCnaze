@@ -909,7 +909,7 @@ app.delete('/api/event-songs/:id', authMiddleware, adminOrExco, async (req, res)
 app.get('/api/song-lists', async (req, res) => {
   try {
     const { event_id } = req.query;
-    let query = supabaseAdmin.from('song_lists').select('*, events(title)');
+    let query = supabaseAdmin.from('song_lists').select('*');
 
     if (event_id) {
       query = query.eq('event_id', event_id);
@@ -918,9 +918,23 @@ app.get('/api/song-lists', async (req, res) => {
     const { data, error } = await query.order('created_at', { ascending: false });
     if (error) throw error;
 
-    const normalized = (data || []).map(item => ({
+    const songLists = data || [];
+    const eventIds = [...new Set(songLists.map(sl => sl.event_id).filter(Boolean))];
+
+    let eventMap = {};
+    if (eventIds.length > 0) {
+      const { data: events } = await supabaseAdmin
+        .from('events')
+        .select('id, title')
+        .in('id', eventIds);
+      (events || []).forEach(e => {
+        eventMap[e.id] = e.title;
+      });
+    }
+
+    const normalized = songLists.map(item => ({
       ...item,
-      event_title: item.events?.title || null
+      event_title: eventMap[item.event_id] || null
     }));
 
     res.json(normalized || []);
@@ -1275,6 +1289,38 @@ app.post('/api/notifications', authMiddleware, adminOrExco, async (req, res) => 
   } catch (err) {
     console.error('Notification create error:', err);
     res.status(500).json({ message: 'Failed to create notification' });
+  }
+});
+
+app.post('/api/notifications/mark-read', authMiddleware, async (req, res) => {
+  try {
+    await supabaseAdmin
+      .from('notifications')
+      .update({ read: true })
+      .or(`user_id.eq.${req.user.id},user_id.is.null`);
+
+    res.json({ message: 'Notifications marked as read' });
+  } catch (err) {
+    console.error('Notification mark-read error:', err);
+    res.status(500).json({ message: 'Failed to mark notifications as read' });
+  }
+});
+
+app.delete('/api/notifications/:id', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('notifications')
+      .delete()
+      .eq('id', req.params.id)
+      .eq('user_id', req.user.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data || { message: 'Notification deleted' });
+  } catch (err) {
+    console.error('Notification delete error:', err);
+    res.status(500).json({ message: 'Failed to delete notification' });
   }
 });
 

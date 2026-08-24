@@ -12,6 +12,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   container.innerHTML = '<div class="spinner"></div>';
 
+  const currentUser = getCurrentUser();
+  const currentUserId = currentUser?.id || null;
+
   async function loadFeed() {
     try {
       const [notifications, events, scores, songLists, attendance] = await Promise.all([
@@ -23,9 +26,18 @@ document.addEventListener('DOMContentLoaded', async () => {
       ]);
 
       const feed = [];
+      const seen = new Set();
+
+      const addItem = (item) => {
+        const key = `${item.type}-${item.id}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          feed.push(item);
+        }
+      };
 
       (asArray(notifications)).forEach(n => {
-        feed.push({
+        addItem({
           type: 'notification',
           id: n.id,
           title: n.title || 'Notification',
@@ -33,12 +45,13 @@ document.addEventListener('DOMContentLoaded', async () => {
           icon: n.icon || 'notifications',
           timestamp: n.created_at,
           read: n.read || false,
-          link: '#'
+          link: '#',
+          deletable: !n.user_id || n.user_id === currentUserId
         });
       });
 
       (asArray(events)).forEach(e => {
-        feed.push({
+        addItem({
           type: 'event',
           id: e.id,
           title: e.title || 'New Event',
@@ -46,12 +59,13 @@ document.addEventListener('DOMContentLoaded', async () => {
           icon: 'event',
           timestamp: e.created_at,
           read: true,
-          link: 'events.html'
+          link: 'events.html',
+          deletable: false
         });
       });
 
       (asArray(scores)).forEach(s => {
-        feed.push({
+        addItem({
           type: 'score',
           id: s.id,
           title: s.title || 'New Score',
@@ -59,26 +73,27 @@ document.addEventListener('DOMContentLoaded', async () => {
           icon: 'library_music',
           timestamp: s.created_at,
           read: true,
-          link: 'scores.html'
+          link: 'scores.html',
+          deletable: false
         });
       });
 
       (asArray(songLists)).forEach(sl => {
-        const status = sl.status === 'published' ? 'Published' : 'Draft saved';
-        feed.push({
+        addItem({
           type: 'song-list',
           id: sl.id,
-          title: status + ' Song Plan',
+          title: (sl.status === 'published' ? 'Published' : 'Draft saved') + ' Song Plan',
           message: `Event: ${sl.event_title || sl.event_id || 'Unknown Event'}`,
           icon: sl.status === 'published' ? 'publish' : 'edit_note',
           timestamp: sl.created_at,
           read: true,
-          link: 'event-songs.html'
+          link: 'event-songs.html',
+          deletable: false
         });
       });
 
       (asArray(attendance)).forEach(a => {
-        feed.push({
+        addItem({
           type: 'attendance',
           id: a.id,
           title: 'Attendance Recorded',
@@ -86,13 +101,15 @@ document.addEventListener('DOMContentLoaded', async () => {
           icon: 'fact_check',
           timestamp: a.created_at,
           read: true,
-          link: 'attendance.html'
+          link: 'attendance.html',
+          deletable: false
         });
       });
 
       feed.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
 
       renderFeed(feed);
+      markNotificationsAsRead();
     } catch (error) {
       Toast.error('Failed to load feed: ' + error.message);
       container.innerHTML = `<div class="empty-state"><div class="empty-state-title">Error loading feed</div><div class="empty-state-desc">${escapeHtml(error.message)}</div></div>`;
@@ -105,47 +122,87 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-      container.innerHTML = feed.map(item => {
-        const timeAgo = getTimeAgo(item.timestamp);
-        const typeColors = {
-          'notification': 'var(--color-primary)',
-          'event': 'var(--color-success)',
-          'score': 'var(--color-accent)',
-          'song-list': 'var(--color-info)',
-          'attendance': 'var(--color-primary-container)'
-        };
-        const iconColor = typeColors[item.type] || 'var(--color-primary)';
+    const unreadCount = feed.filter(f => f.type === 'notification' && !f.read).length;
+    const hasUnread = unreadCount > 0;
 
-        return `
-          <div class="feed-item" onclick="window.location.href='${item.link}'">
-            <div class="feed-icon" style="background: ${iconColor};">
-              <span class="material-symbols-outlined">${item.icon}</span>
-            </div>
-            <div class="feed-content">
-              <div class="feed-title">${escapeHtml(item.title)}</div>
-              <div class="feed-message">${escapeHtml(item.message)}</div>
-              <div class="feed-time">${timeAgo}</div>
-            </div>
-            ${item.read ? '' : '<span class="badge badge-primary feed-badge">New</span>'}
+    let headerHtml = `
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; gap: 0.75rem; flex-wrap: wrap;">
+        <h2 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: var(--color-primary); margin: 0;">Feed</h2>
+        ${hasUnread ? `<button id="mark-all-read-btn" class="btn btn-outline btn-sm"><span class="material-symbols-outlined" style="font-size: 16px;">done_all</span> Mark All As Read</button>` : ''}
+      </div>
+    `;
+
+    container.innerHTML = headerHtml + feed.map(item => {
+      const timeAgo = getTimeAgo(item.timestamp);
+      const typeColors = {
+        'notification': 'var(--color-primary)',
+        'event': 'var(--color-success)',
+        'score': 'var(--color-accent)',
+        'song-list': 'var(--color-info)',
+        'attendance': 'var(--color-primary-container)'
+      };
+      const iconColor = typeColors[item.type] || 'var(--color-primary)';
+
+      return `
+        <div class="feed-item" data-type="${item.type}" data-id="${item.id}" ${item.link !== '#' ? `onclick="window.location.href='${item.link}'"` : ''}>
+          <div class="feed-icon" style="background: ${iconColor};">
+            <span class="material-symbols-outlined">${item.icon}</span>
           </div>
-        `;
-      }).join('');
+          <div class="feed-content">
+            <div class="feed-title">${escapeHtml(item.title)}</div>
+            <div class="feed-message">${escapeHtml(item.message)}</div>
+            <div class="feed-time">${timeAgo}</div>
+          </div>
+          ${item.read ? '' : '<span class="badge badge-primary feed-badge">New</span>'}
+          ${item.deletable ? `<button class="btn-icon delete-notification" data-id="${item.id}" data-type="${item.type}" title="Delete" style="color: var(--color-error); padding: 4px;"><span class="material-symbols-outlined" style="font-size: 18px;">delete</span></button>` : ''}
+        </div>
+      `;
+    }).join('');
+
+    const markAllBtn = document.getElementById('mark-all-read-btn');
+    if (markAllBtn) {
+      markAllBtn.addEventListener('click', async () => {
+        try {
+          await api.post('/notifications/mark-read', {});
+          Toast.success('All notifications marked as read');
+          updateNotificationBadge(0);
+          await loadFeed();
+        } catch (error) {
+          Toast.error('Failed to mark as read: ' + error.message);
+        }
+      });
+    }
+
+    document.querySelectorAll('.delete-notification').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const id = btn.dataset.id;
+        const type = btn.dataset.type;
+        if (!confirm('Delete this item?')) return;
+        try {
+          if (type === 'notification') {
+            await api.delete('/notifications/' + id);
+          }
+          Toast.success('Item deleted');
+          await loadFeed();
+        } catch (error) {
+          Toast.error('Failed to delete: ' + error.message);
+        }
+      });
+    });
   }
 
-  function getTimeAgo(timestamp) {
-    if (!timestamp) return 'Just now';
-    const now = new Date();
-    const then = new Date(timestamp);
-    const diffMs = now - then;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return diffMins + ' min ago';
-    if (diffHours < 24) return diffHours + 'h ago';
-    if (diffDays < 7) return diffDays + 'd ago';
-    return then.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  async function markNotificationsAsRead() {
+    try {
+      const notifications = asArray(await api.get('/notifications'));
+      const unread = notifications.filter(n => !n.read);
+      if (unread.length > 0) {
+        await api.post('/notifications/mark-read', {});
+        updateNotificationBadge(0);
+      }
+    } catch {
+      // Silently fail
+    }
   }
 
   await loadFeed();

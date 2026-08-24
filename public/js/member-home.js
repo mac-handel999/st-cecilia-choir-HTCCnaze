@@ -137,21 +137,43 @@ function startSundayMassCountdown() {
 
   function getNextSundayMass() {
     const now = new Date();
-    const result = new Date(now);
-    result.setHours(8, 0, 0, 0);
     const currentDay = now.getDay();
-    let daysUntil = (0 - currentDay + 7) % 7;
-    if (daysUntil === 0 && result <= now) daysUntil = 7;
-    result.setDate(now.getDate() + daysUntil);
-    return result;
+    
+    const masses = [
+      { hours: 6, minutes: 30, label: '6:30 AM' },
+      { hours: 9, minutes: 30, label: '9:30 AM' }
+    ];
+
+    let nextMass = null;
+    let minDiff = Infinity;
+
+    for (const mass of masses) {
+      for (let daysUntil = 0; daysUntil < 7; daysUntil++) {
+        const candidate = new Date(now);
+        candidate.setDate(now.getDate() + ((0 - currentDay + 7) % 7 + daysUntil) % 7);
+        candidate.setHours(mass.hours, mass.minutes, 0, 0);
+        
+        const diff = candidate - now;
+        if (diff > 0 && diff < minDiff) {
+          minDiff = diff;
+          nextMass = { date: candidate, label: mass.label };
+        }
+      }
+    }
+
+    return nextMass;
   }
 
   const nextMass = getNextSundayMass();
-  const options = { weekday: 'long', month: 'short', day: 'numeric' };
-  timeEl.textContent = `Every Sunday, 8:00 AM — ${nextMass.toLocaleDateString('en-US', options)}`;
-  if (badgeEl) badgeEl.textContent = 'This Sunday';
-
-  startCountdown(nextMass, countdownEl);
+  if (nextMass) {
+    const options = { weekday: 'long', month: 'short', day: 'numeric' };
+    timeEl.textContent = `Every Sunday, 6:30 AM & 9:30 AM — Next: ${nextMass.label} (${nextMass.date.toLocaleDateString('en-US', options)})`;
+    if (badgeEl) badgeEl.textContent = 'This Sunday';
+    startCountdown(nextMass.date, countdownEl);
+  } else {
+    timeEl.textContent = 'Every Sunday, 6:30 AM & 9:30 AM';
+    if (badgeEl) badgeEl.textContent = 'Sunday';
+  }
 }
 
 function startCountdown(targetDate, countdownEl) {
@@ -233,7 +255,16 @@ async function loadAnnouncements() {
 
   try {
     const notifications = asArray(await api.get('/notifications'));
-    const announcements = notifications.slice(0, 4);
+    const seen = new Set();
+    const unique = [];
+    for (const n of notifications) {
+      const key = `${n.title}-${n.message}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        unique.push(n);
+      }
+    }
+    const announcements = unique.slice(0, 4);
 
     if (announcements.length === 0) {
       container.innerHTML = '<div class="announcement-item"><h4>No announcements yet</h4><p>Check back for choir updates.</p></div>';
@@ -260,12 +291,27 @@ async function loadUpcomingEvent() {
 
   try {
     const events = asArray(await api.get('/events'));
+    const now = new Date();
     const upcoming = events
-      .filter(e => e.event_date)
+      .filter(e => e.event_date && new Date(e.event_date) >= now)
       .sort((a, b) => new Date(a.event_date) - new Date(b.event_date))[0];
 
     if (!upcoming) {
-      container.innerHTML = '<p style="color: var(--color-text-muted); padding: 1rem;">No upcoming events scheduled.</p>';
+      const nextDate = getNextRehearsal();
+      if (nextDate && nextDate._slot) {
+        const slot = nextDate._slot;
+        container.innerHTML = `
+          <div class="upcoming-event-img upcoming-event-placeholder"><span class="material-symbols-outlined">music_note</span></div>
+          <div class="upcoming-event-body">
+            <span class="bento-badge">Next Practice</span>
+            <h4>${slot.label} Rehearsal</h4>
+            <p><span class="material-symbols-outlined">schedule</span> ${nextDate.toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' })} — ${slot.target}</p>
+            <p><span class="material-symbols-outlined">location_on</span> Holy Trinity Catholic Church (HTCC) Naze</p>
+          </div>
+        `;
+      } else {
+        container.innerHTML = '<p style="color: var(--color-text-muted); padding: 1rem;">No upcoming events scheduled.</p>';
+      }
       return;
     }
 
@@ -274,7 +320,7 @@ async function loadUpcomingEvent() {
       <div class="upcoming-event-body">
         <span class="bento-badge">Upcoming</span>
         <h4>${escapeHtml(upcoming.title)}</h4>
-        <p><span class="material-symbols-outlined">schedule</span> ${formatDate(upcoming.event_date)}</p>
+        <p><span class="material-symbols-outlined">schedule</span> ${formatDate(upcoming.event_date)}${upcoming.event_time ? ' at ' + escapeHtml(upcoming.event_time) : ''}</p>
         ${upcoming.location ? `<p><span class="material-symbols-outlined">location_on</span> ${escapeHtml(upcoming.location)}</p>` : ''}
         <a href="events.html" class="btn btn-outline btn-sm" style="margin-top: 0.75rem;">View All Events</a>
       </div>

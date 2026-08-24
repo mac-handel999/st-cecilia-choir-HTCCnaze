@@ -448,6 +448,26 @@ BEGIN
   END IF;
 END $$;
 
+-- Force PostgREST to recognize song_lists -> events foreign key by recreating the constraint
+DO $$
+DECLARE
+  constraint_name TEXT;
+BEGIN
+  SELECT conname INTO constraint_name
+  FROM pg_constraint
+  WHERE conrelid = 'song_lists'::regclass
+  AND confrelid = 'events'::regclass
+  AND contype = 'f';
+
+  IF constraint_name IS NOT NULL THEN
+    EXECUTE 'ALTER TABLE song_lists DROP CONSTRAINT ' || quote_ident(constraint_name);
+  END IF;
+
+  ALTER TABLE song_lists
+    ADD CONSTRAINT song_lists_event_id_fkey
+    FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE;
+END $$;
+
 ALTER TABLE events ADD COLUMN IF NOT EXISTS _schema_cache_refresh INTEGER;
 ALTER TABLE events DROP COLUMN IF EXISTS _schema_cache_refresh;
 ALTER TABLE song_lists ADD COLUMN IF NOT EXISTS _schema_cache_refresh INTEGER;

@@ -364,8 +364,8 @@ function getInitials(name) {
 }
 
 const REHEARSAL_SCHEDULE = [
-  { day: 3, label: 'Wednesdays', target: 'Children Cardet Choir', time: '17:00', timeLabel: '5:00 PM WAT' },
-  { day: 5, label: 'Fridays', target: 'Adults', time: '17:00', timeLabel: '5:00 PM WAT' },
+  { day: 3, label: 'Wednesdays', target: 'Adults', time: '17:00', timeLabel: '5:00 PM WAT' },
+  { day: 5, label: 'Fridays', target: 'Children Cardet Choir', time: '17:00', timeLabel: '5:00 PM WAT' },
   { day: 6, label: 'Saturdays', target: 'All Choristers', time: '17:00', timeLabel: '5:00 PM WAT' }
 ];
 
@@ -889,6 +889,21 @@ async function loadNotificationBadge() {
     const notifications = asArray(await api.get('/notifications'));
     const unreadCount = notifications.filter(n => !n.read).length;
     updateNotificationBadge(unreadCount);
+
+    document.querySelectorAll('.portal-icon-btn').forEach(btn => {
+      if (btn.querySelector('.notification-badge')) {
+        btn.addEventListener('click', async () => {
+          if (unreadCount > 0) {
+            try {
+              await api.post('/notifications/mark-read', {});
+              updateNotificationBadge(0);
+            } catch {
+              // Silently fail
+            }
+          }
+        });
+      }
+    });
   } catch {
     // Silently fail - badge will just not show
   }
