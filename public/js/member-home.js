@@ -340,7 +340,7 @@ async function loadUpcomingEvent() {
   }
 }
 
-function startEventCountdown(targetDate, countdownEl) {
+function startCountdown(targetDate, countdownEl) {
   if (!countdownEl) return;
 
   const units = [
