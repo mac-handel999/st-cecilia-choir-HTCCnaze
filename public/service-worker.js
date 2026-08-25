@@ -5,15 +5,18 @@ const STATIC_ASSETS = [
   '/css/design-system.css',
   '/css/components.css',
   '/css/styles.css',
+  '/manifest.json',
+  '/IMAGES/choir-logo.jpg'
+];
+
+const JS_FILES = [
   '/js/shared.js',
   '/js/musical-score.js',
   '/js/scores.js',
   '/js/member-home.js',
   '/js/cecilia-ai.js',
   '/js/executives.js',
-  '/js/image-gallery.js',
-  '/manifest.json',
-  '/IMAGES/choir-logo.jpg'
+  '/js/image-gallery.js'
 ];
 
 // Install event - cache static assets
@@ -22,9 +25,10 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE_NAME)
       .then((cache) => {
         console.log('Caching static assets');
-        return Promise.allSettled(
-          STATIC_ASSETS.map(asset => cache.add(asset).catch(err => console.log('Failed to cache:', asset, err)))
-        );
+        return Promise.allSettled([
+          ...STATIC_ASSETS.map(asset => cache.add(asset).catch(err => console.log('Failed to cache:', asset, err))),
+          ...JS_FILES.map(asset => cache.add(asset).catch(err => console.log('Failed to cache JS:', asset, err)))
+        ]);
       })
       .then(() => self.skipWaiting())
   );
@@ -48,15 +52,16 @@ self.addEventListener('activate', (event) => {
 
 // Fetch event - serve from cache, fallback to network
 self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+
   // Skip non-GET requests
   if (event.request.method !== 'GET') return;
 
-  // Skip API requests - always go to network
-  if (event.request.url.includes('/api/')) {
+  // For API requests and JS files: always go to network first
+  if (url.pathname.includes('/api/') || url.pathname.endsWith('.js')) {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          // Clone the response to cache it
           if (response.ok) {
             const responseClone = response.clone();
             caches.open(CACHE_NAME)
@@ -65,11 +70,8 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => {
-          // Return offline fallback for API requests
-          return new Response(
-            JSON.stringify({ message: 'You are offline. Please check your connection.' }),
-            { headers: { 'Content-Type': 'application/json' } }
-          );
+          return caches.match(event.request)
+            .then(cached => cached || new Response('Offline', { status: 503 }));
         })
     );
     return;

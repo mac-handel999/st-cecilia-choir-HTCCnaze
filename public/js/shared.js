@@ -712,10 +712,18 @@ document.addEventListener('DOMContentLoaded', () => {
   // Register Service Worker for PWA (only on Express server)
   const isExpressServer = window.location.port === '5000' || window.location.port === '';
   if ('serviceWorker' in navigator && isExpressServer) {
-    window.addEventListener('load', () => {
+    window.addEventListener('load', async () => {
+      const registration = await navigator.serviceWorker.getRegistration('/');
+      if (registration) {
+        await registration.unregister();
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
+        console.log('ServiceWorker and caches cleared');
+      }
+
       navigator.serviceWorker.register('/service-worker.js')
-        .then((registration) => {
-          console.log('ServiceWorker registered:', registration.scope);
+        .then((reg) => {
+          console.log('ServiceWorker registered:', reg.scope);
         })
         .catch((error) => {
           console.log('ServiceWorker registration failed:', error);

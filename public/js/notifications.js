@@ -183,6 +183,10 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (type === 'notification') {
             await api.delete('/notifications/' + id);
           }
+          const feedItem = btn.closest('.feed-item');
+          if (feedItem) {
+            feedItem.remove();
+          }
           Toast.success('Item deleted');
           await loadFeed();
         } catch (error) {
