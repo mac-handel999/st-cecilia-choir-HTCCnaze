@@ -19,8 +19,11 @@ const api = {
     });
 
     if (res.status === 401) {
-      clearCurrentUser();
-      window.location.href = 'login.html';
+      const path = window.location.pathname;
+      if (!path.endsWith('/login.html') && !path.endsWith('login.html')) {
+        clearCurrentUser();
+        window.location.href = 'login.html';
+      }
       throw new Error('Unauthorized');
     }
 
@@ -916,7 +919,12 @@ function updateNotificationBadge(count) {
 
 async function loadNotificationBadge() {
   try {
-    const notifications = asArray(await api.get('/notifications'));
+    const res = await fetch('/api/notifications');
+    if (!res.ok) {
+      if (res.status === 401) return;
+      throw new Error('Failed');
+    }
+    const notifications = await res.json();
     const unreadCount = notifications.filter(n => !n.read).length;
     updateNotificationBadge(unreadCount);
 
