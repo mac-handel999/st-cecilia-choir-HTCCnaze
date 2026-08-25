@@ -837,37 +837,59 @@ function hidePageLoader() {
   try {
     const loader = document.getElementById('page-loader');
     if (!loader) return;
+    
     const startTime = Date.now();
     const minDisplay = 1500;
-    const maxDisplay = 5000;
+    const maxDisplay = 8000;
+    
     function tryHide() {
       const elapsed = Date.now() - startTime;
       const remaining = Math.max(0, Math.min(minDisplay - elapsed, maxDisplay - elapsed));
+      
       setTimeout(() => {
         try {
-          loader.classList.add('hidden');
-          setTimeout(() => {
-            try {
-              if (loader.parentNode) loader.parentNode.removeChild(loader);
-            } catch (e) {
-              // Ignore removal errors
-            }
-          }, 500);
+          if (loader && loader.parentNode) {
+            loader.classList.add('hidden');
+            setTimeout(() => {
+              try {
+                if (loader && loader.parentNode) {
+                  loader.parentNode.removeChild(loader);
+                }
+              } catch (e) {
+                // Ignore removal errors
+              }
+            }, 500);
+          }
         } catch (e) {
-          // Ignore class addition errors
+          // Fallback: force remove loader
+          try {
+            if (loader && loader.parentNode) {
+              loader.parentNode.removeChild(loader);
+            }
+          } catch (e2) {
+            // Ignore
+          }
         }
       }, remaining);
     }
+    
     if (document.readyState === 'complete') {
       tryHide();
+    } else if (document.readyState === 'interactive') {
+      setTimeout(tryHide, 500);
     } else {
-      window.addEventListener('load', tryHide);
+      window.addEventListener('load', tryHide, { once: true });
+      setTimeout(tryHide, maxDisplay);
     }
   } catch (e) {
-    // Fallback: remove loader if any error occurs
-    const loader = document.getElementById('page-loader');
-    if (loader && loader.parentNode) {
-      loader.parentNode.removeChild(loader);
+    // Emergency fallback: remove loader by any means
+    try {
+      const loader = document.getElementById('page-loader');
+      if (loader && loader.parentNode) {
+        loader.parentNode.removeChild(loader);
+      }
+    } catch (e2) {
+      // Ignore
     }
   }
 }

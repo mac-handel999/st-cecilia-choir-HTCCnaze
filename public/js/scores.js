@@ -122,7 +122,7 @@ async function loadScores() {
         const supabaseItem = supabaseMap.get(key);
         merged.push({
           ...supabaseItem,
-          uploaded_by: supabaseItem.uploaded_by || driveItem.uploaded_by,
+          uploaded_by: driveItem.uploaded_by || supabaseItem.uploaded_by,
           source: 'supabase+drive'
         });
         seen.add(key);

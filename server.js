@@ -1308,16 +1308,13 @@ app.post('/api/notifications/mark-read', authMiddleware, async (req, res) => {
 
 app.delete('/api/notifications/:id', authMiddleware, async (req, res) => {
   try {
-    const { data, error } = await supabaseAdmin
+    await supabaseAdmin
       .from('notifications')
       .delete()
       .eq('id', req.params.id)
-      .eq('user_id', req.user.id)
-      .select()
-      .single();
+      .eq('user_id', req.user.id);
 
-    if (error) throw error;
-    res.json(data || { message: 'Notification deleted' });
+    res.json({ message: 'Notification deleted' });
   } catch (err) {
     console.error('Notification delete error:', err);
     res.status(500).json({ message: 'Failed to delete notification' });

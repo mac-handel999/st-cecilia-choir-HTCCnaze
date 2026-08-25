@@ -1,4 +1,4 @@
-const CACHE_NAME = 'st-cecilia-choir-v4';
+const CACHE_NAME = 'st-cecilia-choir-v5';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -80,10 +80,8 @@ self.addEventListener('fetch', (event) => {
     caches.match(event.request)
       .then((cachedResponse) => {
         if (cachedResponse) {
-          // Return cached version immediately
           const fetchPromise = fetch(event.request)
             .then((networkResponse) => {
-              // Update cache with fresh version
               if (networkResponse.ok) {
                 const responseClone = networkResponse.clone();
                 caches.open(CACHE_NAME)
@@ -93,19 +91,15 @@ self.addEventListener('fetch', (event) => {
             })
             .catch(() => cachedResponse);
 
-          // Return cached response immediately, update in background
           return cachedResponse;
         }
 
-        // Not in cache, fetch from network
         return fetch(event.request)
           .then((response) => {
-            // Don't cache invalid responses
             if (!response || response.status !== 200 || response.type !== 'basic') {
               return response;
             }
 
-            // Clone and cache the response
             const responseClone = response.clone();
             caches.open(CACHE_NAME)
               .then((cache) => cache.put(event.request, responseClone));
@@ -113,7 +107,6 @@ self.addEventListener('fetch', (event) => {
             return response;
           })
           .catch(() => {
-            // Return offline fallback for HTML pages
             if (event.request.headers.get('accept') && event.request.headers.get('accept').includes('text/html')) {
               return caches.match('/index.html');
             }
