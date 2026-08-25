@@ -36,6 +36,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  font-size: 24px;
 }
 
 .mass-section-icon.gold {
@@ -46,6 +47,15 @@
 .mass-section-icon.info {
   background: var(--color-info);
   color: #fff;
+}
+
+.mass-section-icon .material-symbols-outlined {
+  font-size: 24px;
+}
+
+.mass-section-fallback-icon {
+  font-size: 22px;
+  line-height: 1;
 }
 
 .mass-section-title {
@@ -98,6 +108,10 @@
   color: var(--color-text);
   line-height: 1.7;
   font-size: 0.95rem;
+  white-space: normal;
+  overflow: visible;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 @media (min-width: 768px) {

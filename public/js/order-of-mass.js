@@ -11,6 +11,46 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   let massData = {};
 
+  const ICON_FALLBACKS = {
+    'cross': '✝',
+    'menu_book': '📖',
+    'local_bar': '🍷',
+    'sanctuary': '⛪',
+    'auto_awesome': '✨',
+    'church': '⛪',
+    'event': '📅',
+    'calendar_today': '📅',
+    'library_music': '🎵',
+    'groups': '👥',
+    'person': '👤',
+    'settings': '⚙️',
+    'notifications': '🔔',
+    'home': '🏠',
+    'psychology': '💭',
+    'upload_file': '📤',
+    'description': '📄',
+    'search': '🔍',
+    'sort_by_alpha': '🔤',
+    'delete': '🗑️',
+    'done_all': '✅',
+    'delete_sweep': '🧹',
+    'fact_check': '✓',
+    'campaign': '📢',
+    'photo_library': '🖼️',
+    'badge': '🏅',
+    'dashboard': '📊',
+    'map_pin': '📍',
+    'menu_book': '📕',
+    'church': '⛪',
+    'local_bar': '🍷',
+    'sanctuary': '⛪',
+    'auto_awesome': '✨'
+  };
+
+  function getFallbackIcon(iconName) {
+    return ICON_FALLBACKS[iconName] || '📋';
+  }
+
   try {
     const res = await fetch('data/order-of-mass.json');
     if (!res.ok) throw new Error('Failed to load Order of Mass data');
@@ -64,12 +104,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       card.className = 'mass-section-card';
 
       const iconClass = getIconClass(sec.icon);
+      const fallbackIcon = getFallbackIcon(sec.icon);
 
       const header = document.createElement('div');
       header.className = 'mass-section-header';
       header.innerHTML = `
         <div class="mass-section-icon ${iconClass}">
           <span class="material-symbols-outlined">${sec.icon}</span>
+          <span class="mass-section-fallback-icon" style="display: none;">${fallbackIcon}</span>
         </div>
         <h2 class="mass-section-title">${escapeHtml(sec.section)}</h2>
       `;
@@ -87,6 +129,33 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
 
       contentContainer.appendChild(card);
+    });
+
+    const iconElements = contentContainer.querySelectorAll('.mass-section-icon .material-symbols-outlined');
+    iconElements.forEach(iconEl => {
+      const parent = iconEl.parentElement;
+      const fallback = parent.querySelector('.mass-section-fallback-icon');
+      
+      iconEl.addEventListener('error', () => {
+        iconEl.style.display = 'none';
+        if (fallback) fallback.style.display = 'inline';
+      });
+      
+      iconEl.addEventListener('load', () => {
+        iconEl.style.display = 'inline';
+        if (fallback) fallback.style.display = 'none';
+      });
+      
+      if (fallback) {
+        setTimeout(() => {
+          const computed = getComputedStyle(iconEl);
+          const fontFamily = computed.fontFamily || '';
+          if (!fontFamily.includes('Material Symbols') && !fontFamily.includes('material')) {
+            iconEl.style.display = 'none';
+            fallback.style.display = 'inline';
+          }
+        }, 100);
+      }
     });
   }
 });

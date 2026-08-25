@@ -9,7 +9,7 @@
         { "speaker": "Priest", "text": "The Lord be with you." },
         { "speaker": "People", "text": "And with your spirit." },
         { "speaker": "Priest", "text": "Brethren, let us acknowledge our sins, and so prepare ourselves to celebrate the sacred mysteries." },
-        { "speaker": "All", "text": "I confess to almighty God and to you, my brothers and sisters, that I have greatly sinned in my thoughts and in my words, in what I have done and in what I have failed to do..." },
+        { "speaker": "All", "text": "I confess to almighty God and to you, my brothers and sisters, that I have greatly sinned in my thoughts and in my words, in what I have done and in what I have failed to do: through my fault, through my fault, through my most grievous fault. Therefore I ask blessed Mary ever-Virgin, all the Angels and Saints, and you, my brothers and sisters, to pray for me to the Lord our God." },
         { "speaker": "Priest", "text": "May almighty God have mercy on us, forgive us our sins, and bring us to everlasting life." },
         { "speaker": "People", "text": "Amen." },
         { "speaker": "Priest", "text": "Lord, have mercy." },
@@ -18,7 +18,7 @@
         { "speaker": "People", "text": "Christ, have mercy." },
         { "speaker": "Priest", "text": "Lord, have mercy." },
         { "speaker": "People", "text": "Lord, have mercy." },
-        { "speaker": "All", "text": "Glory to God in the highest, and on earth peace to people of good will. We praise you, we bless you, we adore you, we glorify you..." }
+        { "speaker": "All", "text": "Glory to God in the highest, and on earth peace to people of good will. We praise you, we bless you, we adore you, we glorify you, we give you thanks for your great glory, Lord God, heavenly King, O God, almighty Father. Lord Jesus Christ, Only Begotten Son, Lord God, Lamb of God, Son of the Father, you take away the sins of the world, have mercy on us; you take away the sins of the world, receive our prayer; you sit at the right hand of the Father, have mercy on us. For you alone are the Holy One, you alone are the Lord, you alone are the Most High, Jesus Christ, with the Holy Spirit, in the glory of God the Father. Amen." }
       ]
     },
     {
@@ -33,7 +33,7 @@
         { "speaker": "People", "text": "Glory to you, O Lord." },
         { "speaker": "Priest", "text": "The Gospel of the Lord." },
         { "speaker": "People", "text": "Praise to you, Lord Jesus Christ." },
-        { "speaker": "All", "text": "I believe in one God, the Father almighty, maker of heaven and earth, of all things visible and invisible..." }
+        { "speaker": "All", "text": "I believe in one God, the Father almighty, maker of heaven and earth, of all things visible and invisible. I believe in one Lord Jesus Christ, the Only Begotten Son of God, born of the Father before all ages. God from God, Light from Light, true God from true God, begotten, not made, consubstantial with the Father; through him all things were made. For us men and for our salvation he came down from heaven, and by the Holy Spirit was incarnate of the Virgin Mary, and became man. He was crucified for us under Pontius Pilate; he suffered and was buried. The third day he rose again according to the Scriptures; he ascended into heaven and is seated at the right hand of the Father. He will come again in glory to judge the living and the dead and his kingdom will have no end. I believe in the Holy Spirit, the Lord, the giver of life, who proceeds from the Father and the Son, who with the Father and the Son is adored and glorified, who has spoken through the prophets. I believe in one, holy, catholic and apostolic Church. I confess one Baptism for the forgiveness of sins and I look forward to the resurrection of the dead and the life of the world to come. Amen." }
       ]
     },
     {
@@ -58,12 +58,12 @@
       "icon": "sanctuary",
       "content": [
         { "speaker": "Priest", "text": "At the Savior's command and formed by divine teaching, we dare to say:" },
-        { "speaker": "All", "text": "Our Father, who art in heaven, hallowed be thy name; thy kingdom come, thy will be done on earth as it is in heaven. Give us this day our daily bread..." },
-        { "speaker": "Priest", "text": "Deliver us, Lord, we pray, from every evil..." },
+        { "speaker": "All", "text": "Our Father, who art in heaven, hallowed be thy name; thy kingdom come, thy will be done on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us; and lead us not into temptation, but deliver us from evil." },
+        { "speaker": "Priest", "text": "Deliver us, Lord, we pray, from every evil, graciously grant peace in our days, that, with the help of your mercy, we may be always free from sin and safe from all distress, as we await the blessed hope and the coming of our Savior, Jesus Christ." },
         { "speaker": "People", "text": "For the kingdom, the power and the glory are yours now and for ever." },
         { "speaker": "Priest", "text": "The peace of the Lord be with you always." },
         { "speaker": "People", "text": "And with your spirit." },
-        { "speaker": "All", "text": "Lamb of God, you take away the sins of the world, have mercy on us..." },
+        { "speaker": "All", "text": "Lamb of God, you take away the sins of the world, have mercy on us. Lamb of God, you take away the sins of the world, have mercy on us. Lamb of God, you take away the sins of the world, grant us peace." },
         { "speaker": "Priest", "text": "Behold the Lamb of God, behold him who takes away the sins of the world. Blessed are those called to the supper of the Lamb." },
         { "speaker": "People", "text": "Lord, I am not worthy that you should enter under my roof, but only say the word and my soul shall be healed." }
       ]
@@ -91,7 +91,7 @@
         { "speaker": "Sacerdos", "text": "Dóminus vobíscum." },
         { "speaker": "Populus", "text": "Et cum spíritu tuo." },
         { "speaker": "Sacerdos", "text": "Fratres, agnoscámus peccáta nostra, ut apti simus ad sacra mystéria celebránda." },
-        { "speaker": "Omnes", "text": "Confíteor Deo omnipoténti et vobis, fratres, quia peccávi nimis cogitatióne, verbo, ópere et omissióne..." },
+        { "speaker": "Omnes", "text": "Confíteor Deo omnipoténti et vobis, fratres, quia peccávi nimis cogitatióne, verbo, ópere et omissióne: mea culpa, mea culpa, mea máxima culpa. Ideo precor beátam Maríam semper Vírginem, omnes Angelos et Sanctos, et vos, fratres, oráre pro me ad Dóminum Deum nostrum." },
         { "speaker": "Sacerdos", "text": "Misereátur nostri omnípotens Deus et, dimíssis peccátis nostris, perdúcat nos ad vitam ætérnam." },
         { "speaker": "Populus", "text": "Amen." },
         { "speaker": "Sacerdos", "text": "Kýrie, eléison." },
@@ -100,7 +100,7 @@
         { "speaker": "Populus", "text": "Christe, eléison." },
         { "speaker": "Sacerdos", "text": "Kýrie, eléison." },
         { "speaker": "Populus", "text": "Kýrie, eléison." },
-        { "speaker": "Omnes", "text": "Glória in excélsis Deo et in terra pax homínibus bonæ voluntátis. Laudámus te, benedícimus te, adorámus te, glorificámus te..." }
+        { "speaker": "Omnes", "text": "Glória in excélsis Deo et in terra pax homínibus bonæ voluntátis. Laudámus te, benedícimus te, adorámus te, glorificámus te, grátias ágimus tibi propter magnam glóriam tuam, Dómine Deus, Rex cæléstis, Deus Pater omnípotens. Dómine Fili Unigénite, Iesu Christe, Dómine Deus, Agnus Dei, Fílius Patris, qui tollis peccáta mundi, miserére nobis: qui tollis peccáta mundi, súscipe deprecatiónem nostram: qui sedes ad déxteram Patris, miserére nobis. Quia tu solus Sanctus, tu solus Dóminus, tu solus Altíssimus, Iesu Christe, cum Sancto Spíritu: in glória Dei Patris. Amen." }
       ]
     },
     {
@@ -115,7 +115,7 @@
         { "speaker": "Populus", "text": "Glória tibi, Dómine." },
         { "speaker": "Sacerdos", "text": "Verbum Dómini." },
         { "speaker": "Populus", "text": "Laus tibi, Christe." },
-        { "speaker": "Omnes", "text": "Credo in unum Deum, Patrem omnipoténtem, factórem cæli et terræ, visibílium ómnium et invisibílium..." }
+        { "speaker": "Omnes", "text": "Credo in unum Deum, Patrem omnipoténtem, factórem cæli et terræ, visibílium ómnium et invisibílium. Et in unum Dóminum Iesum Christum, Fílium Dei Unigénitum, et ex Patre natum ante ómnia sæcula. Deum de Deo, lumen de lúmine, Deum verum de Deo vero, génitum, non factum, consubstantiálem Patri: per quem ómnia facta sunt. Qui propter hómines et propter nostram salútem descéndit de cælis. Et incarnátus est de Spíritu Sancto ex María Vírgine, et homo factus est. Crucifíxus étiam pro nobis sub Póntio Piláto; passus et sepúltus est. Et resurréxit tértia die secúndum Scriptúras. Et ascéndit in cælum, sedet ad déxteram Patris. Et íterum ventúrus est cum glória iudicáre vivos et mórtuos, cuius regni non erit finis. Et in Spíritum Sanctum, Dóminum et vivificántem: qui ex Patre Filióque procédit. Qui cum Patre et Fílio simul adorátur et conglorificátur: qui locútus est per Prophétas. Et unam, sanctam, cathólicam et apostólicam Ecclésiam. Confíteor unum baptísma in remissiónem peccatórum. Et exspécto resurrectiónem mortuórum, et vitam ventúri sæculi. Amen." }
       ]
     },
     {
@@ -140,12 +140,12 @@
       "icon": "sanctuary",
       "content": [
         { "speaker": "Sacerdos", "text": "Præcéptis salutáribus móniti, et divína institutióne formáti, audémus dícere:" },
-        { "speaker": "Omnes", "text": "Pater noster, qui es in cælis: sanctificétur nomen tuum; advéniat regnum tuum; fiat volúntas tua, sicut in cælo et in terra..." },
-        { "speaker": "Sacerdos", "text": "Líbera nos, quǽsumus, Dómine, ab ómnibus malis..." },
+        { "speaker": "Omnes", "text": "Pater noster, qui es in cælis: sanctificétur nomen tuum; advéniat regnum tuum; fiat volúntas tua, sicut in cælo et in terra. Panem nostrum cotidiánum da nobis hódie, et dimítte nobis débita nostra, sicut et nos dimíttimus debitóribus nostris. Et ne nos indúcas in tentatiónem: sed líbera nos a malo." },
+        { "speaker": "Sacerdos", "text": "Líbera nos, quǽsumus, Dómine, ab ómnibus malis, da propítius pacem in diébus nostris, ut, ope misericórdiæ tuæ adiúti, et a peccáto simus semper líberi et ab omni perturbatióne secúri: exspectántes beátam spem et advéntum Salvatóris nostri Iesu Christi." },
         { "speaker": "Populus", "text": "Quia tuum est regnum, et potéstas, et glória in sǽcula." },
         { "speaker": "Sacerdos", "text": "Pax Dómini sit semper vobíscum." },
         { "speaker": "Populus", "text": "Et cum spíritu tuo." },
-        { "speaker": "Omnes", "text": "Agnus Dei, qui tollis peccáta mundi: miserére nobis..." },
+        { "speaker": "Omnes", "text": "Agnus Dei, qui tollis peccáta mundi: miserére nobis. Agnus Dei, qui tollis peccáta mundi: miserére nobis. Agnus Dei, qui tollis peccáta mundi: dona nobis pacem." },
         { "speaker": "Sacerdos", "text": "Ecce Agnus Dei, ecce qui tollit peccáta mundi. Beáti qui ad cenam Agni vocáti sunt." },
         { "speaker": "Populus", "text": "Dómine, non sum dignus, ut intres sub tectum meum, sed tantum dic verbo et sanábitur ánima mea." }
       ]
