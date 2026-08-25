@@ -144,20 +144,22 @@ function startSundayMassCountdown() {
       { hours: 9, minutes: 30, label: '9:30 AM' }
     ];
 
+    const daysUntilSunday = currentDay === 0 ? 7 : 7 - currentDay;
+    const nextSunday = new Date(now);
+    nextSunday.setDate(now.getDate() + daysUntilSunday);
+    nextSunday.setHours(0, 0, 0, 0);
+
     let nextMass = null;
     let minDiff = Infinity;
 
     for (const mass of masses) {
-      for (let daysUntil = 0; daysUntil < 7; daysUntil++) {
-        const candidate = new Date(now);
-        candidate.setDate(now.getDate() + ((0 - currentDay + 7) % 7 + daysUntil) % 7);
-        candidate.setHours(mass.hours, mass.minutes, 0, 0);
-        
-        const diff = candidate - now;
-        if (diff > 0 && diff < minDiff) {
-          minDiff = diff;
-          nextMass = { date: candidate, label: mass.label };
-        }
+      const candidate = new Date(nextSunday);
+      candidate.setHours(mass.hours, mass.minutes, 0, 0);
+      
+      const diff = candidate - now;
+      if (diff > 0 && diff < minDiff) {
+        minDiff = diff;
+        nextMass = { date: candidate, label: mass.label };
       }
     }
 
