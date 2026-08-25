@@ -176,41 +176,6 @@ function startSundayMassCountdown() {
   }
 }
 
-function startCountdown(targetDate, countdownEl) {
-  if (!countdownEl) return;
-
-  const units = [
-    { label: 'Days', divisor: 1000 * 60 * 60 * 24 },
-    { label: 'Hrs', divisor: 1000 * 60 * 60 },
-    { label: 'Mins', divisor: 1000 * 60 },
-    { label: 'Secs', divisor: 1000 }
-  ];
-
-  let intervalId = null;
-
-  function render() {
-    const diff = targetDate - new Date();
-    if (diff <= 0) {
-      countdownEl.innerHTML = '<div class="countdown-block"><div class="countdown-value">Now</div><div class="countdown-label">Rehearsal</div></div>';
-      if (intervalId) clearInterval(intervalId);
-      return;
-    }
-
-    const values = units.map(u => ({
-      label: u.label,
-      value: Math.max(0, Math.floor(diff / u.divisor))
-    }));
-
-    countdownEl.innerHTML = values.map((v, i) => {
-      const sep = i < values.length - 1 ? '<div class="countdown-sep">:</div>' : '';
-      return `<div class="countdown-block"><div class="countdown-value">${v.value}</div><div class="countdown-label">${v.label}</div></div>${sep}`;
-    }).join('');
-  }
-
-  render();
-  intervalId = setInterval(render, 1000);
-}
-
 async function loadRecentScores() {
   const list = document.getElementById('recent-scores-list');
   if (!list) return;
@@ -271,15 +236,34 @@ async function loadAnnouncements() {
       return;
     }
 
+    const currentUser = getCurrentUser();
+    const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'exco';
+
     container.innerHTML = announcements.map((n, i) => `
-      <div class="announcement-item ${i === 0 ? 'announcement-featured' : ''}">
+      <div class="announcement-item ${i === 0 ? 'announcement-featured' : ''}" data-id="${n.id}">
         <div class="announcement-top">
           <h4>${escapeHtml(n.title)}</h4>
           <span>${formatDate(n.created_at)}</span>
         </div>
         <p>${escapeHtml(n.message)}</p>
+        ${isAdmin ? `<button class="btn-icon delete-announcement" data-id="${n.id}" title="Delete" style="color: var(--color-error); padding: 4px; margin-top: 0.5rem;"><span class="material-symbols-outlined" style="font-size: 18px;">delete</span></button>` : ''}
       </div>
     `).join('');
+
+    container.querySelectorAll('.delete-announcement').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const id = btn.dataset.id;
+        if (!confirm('Delete this announcement?')) return;
+        try {
+          await api.delete('/notifications/' + id);
+          btn.closest('.announcement-item').remove();
+          Toast.success('Announcement deleted');
+        } catch (error) {
+          Toast.error('Failed to delete: ' + error.message);
+        }
+      });
+    });
   } catch {
     container.innerHTML = '<div class="announcement-item"><h4>Announcements</h4><p>Unable to load announcements right now.</p></div>';
   }
@@ -295,6 +279,9 @@ async function loadUpcomingEvent() {
     const upcoming = events
       .filter(e => e.event_date && new Date(e.event_date) >= now)
       .sort((a, b) => new Date(a.event_date) - new Date(b.event_date))[0];
+
+    const currentUser = getCurrentUser();
+    const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'exco';
 
     if (!upcoming) {
       const nextDate = getNextRehearsal();
@@ -315,6 +302,9 @@ async function loadUpcomingEvent() {
       return;
     }
 
+    const eventDate = new Date(upcoming.event_date);
+    const eventDateTime = upcoming.event_time ? new Date(`${upcoming.event_date}T${upcoming.event_time}`) : eventDate;
+
     container.innerHTML = `
       ${upcoming.image_url ? `<img src="${escapeHtml(upcoming.image_url)}" alt="${escapeHtml(upcoming.title)}" class="upcoming-event-img" loading="lazy">` : '<div class="upcoming-event-img upcoming-event-placeholder"><span class="material-symbols-outlined">church</span></div>'}
       <div class="upcoming-event-body">
@@ -322,10 +312,65 @@ async function loadUpcomingEvent() {
         <h4>${escapeHtml(upcoming.title)}</h4>
         <p><span class="material-symbols-outlined">schedule</span> ${formatDate(upcoming.event_date)}${upcoming.event_time ? ' at ' + escapeHtml(upcoming.event_time) : ''}</p>
         ${upcoming.location ? `<p><span class="material-symbols-outlined">location_on</span> ${escapeHtml(upcoming.location)}</p>` : ''}
-        <a href="events.html" class="btn btn-outline btn-sm" style="margin-top: 0.75rem;">View All Events</a>
+        <div id="event-countdown" style="margin-top: 0.75rem;"></div>
+        <div style="margin-top: 0.75rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <a href="events.html" class="btn btn-outline btn-sm">View All Events</a>
+          ${isAdmin ? `<button class="btn btn-outline btn-sm delete-event-btn" data-id="${upcoming.id}" style="color: var(--color-error); border-color: var(--color-error);"><span class="material-symbols-outlined" style="font-size: 16px;">delete</span> Delete</button>` : ''}
+        </div>
       </div>
     `;
+
+    startCountdown(eventDateTime, document.getElementById('event-countdown'));
+
+    const deleteBtn = container.querySelector('.delete-event-btn');
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', async () => {
+        if (!confirm('Delete this event?')) return;
+        try {
+          await api.delete('/events/' + upcoming.id);
+          Toast.success('Event deleted');
+          await loadUpcomingEvent();
+        } catch (error) {
+          Toast.error('Failed to delete: ' + error.message);
+        }
+      });
+    }
   } catch {
     container.innerHTML = '<p style="color: var(--color-text-muted); padding: 1rem;">Events will appear here when scheduled.</p>';
   }
+}
+
+function startEventCountdown(targetDate, countdownEl) {
+  if (!countdownEl) return;
+
+  const units = [
+    { label: 'Days', divisor: 1000 * 60 * 60 * 24 },
+    { label: 'Hrs', divisor: 1000 * 60 * 60 },
+    { label: 'Mins', divisor: 1000 * 60 },
+    { label: 'Secs', divisor: 1000 }
+  ];
+
+  let intervalId = null;
+
+  function render() {
+    const diff = targetDate - new Date();
+    if (diff <= 0) {
+      countdownEl.innerHTML = '<div class="countdown-block"><div class="countdown-value">Now</div><div class="countdown-label">Event</div></div>';
+      if (intervalId) clearInterval(intervalId);
+      return;
+    }
+
+    const values = units.map(u => ({
+      label: u.label,
+      value: Math.max(0, Math.floor(diff / u.divisor))
+    }));
+
+    countdownEl.innerHTML = values.map((v, i) => {
+      const sep = i < values.length - 1 ? '<div class="countdown-sep">:</div>' : '';
+      return `<div class="countdown-block"><div class="countdown-value">${v.value}</div><div class="countdown-label">${v.label}</div></div>${sep}`;
+    }).join('');
+  }
+
+  render();
+  intervalId = setInterval(render, 1000);
 }

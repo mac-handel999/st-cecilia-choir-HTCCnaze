@@ -42,28 +42,35 @@ document.addEventListener('DOMContentLoaded', async () => {
         formData.append('score', file);
         formData.append('category', categoryInput.value);
 
+        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
         const response = await fetch('/api/drive/scores/upload', {
           method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token') || sessionStorage.getItem('token')}`
-          },
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
           body: formData
         });
 
-        const result = await response.json();
+        let result;
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          result = await response.json();
+        } else {
+          result = { message: await response.text() };
+        }
 
         if (!response.ok) {
-          throw new Error(result.error || result.message || 'Upload failed');
+          throw new Error(result.error || result.message || `Upload failed with status ${response.status}`);
         }
 
         showAlert('upload-alert', 'Score uploaded successfully!', 'success');
         uploadForm.reset();
         await loadScores();
       } catch (error) {
+        console.error('Upload error:', error);
         showAlert('upload-alert', error.message || 'Upload failed. Please try again.', 'error');
       } finally {
-        submitBtn.disabled = false;
+        submitBtn.disabled = true;
         submitBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 18px;">cloud_upload</span> Upload Score';
+        submitBtn.disabled = false;
       }
     });
   }

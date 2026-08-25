@@ -128,7 +128,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     let headerHtml = `
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; gap: 0.75rem; flex-wrap: wrap;">
         <h2 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: var(--color-primary); margin: 0;">Feed</h2>
-        ${hasUnread ? `<button id="mark-all-read-btn" class="btn btn-outline btn-sm"><span class="material-symbols-outlined" style="font-size: 16px;">done_all</span> Mark All As Read</button>` : ''}
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          ${hasUnread ? `<button id="mark-all-read-btn" class="btn btn-outline btn-sm"><span class="material-symbols-outlined" style="font-size: 16px;">done_all</span> Mark All As Read</button>` : '<button id="mark-all-read-btn" class="btn btn-outline btn-sm" disabled style="opacity: 0.5;"><span class="material-symbols-outlined" style="font-size: 16px;">done_all</span> Mark All As Read</button>'}
+          <button id="delete-all-btn" class="btn btn-outline btn-sm" style="color: var(--color-error); border-color: var(--color-error);"><span class="material-symbols-outlined" style="font-size: 16px;">delete_sweep</span> Delete All</button>
+        </div>
       </div>
     `;
 
@@ -188,12 +191,28 @@ document.addEventListener('DOMContentLoaded', async () => {
             feedItem.remove();
           }
           Toast.success('Item deleted');
-          await loadFeed();
         } catch (error) {
           Toast.error('Failed to delete: ' + error.message);
+          await loadFeed();
         }
       });
     });
+
+    const deleteAllBtn = document.getElementById('delete-all-btn');
+    if (deleteAllBtn) {
+      deleteAllBtn.addEventListener('click', async () => {
+        if (!confirm('Delete ALL notifications? This cannot be undone.')) return;
+        try {
+          const notifications = await api.get('/notifications');
+          const ids = asArray(notifications).map(n => n.id);
+          await Promise.all(ids.map(id => api.delete('/notifications/' + id)));
+          Toast.success('All notifications deleted');
+          await loadFeed();
+        } catch (error) {
+          Toast.error('Failed to delete all: ' + error.message);
+        }
+      });
+    }
   }
 
   async function markNotificationsAsRead() {
