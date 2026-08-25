@@ -1,0 +1,258 @@
+{
+  "en": [
+    {
+      "section": "Introductory Rites",
+      "icon": "cross",
+      "content": [
+        { "speaker": "Priest", "text": "In the name of the Father, and of the Son, and of the Holy Spirit." },
+        { "speaker": "People", "text": "Amen." },
+        { "speaker": "Priest", "text": "The Lord be with you." },
+        { "speaker": "People", "text": "And with your spirit." },
+        { "speaker": "Priest", "text": "Brethren, let us acknowledge our sins, and so prepare ourselves to celebrate the sacred mysteries." },
+        { "speaker": "All", "text": "I confess to almighty God and to you, my brothers and sisters, that I have greatly sinned in my thoughts and in my words, in what I have done and in what I have failed to do..." },
+        { "speaker": "Priest", "text": "May almighty God have mercy on us, forgive us our sins, and bring us to everlasting life." },
+        { "speaker": "People", "text": "Amen." },
+        { "speaker": "Priest", "text": "Lord, have mercy." },
+        { "speaker": "People", "text": "Lord, have mercy." },
+        { "speaker": "Priest", "text": "Christ, have mercy." },
+        { "speaker": "People", "text": "Christ, have mercy." },
+        { "speaker": "Priest", "text": "Lord, have mercy." },
+        { "speaker": "People", "text": "Lord, have mercy." },
+        { "speaker": "All", "text": "Glory to God in the highest, and on earth peace to people of good will. We praise you, we bless you, we adore you, we glorify you..." }
+      ]
+    },
+    {
+      "section": "Liturgy of the Word",
+      "icon": "menu_book",
+      "content": [
+        { "speaker": "Reader", "text": "The Word of the Lord." },
+        { "speaker": "People", "text": "Thanks be to God." },
+        { "speaker": "Priest", "text": "The Lord be with you." },
+        { "speaker": "People", "text": "And with your spirit." },
+        { "speaker": "Priest", "text": "A reading from the holy Gospel according to N." },
+        { "speaker": "People", "text": "Glory to you, O Lord." },
+        { "speaker": "Priest", "text": "The Gospel of the Lord." },
+        { "speaker": "People", "text": "Praise to you, Lord Jesus Christ." },
+        { "speaker": "All", "text": "I believe in one God, the Father almighty, maker of heaven and earth, of all things visible and invisible..." }
+      ]
+    },
+    {
+      "section": "Liturgy of the Eucharist",
+      "icon": "local_bar",
+      "content": [
+        { "speaker": "Priest", "text": "Pray, brethren, that my sacrifice and yours may be acceptable to God, the almighty Father." },
+        { "speaker": "People", "text": "May the Lord accept the sacrifice at your hands for the praise and glory of his name, for our good and the good of all his holy Church." },
+        { "speaker": "Priest", "text": "The Lord be with you." },
+        { "speaker": "People", "text": "And with your spirit." },
+        { "speaker": "Priest", "text": "Lift up your hearts." },
+        { "speaker": "People", "text": "We lift them up to the Lord." },
+        { "speaker": "Priest", "text": "Let us give thanks to the Lord our God." },
+        { "speaker": "People", "text": "It is right and just." },
+        { "speaker": "All", "text": "Holy, Holy, Holy Lord God of hosts. Heaven and earth are full of your glory. Hosanna in the highest. Blessed is he who comes in the name of the Lord. Hosanna in the highest." },
+        { "speaker": "Priest", "text": "The mystery of faith." },
+        { "speaker": "People", "text": "We proclaim your Death, O Lord, and profess your Resurrection until you come again." }
+      ]
+    },
+    {
+      "section": "Communion Rite",
+      "icon": "sanctuary",
+      "content": [
+        { "speaker": "Priest", "text": "At the Savior's command and formed by divine teaching, we dare to say:" },
+        { "speaker": "All", "text": "Our Father, who art in heaven, hallowed be thy name; thy kingdom come, thy will be done on earth as it is in heaven. Give us this day our daily bread..." },
+        { "speaker": "Priest", "text": "Deliver us, Lord, we pray, from every evil..." },
+        { "speaker": "People", "text": "For the kingdom, the power and the glory are yours now and for ever." },
+        { "speaker": "Priest", "text": "The peace of the Lord be with you always." },
+        { "speaker": "People", "text": "And with your spirit." },
+        { "speaker": "All", "text": "Lamb of God, you take away the sins of the world, have mercy on us..." },
+        { "speaker": "Priest", "text": "Behold the Lamb of God, behold him who takes away the sins of the world. Blessed are those called to the supper of the Lamb." },
+        { "speaker": "People", "text": "Lord, I am not worthy that you should enter under my roof, but only say the word and my soul shall be healed." }
+      ]
+    },
+    {
+      "section": "Concluding Rite",
+      "icon": "auto_awesome",
+      "content": [
+        { "speaker": "Priest", "text": "The Lord be with you." },
+        { "speaker": "People", "text": "And with your spirit." },
+        { "speaker": "Priest", "text": "May almighty God bless you, the Father, and the Son, and the Holy Spirit." },
+        { "speaker": "People", "text": "Amen." },
+        { "speaker": "Priest", "text": "Go forth, the Mass is ended." },
+        { "speaker": "People", "text": "Thanks be to God." }
+      ]
+    }
+  ],
+  "la": [
+    {
+      "section": "Ritus Initiales",
+      "icon": "cross",
+      "content": [
+        { "speaker": "Sacerdos", "text": "In nómine Patris, et Fílii, et Spíritus Sancti." },
+        { "speaker": "Populus", "text": "Amen." },
+        { "speaker": "Sacerdos", "text": "Dóminus vobíscum." },
+        { "speaker": "Populus", "text": "Et cum spíritu tuo." },
+        { "speaker": "Sacerdos", "text": "Fratres, agnoscámus peccáta nostra, ut apti simus ad sacra mystéria celebránda." },
+        { "speaker": "Omnes", "text": "Confíteor Deo omnipoténti et vobis, fratres, quia peccávi nimis cogitatióne, verbo, ópere et omissióne..." },
+        { "speaker": "Sacerdos", "text": "Misereátur nostri omnípotens Deus et, dimíssis peccátis nostris, perdúcat nos ad vitam ætérnam." },
+        { "speaker": "Populus", "text": "Amen." },
+        { "speaker": "Sacerdos", "text": "Kýrie, eléison." },
+        { "speaker": "Populus", "text": "Kýrie, eléison." },
+        { "speaker": "Sacerdos", "text": "Christe, eléison." },
+        { "speaker": "Populus", "text": "Christe, eléison." },
+        { "speaker": "Sacerdos", "text": "Kýrie, eléison." },
+        { "speaker": "Populus", "text": "Kýrie, eléison." },
+        { "speaker": "Omnes", "text": "Glória in excélsis Deo et in terra pax homínibus bonæ voluntátis. Laudámus te, benedícimus te, adorámus te, glorificámus te..." }
+      ]
+    },
+    {
+      "section": "Liturgia Verbi",
+      "icon": "menu_book",
+      "content": [
+        { "speaker": "Lector", "text": "Verbum Dómini." },
+        { "speaker": "Populus", "text": "Deo grátias." },
+        { "speaker": "Sacerdos", "text": "Dóminus vobíscum." },
+        { "speaker": "Populus", "text": "Et cum spíritu tuo." },
+        { "speaker": "Sacerdos", "text": "Léctio sancti Evangélii secúndum N." },
+        { "speaker": "Populus", "text": "Glória tibi, Dómine." },
+        { "speaker": "Sacerdos", "text": "Verbum Dómini." },
+        { "speaker": "Populus", "text": "Laus tibi, Christe." },
+        { "speaker": "Omnes", "text": "Credo in unum Deum, Patrem omnipoténtem, factórem cæli et terræ, visibílium ómnium et invisibílium..." }
+      ]
+    },
+    {
+      "section": "Liturgia Eucharistica",
+      "icon": "local_bar",
+      "content": [
+        { "speaker": "Sacerdos", "text": "Oráte, fratres: ut meum ac vestrum sacrifícium acceptábile fiat apud Deum Patrem omnipoténtem." },
+        { "speaker": "Populus", "text": "Suscípiat Dóminus sacrifícium de mánibus tuis ad laudem et glóriam nóminis sui, ad utilitátem quoque nostram totiúsque Ecclésiæ suæ sanctæ." },
+        { "speaker": "Sacerdos", "text": "Dóminus vobíscum." },
+        { "speaker": "Populus", "text": "Et cum spíritu tuo." },
+        { "speaker": "Sacerdos", "text": "Sursum corda." },
+        { "speaker": "Populus", "text": "Habémus ad Dóminum." },
+        { "speaker": "Sacerdos", "text": "Grátias agámus Dómino Deo nostro." },
+        { "speaker": "Populus", "text": "Dignum et iustum est." },
+        { "speaker": "Omnes", "text": "Sanctus, Sanctus, Sanctus Dóminus Deus Sábaoth. Pleni sunt cæli et terra glória tua. Hosánna in excélsis. Benedíctus qui venit in nómine Dómini. Hosánna in excélsis." },
+        { "speaker": "Sacerdos", "text": "Mysterium fídei." },
+        { "speaker": "Populus", "text": "Mortem tuam annuntiámus, Dómine, et tuam resurrectiónem confitémur, donec vénias." }
+      ]
+    },
+    {
+      "section": "Ritus Communionis",
+      "icon": "sanctuary",
+      "content": [
+        { "speaker": "Sacerdos", "text": "Præcéptis salutáribus móniti, et divína institutióne formáti, audémus dícere:" },
+        { "speaker": "Omnes", "text": "Pater noster, qui es in cælis: sanctificétur nomen tuum; advéniat regnum tuum; fiat volúntas tua, sicut in cælo et in terra..." },
+        { "speaker": "Sacerdos", "text": "Líbera nos, quǽsumus, Dómine, ab ómnibus malis..." },
+        { "speaker": "Populus", "text": "Quia tuum est regnum, et potéstas, et glória in sǽcula." },
+        { "speaker": "Sacerdos", "text": "Pax Dómini sit semper vobíscum." },
+        { "speaker": "Populus", "text": "Et cum spíritu tuo." },
+        { "speaker": "Omnes", "text": "Agnus Dei, qui tollis peccáta mundi: miserére nobis..." },
+        { "speaker": "Sacerdos", "text": "Ecce Agnus Dei, ecce qui tollit peccáta mundi. Beáti qui ad cenam Agni vocáti sunt." },
+        { "speaker": "Populus", "text": "Dómine, non sum dignus, ut intres sub tectum meum, sed tantum dic verbo et sanábitur ánima mea." }
+      ]
+    },
+    {
+      "section": "Ritus Conclusionis",
+      "icon": "auto_awesome",
+      "content": [
+        { "speaker": "Sacerdos", "text": "Dóminus vobíscum." },
+        { "speaker": "Populus", "text": "Et cum spíritu tuo." },
+        { "speaker": "Sacerdos", "text": "Benedícat vos omnípotens Deus, Pater, et Fílius, et Spíritus Sanctus." },
+        { "speaker": "Populus", "text": "Amen." },
+        { "speaker": "Sacerdos", "text": "Ite, missa est." },
+        { "speaker": "Populus", "text": "Deo grátias." }
+      ]
+    }
+  ],
+  "ig": [
+    {
+      "section": "Introductory Rites",
+      "icon": "cross",
+      "content": [
+        { "speaker": "V.", "text": "N'aha Nna, na Nwa na Mmụọ Nsọ" },
+        { "speaker": "R.", "text": "Amen" },
+        { "speaker": "V.", "text": "Ka Ngọzi nke Onyenweanyị, Jesu Kristi, na ịhụnanya nke Chukwu Nna, na ịdịkọ n'otu nke Mmụọ Nsọ na-enye, dịrị ụnụ nile." },
+        { "speaker": "R.", "text": "Dịrịkwa mmụọ gị." },
+        { "speaker": "V.", "text": "Ụmụnne, ka anyị kwado onwe anyị nke ọma maka nnukwu emume nke Eukarịstịa site n'ikwuputa njọ anyị." },
+        { "speaker": "V. & R.", "text": "Ekwupụta m gwa Chineke ji ike nile, na ụnụ, ụmụnne m; na emehiela m nke ukwuu, site na echiche, na okwu na omume, na site n'ịhapụ ezi omume o kwesịrị na m ga-eme; site na mmehie m, site na mmehie m, site na mmehie m nke kacha ukwuu. Ya ka m ji arịọ Marịa dị ngọzi, Virgin ọkpụ, na ndị Mmụọma na ndị nsọ nile, na ụnụ, ụmụnne m ka ụnụ rịọrọ m Oseburụwa Chukwu anyị arịrịọ." },
+        { "speaker": "V.", "text": "Ka Chineke ji ike nile mere anyị ebere, gbaghara anyị njọ anyị, duruo anyị na ndụ ebebe." },
+        { "speaker": "R.", "text": "Amen." },
+        { "speaker": "V.", "text": "Onyenwanyị, mee ebere." },
+        { "speaker": "R.", "text": "Onyenwanyị, mee ebere." },
+        { "speaker": "V.", "text": "Kristi, mee ebere." },
+        { "speaker": "R.", "text": "Kristi, mee ebere." },
+        { "speaker": "V.", "text": "Onyenwanyị, mee ebere." },
+        { "speaker": "R.", "text": "Onyenwanyị, mee ebere." },
+        { "speaker": "All", "text": "Otito dịrị Chineke n'elu kacha elu, n'ụwa, udo dịrị ndị mmadụ ndị ihe na-asọ Chukwu. Anyị etoo Gị, Anyị esekpuoro Gị, Anyị edoo gị ebube. Anyị ekele Gị n'ihi nnukwu ebube Gị, Oseburụwa Chukwu, Eze nke eluigwe; Chukwu Nna ji ike nile. Onyenwanyị, Jesu Kristi, sọ otu Nwa Chineke mụrụ. Dinwenụ anyị, bụ Chukwu, Nwa-atụrụ nke Chineke, Nwa nke Nna, Onye na-ekpochapụ njọ nke ụwa, mere anyị ebere, Onye na-ekpochapụ njọ nke ụwa, nara arịrịọ anyị, Onye nọ n'aka nri Nna, mere anyị ebere. N'ihina sọ Gị dị asọ, Sọ Gị bụ Dinwenụ. Sọ Gị, O Jesu Kristi, kacha dị elu. Nyere Mmụọ Nsọ, n'ebube Chukwu nna. Amen." }
+      ]
+    },
+    {
+      "section": "Liturgy of the Word",
+      "icon": "menu_book",
+      "content": [
+        { "speaker": "V.", "text": "Okwunke Oseburụwa" },
+        { "speaker": "R.", "text": "Ekele dịrị Chukwu" },
+        { "speaker": "V.", "text": "Onyenwanyị nọnyere ụnụ." },
+        { "speaker": "R.", "text": "Nọnyerekwara mmụọ gị." },
+        { "speaker": "V.", "text": "Ihe ọgụgụ nke a si n'Oziọma dị nsọ nke N. dere" },
+        { "speaker": "R.", "text": "Otito dịrị Gị, Dinwenụ anyị." },
+        { "speaker": "V.", "text": "Oziọma nke Oseburụwa" },
+        { "speaker": "R.", "text": "Otito dịrị gị Kristi." },
+        { "speaker": "All", "text": "Ekwe m n'otu Chineke, Nna ji ike nile, onye mere eligwe na ala, n'ihe dum a na-ahụ anya, na ndị anaghị ahụ anya. Ya na otu Onyenwanyị, Jesus Kristi sọ otu Nwa Chineke mụrụ: Nna mụrụ tupu ụwatụwa nile. Chukwu si na Chukwu, íhé si na íhé. Ezi Chukwu si na ezi Chukwu. A mụrụ ya amụ, emeghị eme Ya na Nna bụ otu ihe n'ihe ha ji bụrụ Chukwu, Onye esi na ya mee ihe dum. Onye maka ihi anyị bụ mmadụ na maka ihi nzọpụta anyị. Siri n'eligwe gbadata O WERE AHỤ NA VIRGIN MARỊA SITE NA MMỤỌ NSỌ: Ọ BỤRỤ MMADỤ. A bịa kpọgbue Ya n'obe n'ihi anyị n'oge ọchịchị Pontius Pilate. Ọ taa ahụhụ, ọ nwụọ, Elie Ya, Ma Ọ bilitere n'ụbọchị nke atọ, ka akwụkwọ nsọ si kwuu. Ọ rọgoro n'eligwe nọrọ n'aka nri Nna. Ma Ọ ga-abjaghachi ọzọ n'ebube Ya ikpe ndị dị ndụ na ndị nwụrụ anwụ ikpe; onye ọchịchị Ya enweghị njedebe. Ekwe m na Mmụọ Nsọ Onyenwanyị na-enye ndụ, onye a na-esekpuru, na-etokọdo, Ya na Nna na Nwa: Onye si na Ndị Amụma kwuo okwu. Ekwe m n'otu Nzukọ Nsọ Katọlik, na Apọstọlik. Ekwupụta m otu Baptism nke mgbaghara njọ. Ana m atụ anya mbilite n'ọnwụ ndị nwụrụ anwụ, na ndụ ụwa ga-abịanụ. Amen." }
+      ]
+    },
+    {
+      "section": "Liturgy of the Eucharist",
+      "icon": "local_bar",
+      "content": [
+        { "speaker": "V.", "text": "Rịọwanụ, ụmụnne m, ka aja mụ na ụnụ bụrụ ihe ga-asọ Chukwu Nna ji ike nile ịnarạnụ." },
+        { "speaker": "R.", "text": "Onyenwanyị nara aja nke a n'aka gị maka otito na ebube aha Ya, ya na maka odịmma nke anyị, na nke ozugbo Nzukọ Ya dị asọ." },
+        { "speaker": "V.", "text": "Onyenwanyị nọnyere ụnụ" },
+        { "speaker": "R.", "text": "Nọnyerekwara mmụọ gị." },
+        { "speaker": "V.", "text": "Welitenụ obi elu." },
+        { "speaker": "R.", "text": "Anyị ewelite ha n'ebe Dinwenụ nọ." },
+        { "speaker": "V.", "text": "Ka anyị nyenụ Dinwenụ Chukwu anyị ekele" },
+        { "speaker": "R.", "text": "Okwesịrị, bụrụkwa ihe ziri ezi." },
+        { "speaker": "All", "text": "Nsọ, Nsọ, Nsọ, Oseburụwa Chineke nke igwe ndị agha, Ebube Gị jupụtara eligwe na ala. Hosanna n'elu kacha elu. Ọ dị ngọzi bụ Onye bjara n'aha Onyenweanyị. Hosanna n'elu kacha elu." },
+        { "speaker": "V.", "text": "Ka anyị kwupụtanụ ihe omimi nke okwukwe anyị na-eme ugbu a:" },
+        { "speaker": "R.", "text": "Anyị na-ekwupụta ọnwụ Gị, na-egosịkwa mbilite n'ọnwụ Gị, O Kristi, Wee ruo mgbe ị ga-abịa ọzọ. (OR: Oge ọbụla anyị rịri achịcha nke a, ñụọ iko nke a, anyị na-egosị ọnwụ Gị, O Dinwenụ ruo mgbe ị ga-abịa ọzọ. / Ọbụ site na obe gị na mbilite n'ọnwụ gị ka anyị ji nwere onwe anyị, O Kristi, onye Nzọpụta nke ụwa.)" }
+      ]
+    },
+    {
+      "section": "Communion Rite",
+      "icon": "sanctuary",
+      "content": [
+        { "speaker": "V.", "text": "Ụmụnne ka anyị were ekpere nnụ Onye Nzọpụta anyị kuziri anyị were kpọkuo Chukwu Nna." },
+        { "speaker": "R.", "text": "Nna anyị nọ n'eligwe ka otito dịrị aha Gị, ka ọchịchị Gịbịja; ka e mee uche Gị n'ụwa ka e si eme ya n'eligwe, Nye anyị tata nri nke ụbọchị anyị. Gbaghara anyị mmehie anyịga dịka anyị si gbaghara ndị mehiere anyị, Ekwela ka anyị kwenye na nlanye ma zọpụta anyị n'ajọ ihe." },
+        { "speaker": "V.", "text": "Zọpụta anyị, anyị na-arịọ Gi, O Oseburụwa, n'ajọ ihe nile; were ebere nye udo n'oge nke anyị. Site na inye aka ebere Gị ka a zọpụta anyị na njọ oge nile anyị ewere gbalahụ nsogbu nile, were nchekwube dị nsọ na-atụ anya mbịaghachi nke Onye Nzọpụta anyị, Jesu Kristi." },
+        { "speaker": "R.", "text": "N'ihi na ọchịchị bụ nke Gị, na ike, na otito, ebebe ebebe." },
+        { "speaker": "V.", "text": "Onyenwanyị, Jesus Kristi, Onye gwara ndị Apostle Gị: udo ka m na-ahapụrụ ụnụ, udo nke M ka M na-enye ụnụ, elekwala anya na njọ anyị, kama lekwasị anya n'okwukwe nke Nzukọ Gị: nye ya udo na ịdịkọ n'otu mgbe nile ka uche Gị sirị chọọ. Gị bụ onye dị ndụ, na-achị, ebebe, ebebe." },
+        { "speaker": "R.", "text": "Amen." },
+        { "speaker": "V.", "text": "Udo nke Oseburụwa dịrị ụnụ mgbe nile." },
+        { "speaker": "R.", "text": "Dịrịkwa mmụọ Gị." },
+        { "speaker": "V.", "text": "Nyerịtanụ onwe ụnụ ekele nke udo" },
+        { "speaker": "R.", "text": "Udo na ịhụnanya Kristi." },
+        { "speaker": "All", "text": "Nwa-atụrụ nke Chukwu, Onye na-ekpochapụ njọ nke ụwa, mere anyị ebere. Nwa-atụrụ nke Chukwu, Onye na-ekpochapụ njọ nke ụwa, mere anyị ebere. Nwa-atụrụ nke Chukwu, Onye na-ekpochapụ njọ nke ụwa, nye anyị udo." },
+        { "speaker": "V.", "text": "Lee Nwa-atụrụ nke Chukwu! Lee Onye na-ekpochapụ njọ nke ụwa! Ha nwere isi ọma bụ ndị akpọrọ n'Oriri nke Nwa-atụrụ Chineke." },
+        { "speaker": "R.", "text": "Dinwenụ m etosịghị m ka Ị bata n'ụlọ m ma kwuo sọ okwu, na mkpụrụobi m ga-adịrị." }
+      ]
+    },
+    {
+      "section": "Concluding Rite",
+      "icon": "auto_awesome",
+      "content": [
+        { "speaker": "V.", "text": "Onyenwanyị nọnyere ụnụ." },
+        { "speaker": "R.", "text": "Nọnyerekwara mmụọ gị." },
+        { "speaker": "V.", "text": "Ka Chukwu ji ike nile gọzie ụnụ, Nna, na Nwa, na Mmụọ Nsọ." },
+        { "speaker": "R.", "text": "Amen." },
+        { "speaker": "V.", "text": "Missa agwụsịwo lawanụ n'udo" },
+        { "speaker": "R.", "text": "Ekele dịrị Chukwu." },
+        { "speaker": "V. (Bishop)", "text": "Ka Otito dịrị aha Oseburụwa." },
+        { "speaker": "R.", "text": "Site kịta dịrị gaba na ụwa ebebe." },
+        { "speaker": "V.", "text": "Enyemaka anyị dị n'aha Dinwenụ anyị" },
+        { "speaker": "R.", "text": "Onye mere eligwe na ala" },
+        { "speaker": "V.", "text": "Ka Chukwu ji ike nile gọzie ụnụ, Nna, na Nwa, na Mmụọ Nsọ." },
+        { "speaker": "R.", "text": "Amen." }
+      ]
+    }
+  ]
+}
