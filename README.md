@@ -20,10 +20,11 @@ The goal of this website is to bridge the gap between traditional liturgical mus
 * **👥 Member Portal:** A personalized dashboard for choristers with a Next Rehearsal countdown, quick-access cards, and dynamic time-based greetings.
 * **📸 Media Gallery:** A responsive carousel and grid view showcasing photographs and videos from various performances and church functions.
 * **🏛️ Executives Page:** A dedicated page highlighting the current choir executive committee members and their roles.
-* **📊 Attendance Tracking:** Record and track attendance for rehearsals and events, with admin-level management.
-* **🔔 Notifications System:** In-app and push notifications for rehearsal reminders, new scores, announcements, and choir updates.
+* **📊 Attendance Tracking:** Record and track attendance for rehearsals and events. Members can mark their own attendance; admins can manage all records.
+* **🔔 Notifications System:** In-app and push notifications for rehearsal reminders, new scores, announcements, and choir updates. Includes Delete All and per-item delete.
+* **📢 Announcement Box:** Admin-only broadcast system to send choir-wide announcements with optional date, time, and links. Announcements appear on the Member-home page and in the Notifications feed.
+* **🙏 Order of Mass:** Multilingual Catholic Order of Mass reference with English, Latin, and Igbo texts, organized by liturgical section with speaker roles and full prayers.
 * **⚙️ Settings:** Dark/light mode toggle, theme preference, account security, and notification preferences.
-* **🙏 Liturgical Resource Center:** Quick links to the daily Mass readings and Choral Anthems.
 
 ---
 
@@ -38,8 +39,11 @@ The goal of this website is to bridge the gap between traditional liturgical mus
 
 ### Member Portal
 * **Next Rehearsal Countdown:** Real-time countdown timer showing time remaining until the next scheduled rehearsal.
-* **Quick-Access Cards:** Bento-style grid for Scores, Attendance, Cecilia AI, Events, and more.
+* **Quick-Access Cards:** Bento-style grid for Scores, Attendance, Cecilia AI, Events, Order of Mass, and more.
 * **Personalized Dashboard:** Tailored home screen for logged-in members.
+* **Announcements Section:** Displays the latest choir announcements with admin delete capability.
+* **Admin Floating Button:** Quick access to Announcement Box for admins and executives.
+* **Admin Dashboard Link:** Direct link to admin login for authorized personnel.
 
 ### Musical Scores
 * **Search & Filter:** Search by title or composer, filter by category and voice part.
@@ -53,12 +57,30 @@ The goal of this website is to bridge the gap between traditional liturgical mus
 * **Chat History:** Maintains conversation context within a session.
 
 ### Attendance
-* **Mark Attendance:** Members can check in to rehearsals and events.
-* **Admin Management:** Executives can record and view attendance reports.
+* **Self-Service Attendance:** All logged-in users can mark their own attendance for events.
+* **Admin Management:** Admins and executives can view and manage all attendance records.
+* **Real-time Stats:** Present, absent, and excused counts update instantly.
+* **Saved Records:** View historical attendance by event date.
 
 ### Notifications
 * **In-App Notifications:** Center for all choir announcements and reminders.
 * **Push Notifications:** Browser push support via service worker for real-time alerts.
+* **Mark All As Read:** Bulk-read functionality.
+* **Delete All:** Clear all notifications at once.
+* **Announcements Feed:** Announcements from the Announcement Box appear in the notifications feed with delete capability.
+
+### Announcement Box (Admin)
+* **Broadcast Messaging:** Admins and executives can send announcements to all choir members.
+* **Rich Content:** Optional date, time, and link fields for each announcement.
+* **Edit & Delete:** Admins can edit or delete announcements after publishing.
+* **Multi-Platform Display:** Announcements appear on the Member-home page and in the Notifications feed.
+
+### Order of Mass
+* **Multilingual Support:** Toggle between English, Latin, and Igbo liturgical texts.
+* **Structured Sections:** Organized by Introductory Rites, Liturgy of the Word, Liturgy of the Eucharist, Communion Rite, and Concluding Rite.
+* **Speaker Roles:** Color-coded speakers (Priest, People, All) for easy reading.
+* **Full Text Display:** Complete liturgical prayers without truncation.
+* **Icon Fallbacks:** Unicode fallbacks for all section icons.
 
 ---
 
@@ -103,9 +125,13 @@ st-cecilia-choir-HTCCnaze/
 │   │   ├── members-directory.js
 │   │   ├── login.js           # Authentication logic
 │   │   ├── register.js        # Registration logic
-│   │   └── profile.js         # User profile logic
+│   │   ├── profile.js         # User profile logic
+│   │   ├── order-of-mass.js   # Order of Mass multilingual page
+│   │   └── announcement-box.js # Admin announcement broadcast page
 │   ├── IMAGES/                # Logo, choir photos, and static images
 │   ├── icons/                 # App icons
+│   ├── data/                  # JSON data files
+│   │   └── order-of-mass.json # English, Latin, Igbo Order of Mass texts
 │   ├── index.html             # Landing page
 │   ├── member-home.html       # Member portal dashboard
 │   ├── scores.html            # Musical Scores page
@@ -116,12 +142,16 @@ st-cecilia-choir-HTCCnaze/
 │   ├── executives.html        # Executives committee page
 │   ├── events.html            # Events calendar page
 │   ├── notifications.html     # Notifications center
+│   ├── order-of-mass.html     # Order of Mass multilingual page
+│   ├── announcement-box.html  # Admin announcement broadcast page
 │   ├── settings.html          # Settings and preferences
 │   ├── members.html           # Membership portal
 │   ├── members-directory.html # Member directory
 │   ├── login.html             # Login page
 │   ├── register.html          # Registration page
-│   ├── dashboard.html         # Admin dashboard
+│   ├── admin-login.html       # Admin login page
+│   ├── admin-dashboard.html   # Admin dashboard
+│   ├── dashboard.html         # Legacy dashboard
 │   ├── profile.html           # User profile page
 │   ├── About.html             # About the choir
 │   ├── privacy.html           # Privacy policy
@@ -153,16 +183,19 @@ st-cecilia-choir-HTCCnaze/
 | GET | `/api/users` | List all users (admin) |
 | GET | `/api/users/:id` | Get user by ID |
 | PUT | `/api/users/:id` | Update user |
-| DELETE | `/api/users/:id` | Delete user |
+| DELETE | `/api/users/:id` | Delete user (admin/exco only) |
 | GET | `/api/scores` | List all scores |
 | POST | `/api/scores` | Upload a new score |
 | DELETE | `/api/scores/:id` | Delete a score |
 | GET | `/api/drive/scores` | List scores from Google Drive |
 | POST | `/api/drive/scores/upload` | Upload score to Google Drive |
 | DELETE | `/api/drive/scores/:fileId` | Delete score from Google Drive |
-| GET | `/api/attendance` | Get attendance records |
-| POST | `/api/attendance` | Record attendance |
-| PUT | `/api/attendance/:id` | Update attendance record |
+| GET | `/api/attendance` | Get attendance records (with member names) |
+| POST | `/api/attendance` | Record attendance (self or admin for others) |
+| PUT | `/api/attendance/:id` | Update attendance record (own or admin) |
+| POST | `/api/attendance/bulk` | Bulk save attendance (admin/exco or self) |
+| DELETE | `/api/attendance/:id` | Delete attendance record (own or admin) |
+| DELETE | `/api/attendance/event/:eventDate` | Delete all attendance for event (admin/exco only) |
 | GET | `/api/events` | List events |
 | POST | `/api/events` | Create event |
 | PUT | `/api/events/:id` | Update event |
@@ -174,7 +207,13 @@ st-cecilia-choir-HTCCnaze/
 | GET | `/api/gallery` | List gallery images |
 | POST | `/api/gallery/upload` | Upload gallery image |
 | GET | `/api/notifications` | List notifications |
-| POST | `/api/notifications` | Create notification |
+| POST | `/api/notifications` | Create notification (admin/exco only) |
+| POST | `/api/notifications/mark-read` | Mark all notifications as read |
+| DELETE | `/api/notifications/:id` | Delete notification |
+| GET | `/api/announcements` | List all announcements |
+| POST | `/api/announcements` | Create announcement (admin/exco only) |
+| PUT | `/api/announcements/:id` | Update announcement (admin/exco only) |
+| DELETE | `/api/announcements/:id` | Delete announcement (admin/exco only) |
 | GET | `/api/settings` | Get user settings |
 | PUT | `/api/settings` | Update user settings |
 | POST | `/api/ai/chat` | Cecilia AI chat endpoint |

@@ -2791,6 +2791,45 @@ a:hover {
   border-color: transparent;
 }
 
+.admin-floating-btn {
+  position: fixed;
+  bottom: calc(var(--bottom-nav-height) + var(--safe-area-bottom) + 1rem);
+  right: 1rem;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-lg);
+  z-index: 90;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.admin-floating-btn:hover {
+  background: var(--color-primary-light);
+  transform: scale(1.05);
+}
+
+.admin-floating-btn .material-symbols-outlined {
+  font-size: 28px;
+}
+
+@media (min-width: 768px) {
+  .admin-floating-btn {
+    bottom: 2rem;
+    right: 2rem;
+    width: 64px;
+    height: 64px;
+  }
+  .admin-floating-btn .material-symbols-outlined {
+    font-size: 32px;
+  }
+}
+
 /* --------------------------------------------
    SETTINGS PAGE
    -------------------------------------------- */

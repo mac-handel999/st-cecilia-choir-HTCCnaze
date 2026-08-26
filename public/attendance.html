@@ -54,11 +54,11 @@
   </header>
 
   <main class="page-content portal-page-content">
-    <div class="container" style="padding-top: 2rem; padding-bottom: 7rem; max-width: 900px;">
+    <div class="container" style="padding-top: 2rem; padding-bottom: 3rem; max-width: 900px;">
 
       <div style="text-align: center; margin-bottom: 2rem;">
         <h1 class="page-title">Mark Attendance</h1>
-        <p class="page-subtitle">Select an event and mark member attendance</p>
+        <p class="page-subtitle">Select an event and mark your attendance</p>
       </div>
 
       <div class="card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
@@ -84,46 +84,20 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6" id="attendance-stats">
-        <div class="card stat-card">
-          <span style="font-size: 0.75rem; font-weight: 600; color: var(--color-text-light); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.25rem;">Present</span>
-          <span style="font-size: 1.75rem; font-weight: 700; color: var(--color-primary); font-family: var(--font-heading);" id="stat-present">0</span>
-        </div>
-        <div class="card stat-card">
-          <span style="font-size: 0.75rem; font-weight: 600; color: var(--color-text-light); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.25rem;">Absent</span>
-          <span style="font-size: 1.75rem; font-weight: 700; color: var(--color-text); font-family: var(--font-heading);" id="stat-absent">0</span>
-        </div>
-        <div class="card stat-card">
-          <span style="font-size: 0.75rem; font-weight: 600; color: var(--color-text-light); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.25rem;">Excused</span>
-          <span style="font-size: 1.75rem; font-weight: 700; color: var(--color-text-muted); font-family: var(--font-heading);" id="stat-excused">0</span>
-        </div>
-        <div class="card stat-card">
-          <span style="font-size: 0.75rem; font-weight: 600; color: var(--color-text-light); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.25rem;">Total</span>
-          <span style="font-size: 1.75rem; font-weight: 700; color: var(--color-text-muted); font-family: var(--font-heading);" id="stat-total">0</span>
-        </div>
-      </div>
-
-      <div class="filter-chips mb-4" id="voice-filters">
-        <button class="filter-chip active" data-voice="all">All Voices</button>
-        <button class="filter-chip" data-voice="soprano">Soprano</button>
-        <button class="filter-chip" data-voice="alto">Alto</button>
-        <button class="filter-chip" data-voice="tenor">Tenor</button>
-        <button class="filter-chip" data-voice="bass">Bass</button>
-      </div>
-
-      <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 1.5rem;" id="member-list-container">
-        <div id="member-list">
+      <div class="card" style="padding: 1.5rem; margin-bottom: 1.5rem;" id="my-attendance-card">
+        <h2 style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: var(--color-primary); margin-bottom: 1rem;">My Attendance</h2>
+        <div id="my-attendance-content">
           <div class="empty-state">
-            <div class="empty-state-icon">event</div>
+            <div class="empty-state-icon">person</div>
             <div class="empty-state-title">Select an event</div>
-            <div class="empty-state-desc">Choose an event above to mark attendance</div>
+            <div class="empty-state-desc">Choose an event above to mark your attendance</div>
           </div>
         </div>
       </div>
 
       <div id="saved-attendance-section" style="margin-top: 2rem;">
         <h2 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: var(--color-primary); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-          <span class="material-symbols-outlined">history</span> Saved Attendance Records
+          <span class="material-symbols-outlined">history</span> Attendance Records
         </h2>
         <div id="saved-attendance-list">
           <div class="spinner"></div>
@@ -132,17 +106,6 @@
 
     </div>
   </main>
-
-  <div style="position: fixed; bottom: 0; left: 0; width: 100%; background: var(--color-surface); border-top: 1px solid var(--color-border-light); padding: 1rem; z-index: 100; box-shadow: 0 -2px 10px rgba(0,0,0,0.05);">
-    <div style="max-width: 900px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
-      <div style="flex: 1;">
-        <p style="font-size: 0.85rem; color: var(--color-text-light);" id="save-status">Ready to save</p>
-      </div>
-      <button id="save-attendance-btn" class="btn btn-primary" style="flex: 2; max-width: 300px;">
-        <span class="material-symbols-outlined" style="font-size: 20px;">save</span> Save Attendance
-      </button>
-    </div>
-  </div>
 
   <div id="toast-container"></div>
 

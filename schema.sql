@@ -102,6 +102,21 @@ CREATE TABLE IF NOT EXISTS notifications (
 );
 
 -- ============================================
+-- ANNOUNCEMENTS TABLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS announcements (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  title TEXT NOT NULL,
+  message TEXT NOT NULL,
+  announcement_date TEXT,
+  announcement_time TEXT,
+  link TEXT,
+  created_by UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+-- ============================================
 -- ATTENDANCE TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS attendance (
@@ -198,6 +213,7 @@ CREATE INDEX IF NOT EXISTS idx_chat_history_user_id ON chat_history(user_id);
 CREATE INDEX IF NOT EXISTS idx_chat_history_created_at ON chat_history(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_announcements_created_at ON announcements(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_gallery_created_at ON gallery(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_event_songs_event_id ON event_songs(event_id);
 CREATE INDEX IF NOT EXISTS idx_event_songs_order ON event_songs(order_number);
@@ -216,6 +232,7 @@ ALTER TABLE events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE executives ENABLE ROW LEVEL SECURITY;
 ALTER TABLE gallery ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE announcements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE attendance ENABLE ROW LEVEL SECURITY;
 ALTER TABLE chat_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE event_songs ENABLE ROW LEVEL SECURITY;
@@ -322,6 +339,18 @@ CREATE POLICY "Exco and admin can insert notifications" ON notifications FOR INS
   EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role IN ('exco', 'admin'))
 );
 
+-- Announcements policies
+CREATE POLICY "Anyone can view announcements" ON announcements FOR SELECT USING (true);
+CREATE POLICY "Exco and admin can insert announcements" ON announcements FOR INSERT WITH CHECK (
+  EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role IN ('exco', 'admin'))
+);
+CREATE POLICY "Exco and admin can update announcements" ON announcements FOR UPDATE USING (
+  EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role IN ('exco', 'admin'))
+);
+CREATE POLICY "Exco and admin can delete announcements" ON announcements FOR DELETE USING (
+  EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role IN ('exco', 'admin'))
+);
+
 -- Attendance policies
 CREATE POLICY "Users can view attendance" ON attendance FOR SELECT USING (true);
 CREATE POLICY "Exco and admin can insert attendance" ON attendance FOR INSERT WITH CHECK (
@@ -397,6 +426,9 @@ BEGIN
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'notifications') THEN
     ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'announcements') THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE announcements;
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'attendance') THEN
     ALTER PUBLICATION supabase_realtime ADD TABLE attendance;

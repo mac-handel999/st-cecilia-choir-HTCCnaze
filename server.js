@@ -74,6 +74,19 @@ function adminOrExco(req, res, next) {
   next();
 }
 
+async function getUserName(userId) {
+  try {
+    const { data } = await supabaseAdmin
+      .from('users')
+      .select('full_name, username')
+      .eq('id', userId)
+      .single();
+    return data?.full_name || data?.username || 'Admin';
+  } catch {
+    return 'Admin';
+  }
+}
+
 function buildQuery(table, req, defaultSelect) {
   const select = req.query.select || defaultSelect || '*';
   const order = req.query.order;
@@ -326,13 +339,18 @@ app.put('/api/users/:id', authMiddleware, async (req, res) => {
 
 app.delete('/api/users/:id', authMiddleware, async (req, res) => {
   try {
+    const isAdmin = req.user.role === 'admin' || req.user.role === 'exco';
+    if (!isAdmin) {
+      return res.status(403).json({ message: 'Only admins can delete users' });
+    }
+
     const { error } = await supabaseAdmin
       .from('users')
       .delete()
       .eq('id', req.params.id);
 
     if (error) return res.status(404).json({ message: 'User not found' });
-    res.json({ message: 'Account deleted successfully' });
+    res.json({ message: 'User deleted successfully' });
   } catch (err) {
     console.error('User delete error:', err);
     res.status(500).json({ message: 'Failed to delete user' });
@@ -628,28 +646,64 @@ app.get('/api/attendance', authMiddleware, async (req, res) => {
     const { data, error } = await buildQuery('attendance', req, 'id, event_name, event_date, member_id, status, reason, marked_by, created_at, updated_at');
 
     if (error) throw error;
-    res.json(data || []);
+
+    const records = data || [];
+    const memberIds = [...new Set(records.map(r => r.member_id))];
+    const members = {};
+    
+    if (memberIds.length > 0) {
+      const { data: memberData } = await supabaseAdmin
+        .from('users')
+        .select('id, full_name, username')
+        .in('id', memberIds);
+      
+      if (memberData) {
+        memberData.forEach(m => {
+          members[m.id] = m.full_name || m.username;
+        });
+      }
+    }
+
+    const enriched = records.map(r => ({
+      ...r,
+      member_name: members[r.member_id] || null,
+      member_username: members[r.member_id] || null
+    }));
+
+    res.json(enriched);
   } catch (err) {
     console.error('Attendance list error:', err);
     res.status(500).json({ message: 'Failed to fetch attendance' });
   }
 });
 
-app.post('/api/attendance', authMiddleware, adminOrExco, async (req, res) => {
+app.post('/api/attendance', authMiddleware, async (req, res) => {
   try {
+    const isAdmin = req.user.role === 'admin' || req.user.role === 'exco';
     const { date, type, member_id, status, reason, event_name, event_date, ...rest } = req.body;
+
+    let finalMemberId = member_id;
+    if (!isAdmin) {
+      finalMemberId = req.user.id;
+    }
+
+    if (!finalMemberId) {
+      return res.status(400).json({ message: 'Member ID is required' });
+    }
+
     const payload = {
       event_name: type || event_name,
       event_date: date || event_date,
-      member_id,
+      member_id: finalMemberId,
       status: status || 'absent',
-      reason,
+      reason: reason || null,
       marked_by: req.user.id,
       ...rest
     };
+
     const { data, error } = await supabaseAdmin
       .from('attendance')
-      .insert([payload])
+      .upsert(payload, { onConflict: 'member_id,event_date' })
       .select()
       .single();
 
@@ -661,9 +715,25 @@ app.post('/api/attendance', authMiddleware, adminOrExco, async (req, res) => {
   }
 });
 
-app.put('/api/attendance/:id', authMiddleware, adminOrExco, async (req, res) => {
+app.put('/api/attendance/:id', authMiddleware, async (req, res) => {
   try {
+    const isAdmin = req.user.role === 'admin' || req.user.role === 'exco';
     const { status, reason } = req.body;
+
+    const { data: existing, error: fetchError } = await supabaseAdmin
+      .from('attendance')
+      .select('member_id')
+      .eq('id', req.params.id)
+      .single();
+
+    if (fetchError || !existing) {
+      return res.status(404).json({ message: 'Attendance record not found' });
+    }
+
+    if (!isAdmin && existing.member_id !== req.user.id) {
+      return res.status(403).json({ message: 'You can only update your own attendance' });
+    }
+
     const { data, error } = await supabaseAdmin
       .from('attendance')
       .update({ status, reason, updated_at: new Date().toISOString() })
@@ -671,7 +741,7 @@ app.put('/api/attendance/:id', authMiddleware, adminOrExco, async (req, res) => 
       .select()
       .single();
 
-    if (error || !data) return res.status(404).json({ message: 'Attendance record not found' });
+    if (error) throw error;
     res.json(data);
   } catch (err) {
     console.error('Attendance update error:', err);
@@ -679,14 +749,16 @@ app.put('/api/attendance/:id', authMiddleware, adminOrExco, async (req, res) => 
   }
 });
 
-app.post('/api/attendance/bulk', authMiddleware, adminOrExco, async (req, res) => {
+app.post('/api/attendance/bulk', authMiddleware, async (req, res) => {
   try {
+    const isAdmin = req.user.role === 'admin' || req.user.role === 'exco';
     const { event_date, event_name, records } = req.body;
+
     if (!records || !Array.isArray(records) || records.length === 0) {
       return res.status(400).json({ message: 'No records provided' });
     }
 
-    const payload = records.map(r => ({
+    let payload = records.map(r => ({
       event_name: event_name || r.event_name,
       event_date: event_date || r.event_date,
       member_id: r.member_id,
@@ -694,6 +766,13 @@ app.post('/api/attendance/bulk', authMiddleware, adminOrExco, async (req, res) =
       reason: r.reason || null,
       marked_by: req.user.id
     }));
+
+    if (!isAdmin) {
+      payload = payload.filter(r => r.member_id === req.user.id);
+      if (payload.length === 0) {
+        return res.status(403).json({ message: 'You can only mark your own attendance' });
+      }
+    }
 
     const { data, error } = await supabaseAdmin
       .from('attendance')
@@ -719,17 +798,30 @@ app.post('/api/attendance/bulk', authMiddleware, adminOrExco, async (req, res) =
   }
 });
 
-app.delete('/api/attendance/:id', authMiddleware, adminOrExco, async (req, res) => {
+app.delete('/api/attendance/:id', authMiddleware, async (req, res) => {
   try {
-    const { data, error } = await supabaseAdmin
+    const isAdmin = req.user.role === 'admin' || req.user.role === 'exco';
+
+    const { data: existing, error: fetchError } = await supabaseAdmin
       .from('attendance')
-      .delete()
+      .select('member_id')
       .eq('id', req.params.id)
-      .select()
       .single();
 
-    if (error) throw error;
-    res.json(data || { message: 'Attendance record deleted' });
+    if (fetchError || !existing) {
+      return res.status(404).json({ message: 'Attendance record not found' });
+    }
+
+    if (!isAdmin && existing.member_id !== req.user.id) {
+      return res.status(403).json({ message: 'You can only delete your own attendance' });
+    }
+
+    await supabaseAdmin
+      .from('attendance')
+      .delete()
+      .eq('id', req.params.id);
+
+    res.json({ message: 'Attendance record deleted' });
   } catch (err) {
     console.error('Attendance delete error:', err);
     res.status(500).json({ message: 'Failed to delete attendance record' });
@@ -738,16 +830,14 @@ app.delete('/api/attendance/:id', authMiddleware, adminOrExco, async (req, res) 
 
 app.delete('/api/attendance/event/:eventDate', authMiddleware, adminOrExco, async (req, res) => {
   try {
-    const { data, error } = await supabaseAdmin
+    await supabaseAdmin
       .from('attendance')
       .delete()
-      .eq('event_date', req.params.eventDate)
-      .select();
+      .eq('event_date', decodeURIComponent(req.params.eventDate));
 
-    if (error) throw error;
-    res.json({ message: 'Attendance records deleted', count: data?.length || 0 });
+    res.json({ message: 'Attendance records deleted' });
   } catch (err) {
-    console.error('Attendance bulk delete error:', err);
+    console.error('Attendance event delete error:', err);
     res.status(500).json({ message: 'Failed to delete attendance records' });
   }
 });
@@ -1308,16 +1398,120 @@ app.post('/api/notifications/mark-read', authMiddleware, async (req, res) => {
 
 app.delete('/api/notifications/:id', authMiddleware, async (req, res) => {
   try {
+    const { data: existing, error: fetchError } = await supabaseAdmin
+      .from('notifications')
+      .select('user_id')
+      .eq('id', req.params.id)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    const isAdmin = req.user.role === 'admin' || req.user.role === 'exco';
+    const isOwner = existing && existing.user_id === req.user.id;
+    const isGlobal = existing && existing.user_id === null;
+
+    if (!isAdmin && !isOwner && !isGlobal) {
+      return res.status(403).json({ message: 'Not authorized to delete this notification' });
+    }
+
     await supabaseAdmin
       .from('notifications')
       .delete()
-      .eq('id', req.params.id)
-      .eq('user_id', req.user.id);
+      .eq('id', req.params.id);
 
     res.json({ message: 'Notification deleted' });
   } catch (err) {
     console.error('Notification delete error:', err);
     res.status(500).json({ message: 'Failed to delete notification' });
+  }
+});
+
+// ==================== ANNOUNCEMENTS ROUTES ====================
+
+app.get('/api/announcements', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('announcements')
+      .select('id, title, message, announcement_date, announcement_time, link, created_by, created_at, updated_at')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    const announcements = [];
+    for (const ann of (data || [])) {
+      announcements.push({
+        ...ann,
+        created_by_name: ann.created_by ? await getUserName(ann.created_by) : 'Admin'
+      });
+    }
+
+    res.json(announcements);
+  } catch (err) {
+    console.error('Announcements list error:', err);
+    res.status(500).json({ message: 'Failed to fetch announcements' });
+  }
+});
+
+app.post('/api/announcements', authMiddleware, adminOrExco, async (req, res) => {
+  try {
+    const { title, message, announcement_date, announcement_time, link } = req.body;
+    const { data, error } = await supabaseAdmin
+      .from('announcements')
+      .insert([{
+        title,
+        message,
+        announcement_date: announcement_date || null,
+        announcement_time: announcement_time || null,
+        link: link || null,
+        created_by: req.user.id
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.status(201).json(data);
+  } catch (err) {
+    console.error('Announcement create error:', err);
+    res.status(500).json({ message: 'Failed to create announcement' });
+  }
+});
+
+app.put('/api/announcements/:id', authMiddleware, adminOrExco, async (req, res) => {
+  try {
+    const { title, message, announcement_date, announcement_time, link } = req.body;
+    const { data, error } = await supabaseAdmin
+      .from('announcements')
+      .update({
+        title,
+        message,
+        announcement_date: announcement_date || null,
+        announcement_time: announcement_time || null,
+        link: link || null,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', req.params.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    console.error('Announcement update error:', err);
+    res.status(500).json({ message: 'Failed to update announcement' });
+  }
+});
+
+app.delete('/api/announcements/:id', authMiddleware, adminOrExco, async (req, res) => {
+  try {
+    await supabaseAdmin
+      .from('announcements')
+      .delete()
+      .eq('id', req.params.id);
+
+    res.json({ message: 'Announcement deleted' });
+  } catch (err) {
+    console.error('Announcement delete error:', err);
+    res.status(500).json({ message: 'Failed to delete announcement' });
   }
 });
 

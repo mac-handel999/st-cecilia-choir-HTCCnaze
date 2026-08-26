@@ -86,4 +86,49 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch (error) {
     document.getElementById('recent-scores').innerHTML = '<p style="color: var(--color-text-muted); text-align: center; padding: 1rem;">Failed to load</p>';
   }
+
+  // All users management
+  try {
+    const users = await api.get('/users');
+    const usersContainer = document.getElementById('all-users-list');
+    if (usersContainer) {
+      if (users && users.length > 0) {
+        usersContainer.innerHTML = `
+          <div style="display: flex; flex-direction: column; gap: 0.5rem; max-height: 500px; overflow-y: auto;">
+            ${users.map(u => `
+              <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; border: 1px solid var(--color-border-light); border-radius: var(--radius-lg); background: var(--color-surface);">
+                <div style="flex: 1; min-width: 0;">
+                  <div style="font-weight: 600; color: var(--color-text); font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(u.full_name || u.username)}</div>
+                  <div style="font-size: 0.8rem; color: var(--color-text-muted);">@${escapeHtml(u.username)} · ${escapeHtml(u.role || 'member')}</div>
+                </div>
+                <button class="btn btn-outline btn-sm delete-user-btn" data-id="${u.id}" style="color: var(--color-error); border-color: var(--color-error); margin-left: 1rem; flex-shrink: 0;">
+                  <span class="material-symbols-outlined" style="font-size: 16px;">delete</span> Delete
+                </button>
+              </div>
+            `).join('')}
+          </div>
+        `;
+
+        usersContainer.querySelectorAll('.delete-user-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            if (!confirm('Permanently delete this user? This cannot be undone.')) return;
+            try {
+              await api.delete('/users/' + btn.dataset.id);
+              Toast.success('User deleted');
+              btn.closest('div[style]').remove();
+            } catch (error) {
+              Toast.error('Failed to delete user: ' + error.message);
+            }
+          });
+        });
+      } else {
+        usersContainer.innerHTML = '<p style="color: var(--color-text-muted); text-align: center; padding: 1rem;">No users found</p>';
+      }
+    }
+  } catch (error) {
+    const usersContainer = document.getElementById('all-users-list');
+    if (usersContainer) {
+      usersContainer.innerHTML = '<p style="color: var(--color-text-muted); text-align: center; padding: 1rem;">Failed to load users</p>';
+    }
+  }
 });

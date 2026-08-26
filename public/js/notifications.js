@@ -17,12 +17,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function loadFeed() {
     try {
-      const [notifications, events, scores, songLists, attendance] = await Promise.all([
+      const [notifications, events, scores, songLists, attendance, announcements] = await Promise.all([
         api.get('/notifications').catch(() => []),
         api.get('/events?limit=10').catch(() => []),
         api.get('/scores?limit=10').catch(() => []),
         api.get('/song-lists?limit=10').catch(() => []),
-        api.get('/attendance?limit=10').catch(() => [])
+        api.get('/attendance?limit=10').catch(() => []),
+        api.get('/announcements').catch(() => [])
       ]);
 
       const feed = [];
@@ -47,6 +48,20 @@ document.addEventListener('DOMContentLoaded', async () => {
           read: n.read || false,
           link: '#',
           deletable: !n.user_id || n.user_id === currentUserId
+        });
+      });
+
+      (asArray(announcements)).forEach(ann => {
+        addItem({
+          type: 'announcement',
+          id: ann.id,
+          title: ann.title || 'Announcement',
+          message: ann.message || '',
+          icon: 'campaign',
+          timestamp: ann.created_at,
+          read: true,
+          link: '#',
+          deletable: true
         });
       });
 
@@ -139,6 +154,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const timeAgo = getTimeAgo(item.timestamp);
       const typeColors = {
         'notification': 'var(--color-primary)',
+        'announcement': 'var(--color-accent)',
         'event': 'var(--color-success)',
         'score': 'var(--color-accent)',
         'song-list': 'var(--color-info)',

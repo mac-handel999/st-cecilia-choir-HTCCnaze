@@ -18,6 +18,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (user?.role === 'admin' || user?.role === 'exco') {
       const adminLink = document.getElementById('admin-dashboard-link');
       if (adminLink) adminLink.classList.remove('hidden');
+
+      const adminFab = document.getElementById('admin-fab');
+      if (adminFab) adminFab.classList.remove('hidden');
     }
 
     const avatarImg = document.getElementById('home-avatar-img');
@@ -221,19 +224,10 @@ async function loadAnnouncements() {
   if (!container) return;
 
   try {
-    const notifications = asArray(await api.get('/notifications'));
-    const seen = new Set();
-    const unique = [];
-    for (const n of notifications) {
-      const key = `${n.title}-${n.message}`;
-      if (!seen.has(key)) {
-        seen.add(key);
-        unique.push(n);
-      }
-    }
-    const announcements = unique.slice(0, 4);
+    const announcements = asArray(await api.get('/announcements'));
+    const display = announcements.slice(0, 4);
 
-    if (announcements.length === 0) {
+    if (display.length === 0) {
       container.innerHTML = '<div class="announcement-item"><h4>No announcements yet</h4><p>Check back for choir updates.</p></div>';
       return;
     }
@@ -241,14 +235,14 @@ async function loadAnnouncements() {
     const currentUser = getCurrentUser();
     const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'exco';
 
-    container.innerHTML = announcements.map((n, i) => `
-      <div class="announcement-item ${i === 0 ? 'announcement-featured' : ''}" data-id="${n.id}">
+    container.innerHTML = display.map((ann, i) => `
+      <div class="announcement-item ${i === 0 ? 'announcement-featured' : ''}" data-id="${ann.id}">
         <div class="announcement-top">
-          <h4>${escapeHtml(n.title)}</h4>
-          <span>${formatDate(n.created_at)}</span>
+          <h4>${escapeHtml(ann.title)}</h4>
+          <span>${formatDate(ann.created_at)}</span>
         </div>
-        <p>${escapeHtml(n.message)}</p>
-        ${isAdmin ? `<button class="btn-icon delete-announcement" data-id="${n.id}" title="Delete" style="color: var(--color-error); padding: 4px; margin-top: 0.5rem;"><span class="material-symbols-outlined" style="font-size: 18px;">delete</span></button>` : ''}
+        <p>${escapeHtml(ann.message)}</p>
+        ${isAdmin ? `<button class="btn-icon delete-announcement" data-id="${ann.id}" title="Delete" style="color: var(--color-error); padding: 4px; margin-top: 0.5rem;"><span class="material-symbols-outlined" style="font-size: 18px;">delete</span></button>` : ''}
       </div>
     `).join('');
 
@@ -258,7 +252,7 @@ async function loadAnnouncements() {
         const id = btn.dataset.id;
         if (!confirm('Delete this announcement?')) return;
         try {
-          await api.delete('/notifications/' + id);
+          await api.delete('/announcements/' + id);
           btn.closest('.announcement-item').remove();
           Toast.success('Announcement deleted');
         } catch (error) {

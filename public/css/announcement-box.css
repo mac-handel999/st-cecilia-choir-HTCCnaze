@@ -1,0 +1,110 @@
+.announcement-form-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-xl);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-sm);
+}
+
+@media (min-width: 768px) {
+  .announcement-form-card {
+    padding: 1.5rem;
+  }
+}
+
+.announcement-list-item {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-xl);
+  padding: 1rem 1.25rem;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 1rem;
+  transition: all 0.2s;
+}
+
+.announcement-list-item:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.announcement-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.announcement-list-title {
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 0;
+}
+
+@media (min-width: 768px) {
+  .announcement-list-title {
+    font-size: 1.1rem;
+  }
+}
+
+.announcement-list-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.announcement-list-meta span {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.announcement-list-meta .material-symbols-outlined {
+  font-size: 16px;
+  color: var(--color-text-light);
+}
+
+.announcement-list-message {
+  color: var(--color-text);
+  line-height: 1.7;
+  font-size: 0.95rem;
+  margin-bottom: 0.75rem;
+}
+
+.announcement-list-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+}
+
+.announcement-list-link:hover {
+  color: var(--color-primary-light);
+}
+
+.announcement-list-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.announcement-empty {
+  text-align: center;
+  padding: 2rem;
+  color: var(--color-text-muted);
+}
+
+.announcement-empty .material-symbols-outlined {
+  font-size: 48px;
+  color: var(--color-border);
+  margin-bottom: 0.75rem;
+}
