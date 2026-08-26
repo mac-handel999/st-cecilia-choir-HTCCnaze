@@ -82,7 +82,10 @@
             <label class="form-label" for="password">Password</label>
             <div class="input-icon-wrapper">
               <span class="material-symbols-outlined input-icon">key</span>
-              <input type="password" id="password" class="form-control" placeholder="Enter your password" required autocomplete="current-password"/>
+              <input type="password" id="password" class="form-control has-toggle" placeholder="Enter your password" required autocomplete="current-password"/>
+              <button type="button" class="password-toggle" id="toggle-password" aria-label="Toggle password visibility">
+                <span class="material-symbols-outlined">visibility_off</span>
+              </button>
             </div>
             <div class="form-error" id="password-error">Password must be at least 6 characters</div>
           </div>
@@ -100,6 +103,11 @@
           <p style="color: var(--color-text-muted); font-size: 0.95rem;">
             Don't have an account? <button onclick="window.location.href='members.html'" class="link-accent" style="background: none; border: none; font-size: 0.95rem; font-weight: 600; color: var(--color-primary);">Register here</button>
           </p>
+        </div>
+        <div class="auth-footer-links">
+          <a href="terms.html" target="_blank">Terms & Conditions</a>
+          <a href="privacy.html" target="_blank">User Policy / Privacy</a>
+          <a href="constitution.html" target="_blank">User Documentation</a>
         </div>
       </div>
     </div>

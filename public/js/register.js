@@ -8,6 +8,22 @@ document.addEventListener('DOMContentLoaded', function() {
   const alertContainer = document.getElementById('alert-container');
   const registerBtn = document.getElementById('register-btn');
 
+  const togglePassword = document.getElementById('toggle-reg-password');
+  const passwordInput = document.getElementById('reg-password');
+
+  if (togglePassword && passwordInput) {
+    togglePassword.addEventListener('click', () => {
+      const isPassword = passwordInput.type === 'password';
+      passwordInput.type = isPassword ? 'text' : 'password';
+      togglePassword.querySelector('.material-symbols-outlined').textContent = isPassword ? 'visibility' : 'visibility_off';
+    });
+  }
+
+  function validateEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+  }
+
   registerForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     alertContainer.innerHTML = '';
@@ -15,7 +31,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const fullName = document.getElementById('reg-fullName').value.trim();
     const username = document.getElementById('reg-username').value.trim();
     const email = document.getElementById('reg-email').value.trim();
-    const password = document.getElementById('reg-password').value;
+    const password = passwordInput.value;
     const choirPart = document.getElementById('reg-choirPart').value;
     const address = document.getElementById('reg-address').value.trim();
     const phoneNumber = document.getElementById('reg-phoneNumber').value.trim();
@@ -29,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function() {
       showAlert('alert-container', 'Please fill in all required fields.', 'error');
       return;
     }
-    if (!email.includes('@')) {
+    if (!validateEmail(email)) {
       showAlert('alert-container', 'Please enter a valid email address.', 'error');
       return;
     }

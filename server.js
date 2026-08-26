@@ -1666,6 +1666,21 @@ app.get('/api/ai/history', authMiddleware, async (req, res) => {
   }
 });
 
+app.delete('/api/ai/history', authMiddleware, async (req, res) => {
+  try {
+    const { error } = await supabaseAdmin
+      .from('chat_history')
+      .delete()
+      .eq('user_id', req.user.id);
+
+    if (error) throw error;
+    res.json({ message: 'Chat history cleared' });
+  } catch (err) {
+    console.error('AI history delete error:', err);
+    res.status(500).json({ message: 'Failed to clear chat history' });
+  }
+});
+
 // ==================== DASHBOARD STATS ====================
 
 app.get('/api/dashboard/stats', authMiddleware, async (req, res) => {

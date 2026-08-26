@@ -1069,3 +1069,13 @@ if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
   document.documentElement.style.setProperty('--transition-slow', '0s');
 }
 
+// Donate toggle on landing page
+const donateToggle = document.getElementById('donate-toggle');
+const acctBox = document.getElementById('acct-box');
+if (donateToggle && acctBox) {
+  donateToggle.addEventListener('click', () => {
+    acctBox.classList.toggle('visible');
+    donateToggle.textContent = acctBox.classList.contains('visible') ? 'Hide Details' : 'Donate Now';
+  });
+}
+

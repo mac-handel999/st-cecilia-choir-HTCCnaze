@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const messages = document.getElementById('chat-messages');
   const input = document.getElementById('chat-input');
   const sendBtn = document.getElementById('chat-send');
+  const clearHistoryBtn = document.getElementById('clear-chat-history');
   if (!messages || !input || !sendBtn) return;
 
   const user = Auth.getUser();
@@ -63,6 +64,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     `;
     messages.appendChild(wrapper);
     messages.scrollTop = messages.scrollHeight;
+  }
+
+  async function clearChatHistory() {
+    if (!confirm('Are you sure you want to clear all chat history? This cannot be undone.')) return;
+    try {
+      await api.delete('/ai/history');
+      chatHistory.length = 0;
+      messages.innerHTML = `
+        <div class="chat-bubble chat-bubble-ai">Hello, my dear chorister! I'm Cecilia AI, your devoted liturgical music companion. Named after our beloved patron saint of musicians, I'm here to guide you through the sacred world of choral music, hymn suggestions, and Catholic liturgy. How may I assist you today?</div>
+      `;
+      Toast.success('Chat history cleared');
+    } catch (error) {
+      Toast.error('Failed to clear chat history: ' + error.message);
+    }
+  }
+
+  if (clearHistoryBtn) {
+    clearHistoryBtn.addEventListener('click', clearChatHistory);
   }
 
   async function sendMessage() {

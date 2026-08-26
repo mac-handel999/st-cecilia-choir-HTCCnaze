@@ -9,16 +9,32 @@ document.addEventListener('DOMContentLoaded', function() {
   const loginBtn = document.getElementById('login-btn');
   const loginText = document.getElementById('login-text');
 
+  const togglePassword = document.getElementById('toggle-password');
+  const passwordInput = document.getElementById('password');
+
+  if (togglePassword && passwordInput) {
+    togglePassword.addEventListener('click', () => {
+      const isPassword = passwordInput.type === 'password';
+      passwordInput.type = isPassword ? 'text' : 'password';
+      togglePassword.querySelector('.material-symbols-outlined').textContent = isPassword ? 'visibility' : 'visibility_off';
+    });
+  }
+
+  function validateEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+  }
+
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     alertContainer.innerHTML = '';
 
     const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
+    const password = passwordInput.value;
     const remember = document.getElementById('remember')?.checked || false;
 
     let hasError = false;
-    if (!email || !email.includes('@')) {
+    if (!email || !validateEmail(email)) {
       document.getElementById('email-error').classList.add('visible');
       hasError = true;
     } else {
@@ -48,8 +64,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
   async function handleForgotPassword() {
     const email = document.getElementById('email').value.trim();
-    if (!email || !email.includes('@')) {
-      showAlert('alert-container', 'Please enter your email address first to reset your password.', 'error');
+    if (!email || !validateEmail(email)) {
+      showAlert('alert-container', 'Please enter your valid email address first to reset your password.', 'error');
       return;
     }
     try {
