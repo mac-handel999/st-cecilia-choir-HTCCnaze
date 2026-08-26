@@ -24,7 +24,7 @@ The goal of this website is to bridge the gap between traditional liturgical mus
 * **🔔 Notifications System:** In-app and push notifications for rehearsal reminders, new scores, announcements, and choir updates. Includes Delete All and per-item delete.
 * **📢 Announcement Box:** Admin-only broadcast system to send choir-wide announcements with optional date, time, and links. Announcements appear on the Member-home page and in the Notifications feed.
 * **🙏 Order of Mass:** Multilingual Catholic Order of Mass reference with English, Latin, and Igbo texts, organized by liturgical section with speaker roles and full prayers.
-* **⚙️ Settings:** Dark/light mode toggle, theme preference, account security, and notification preferences.
+* **⚙️ Settings:** Dark/light mode toggle, theme preference, account security, notification preferences, and legal/documentation links.
 
 ---
 
@@ -36,12 +36,19 @@ The goal of this website is to bridge the gap between traditional liturgical mus
 * **Dark / Light Mode:** Toggle between themes or auto-switch based on system preference.
 * **Dynamic Greetings:** Personalized welcome messages that adapt based on time of day and liturgical season.
 * **Responsive UI:** Works across all screen sizes from mobile to desktop.
+* **Form Validation:** Client-side email and password validation with real-time error messages.
+* **Password Visibility Toggle:** Eye icon button to show/hide passwords on login and registration forms.
+* **Donation Toggle:** Landing page donation section with toggleable bank account details.
+* **Legal & Documentation Links:** Terms & Conditions, Privacy Policy, and User Documentation accessible from Login, Register, Profile, and Settings pages.
+* **Performance Optimized:** Preconnect hints, lazy loading, reduced-motion support, and optimized service worker caching for fast loading on all devices.
+* **Global Error Handling:** User-friendly error messages for network issues, auth failures, file uploads, and server errors, with console logging for debugging.
 
 ### Member Portal
 * **Next Rehearsal Countdown:** Real-time countdown timer showing time remaining until the next scheduled rehearsal.
+* **Sunday Mass Countdown:** Countdown timer for the next scheduled Sunday Mass.
 * **Quick-Access Cards:** Bento-style grid for Scores, Attendance, Cecilia AI, Events, Order of Mass, and more.
 * **Personalized Dashboard:** Tailored home screen for logged-in members.
-* **Announcements Section:** Displays the latest choir announcements with admin delete capability.
+* **Mixed Updates Feed:** Announcements, new scores, and new events displayed together in the Announcements section with type icons and colors.
 * **Admin Floating Button:** Quick access to Announcement Box for admins and executives.
 * **Admin Dashboard Link:** Direct link to admin login for authorized personnel.
 
@@ -55,6 +62,8 @@ The goal of this website is to bridge the gap between traditional liturgical mus
 * **AI-Powered Assistant:** Chat-based interaction using Groq LLM.
 * **Liturgical Music Expertise:** Answers questions about choir music, rehearsals, and liturgy.
 * **Chat History:** Maintains conversation context within a session.
+* **Clear Chat History:** Users can delete all their AI chat history at any time.
+* **Push Notifications:** Browser push notifications for AI chat errors and successes.
 
 ### Attendance
 * **Self-Service Attendance:** All logged-in users can mark their own attendance for events.
@@ -81,6 +90,14 @@ The goal of this website is to bridge the gap between traditional liturgical mus
 * **Speaker Roles:** Color-coded speakers (Priest, People, All) for easy reading.
 * **Full Text Display:** Complete liturgical prayers without truncation.
 * **Icon Fallbacks:** Unicode fallbacks for all section icons.
+
+### Admin Dashboard
+* **Admin Login:** Dedicated admin login page (`admin-login.html`) for authorized personnel.
+* **Dashboard Overview:** Stats for members, scores, events, attendance, and pending items.
+* **Recent Members & Scores:** Quick view of latest registrations and uploaded scores with links to full pages.
+* **Quick Actions:** Fast links to Create Event, Song List Builder, Attendance, Upload Score, Members Directory, Send Notice, Executives, and Image Gallery.
+* **Send Notice:** Broadcast announcements to all choir members with optional date, time, and links.
+* **All Users Management:** View and delete users from the database (admin/exco only).
 
 ---
 
@@ -127,7 +144,10 @@ st-cecilia-choir-HTCCnaze/
 │   │   ├── register.js        # Registration logic
 │   │   ├── profile.js         # User profile logic
 │   │   ├── order-of-mass.js   # Order of Mass multilingual page
-│   │   └── announcement-box.js # Admin announcement broadcast page
+│   │   ├── announcement-box.js # Admin announcement broadcast page
+│   │   ├── create-event.js    # Event creation logic
+│   │   ├── event-songs.js     # Song list builder logic
+│   │   └── admin-dashboard.js # Admin dashboard logic
 │   ├── IMAGES/                # Logo, choir photos, and static images
 │   ├── icons/                 # App icons
 │   ├── data/                  # JSON data files
@@ -144,6 +164,8 @@ st-cecilia-choir-HTCCnaze/
 │   ├── notifications.html     # Notifications center
 │   ├── order-of-mass.html     # Order of Mass multilingual page
 │   ├── announcement-box.html  # Admin announcement broadcast page
+│   ├── create-event.html      # Create event page
+│   ├── event-songs.html       # Song list builder page
 │   ├── settings.html          # Settings and preferences
 │   ├── members.html           # Membership portal
 │   ├── members-directory.html # Member directory
@@ -156,6 +178,7 @@ st-cecilia-choir-HTCCnaze/
 │   ├── About.html             # About the choir
 │   ├── privacy.html           # Privacy policy
 │   ├── terms.html             # Terms of service
+│   ├── constitution.html      # User documentation / constitution
 │   ├── manifest.json          # PWA manifest
 │   └── service-worker.js      # PWA service worker
 ├── server/
@@ -218,6 +241,7 @@ st-cecilia-choir-HTCCnaze/
 | PUT | `/api/settings` | Update user settings |
 | POST | `/api/ai/chat` | Cecilia AI chat endpoint |
 | GET | `/api/ai/history` | Get AI chat history |
+| DELETE | `/api/ai/history` | Clear AI chat history |
 | GET | `/api/dashboard/stats` | Dashboard statistics |
 | GET | `/api/realtime/:table` | Real-time table updates |
 | GET | `/api/health` | Health check |
