@@ -2,7 +2,7 @@
   "en": [
     {
       "section": "Introductory Rites",
-      "icon": "cross",
+      "icon": "church",
       "content": [
         { "speaker": "Priest", "text": "In the name of the Father, and of the Son, and of the Holy Spirit." },
         { "speaker": "People", "text": "Amen." },
@@ -55,7 +55,7 @@
     },
     {
       "section": "Communion Rite",
-      "icon": "sanctuary",
+      "icon": "church",
       "content": [
         { "speaker": "Priest", "text": "At the Savior's command and formed by divine teaching, we dare to say:" },
         { "speaker": "All", "text": "Our Father, who art in heaven, hallowed be thy name; thy kingdom come, thy will be done on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us; and lead us not into temptation, but deliver us from evil." },
@@ -83,8 +83,8 @@
   ],
   "la": [
     {
-      "section": "Ritus Initiales",
-      "icon": "cross",
+      "section": "Introductory Rites",
+      "icon": "church",
       "content": [
         { "speaker": "Sacerdos", "text": "In nómine Patris, et Fílii, et Spíritus Sancti." },
         { "speaker": "Populus", "text": "Amen." },
@@ -137,7 +137,7 @@
     },
     {
       "section": "Ritus Communionis",
-      "icon": "sanctuary",
+      "icon": "church",
       "content": [
         { "speaker": "Sacerdos", "text": "Præcéptis salutáribus móniti, et divína institutióne formáti, audémus dícere:" },
         { "speaker": "Omnes", "text": "Pater noster, qui es in cælis: sanctificétur nomen tuum; advéniat regnum tuum; fiat volúntas tua, sicut in cælo et in terra. Panem nostrum cotidiánum da nobis hódie, et dimítte nobis débita nostra, sicut et nos dimíttimus debitóribus nostris. Et ne nos indúcas in tentatiónem: sed líbera nos a malo." },
@@ -166,7 +166,7 @@
   "ig": [
     {
       "section": "Introductory Rites",
-      "icon": "cross",
+      "icon": "church",
       "content": [
         { "speaker": "V.", "text": "N'aha Nna, na Nwa na Mmụọ Nsọ" },
         { "speaker": "R.", "text": "Amen" },
@@ -219,7 +219,7 @@
     },
     {
       "section": "Communion Rite",
-      "icon": "sanctuary",
+      "icon": "church",
       "content": [
         { "speaker": "V.", "text": "Ụmụnne ka anyị were ekpere nnụ Onye Nzọpụta anyị kuziri anyị were kpọkuo Chukwu Nna." },
         { "speaker": "R.", "text": "Nna anyị nọ n'eligwe ka otito dịrị aha Gị, ka ọchịchị Gịbịja; ka e mee uche Gị n'ụwa ka e si eme ya n'eligwe, Nye anyị tata nri nke ụbọchị anyị. Gbaghara anyị mmehie anyịga dịka anyị si gbaghara ndị mehiere anyị, Ekwela ka anyị kwenye na nlanye ma zọpụta anyị n'ajọ ihe." },

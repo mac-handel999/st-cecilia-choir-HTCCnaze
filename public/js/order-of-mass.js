@@ -12,38 +12,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   let massData = {};
 
   const ICON_FALLBACKS = {
-    'cross': '✝',
+    'church': '⛪',
     'menu_book': '📖',
     'local_bar': '🍷',
-    'sanctuary': '⛪',
-    'auto_awesome': '✨',
-    'church': '⛪',
-    'event': '📅',
-    'calendar_today': '📅',
-    'library_music': '🎵',
-    'groups': '👥',
-    'person': '👤',
-    'settings': '⚙️',
-    'notifications': '🔔',
-    'home': '🏠',
-    'psychology': '💭',
-    'upload_file': '📤',
-    'description': '📄',
-    'search': '🔍',
-    'sort_by_alpha': '🔤',
-    'delete': '🗑️',
-    'done_all': '✅',
-    'delete_sweep': '🧹',
-    'fact_check': '✓',
-    'campaign': '📢',
-    'photo_library': '🖼️',
-    'badge': '🏅',
-    'dashboard': '📊',
-    'map_pin': '📍',
-    'menu_book': '📕',
-    'church': '⛪',
-    'local_bar': '🍷',
-    'sanctuary': '⛪',
     'auto_awesome': '✨'
   };
 
@@ -72,10 +43,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function getIconClass(iconName) {
     const iconMap = {
-      'cross': 'gold',
+      'church': 'gold',
       'menu_book': 'info',
       'local_bar': '',
-      'sanctuary': 'gold',
       'auto_awesome': ''
     };
     return iconMap[iconName] || '';

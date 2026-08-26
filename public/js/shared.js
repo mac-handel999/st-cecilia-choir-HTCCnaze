@@ -475,6 +475,7 @@ const SCORE_CATEGORIES = [
   { id: 'gloria', label: 'Glory To God', icon: 'piano', url: 'https://drive.google.com/open?id=1-eBrjRiwd7Gr119tV85uzVCFGcQjVIa1&usp=drive_copy' },
   { id: 'gospel-acclamation', label: 'Gospel Acclamation', icon: 'campaign', url: 'https://drive.google.com/open?id=1-bcQd-iQcoYHFyhlOwRl6_sKPf8dRlLz&usp=drive_copy' },
   { id: 'creed', label: "Apostle's Creed", icon: 'menu_book', url: 'https://drive.google.com/open?id=1-gu-tnpdCPH2rtMm-xIHog1P_TLyL6w6&usp=drive_copy' },
+  { id: 'sanctus', label: 'SANCTUS / HOLY HOLY', icon: 'church', url: 'https://drive.google.com/open?id=1-fC6dwDvZ53mCLMRdkfh-SjIo1ClOgeH&usp=drive_copy' },
   { id: 'prayer-faithful', label: 'Prayer Of The Faithful', icon: 'volunteer_activism', url: 'https://drive.google.com/open?id=1-fC6dwDvZ53mCLMRdkfh-SjIo1ClOgeH&usp=drive_copy' },
   { id: 'offertory', label: 'Offertory hymns', icon: 'redeem', url: 'https://drive.google.com/open?id=1-kPlxTLJ8yIER7xe66BPDFLJvJiRR9Ek&usp=drive_copy' },
   { id: 'post-offertory', label: 'Post Offertory hymns', icon: 'queue_music', url: 'https://drive.google.com/open?id=1-q1UuD3NgFl6CGNeC-sXArfPW4dHaYv_&usp=drive_copy' },
@@ -1078,4 +1079,99 @@ if (donateToggle && acctBox) {
     donateToggle.textContent = acctBox.classList.contains('visible') ? 'Hide Details' : 'Donate Now';
   });
 }
+
+// ==================== PWA INSTALL PROMPT ====================
+let deferredPrompt = null;
+const pwaInstallBanner = document.getElementById('pwa-install-banner');
+const pwaInstallBtn = document.getElementById('pwa-install-btn');
+const pwaDismissBtn = document.getElementById('pwa-install-dismiss');
+
+function showPwaInstallBanner() {
+  if (!pwaInstallBanner || !deferredPrompt) return;
+  pwaInstallBanner.classList.add('visible');
+}
+
+function hidePwaInstallBanner() {
+  if (!pwaInstallBanner) return;
+  pwaInstallBanner.classList.remove('visible');
+}
+
+async function installPwa() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  console.log('PWA install outcome:', outcome);
+  deferredPrompt = null;
+  hidePwaInstallBanner();
+}
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  setTimeout(showPwaInstallBanner, 3000);
+});
+
+window.addEventListener('appinstalled', () => {
+  console.log('PWA installed successfully');
+  deferredPrompt = null;
+  hidePwaInstallBanner();
+});
+
+if (pwaInstallBtn) {
+  pwaInstallBtn.addEventListener('click', installPwa);
+}
+if (pwaDismissBtn) {
+  pwaDismissBtn.addEventListener('click', hidePwaInstallBanner);
+}
+
+// ==================== SERVICE WORKORKER UPDATE RELOAD ====================
+function showUpdatePopup() {
+  const overlay = document.getElementById('update-popup-overlay');
+  const reloadBtn = document.getElementById('update-reload-btn');
+  const dismissBtn = document.getElementById('update-dismiss-btn');
+
+  if (overlay) overlay.classList.add('visible');
+
+  if (reloadBtn) {
+    reloadBtn.addEventListener('click', () => {
+      window.location.reload();
+    });
+  }
+
+  if (dismissBtn) {
+    dismissBtn.addEventListener('click', () => {
+      if (overlay) overlay.classList.remove('visible');
+    });
+  }
+}
+
+async function checkForServiceWorkerUpdate() {
+  if (!('serviceWorker' in navigator)) return;
+
+  try {
+    const registration = await navigator.serviceWorker.getRegistration('/');
+    if (!registration) return;
+
+    registration.addEventListener('updatefound', () => {
+      const newWorker = registration.installing;
+      if (!newWorker) return;
+
+      newWorker.addEventListener('statechange', () => {
+        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+          showUpdatePopup();
+        }
+      });
+    });
+  } catch (e) {
+    console.warn('Failed to check for service worker update:', e);
+  }
+}
+
+checkForServiceWorkerUpdate();
+
+// Hide update popup if user reloads manually
+window.addEventListener('beforeunload', () => {
+  const overlay = document.getElementById('update-popup-overlay');
+  if (overlay) overlay.classList.remove('visible');
+});
 
