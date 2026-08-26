@@ -904,12 +904,14 @@
   color: #FFFFFF;
   font-size: 0.7rem;
   font-weight: 700;
-  line-height: 18px;
+  line-height: 1;
   text-align: center;
   border-radius: 9999px;
   border: 2px solid #4A0000;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   display: none;
+  align-items: center;
+  justify-content: center;
   z-index: 10;
 }
 

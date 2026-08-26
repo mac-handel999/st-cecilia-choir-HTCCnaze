@@ -7,7 +7,11 @@
   <link rel="stylesheet" href="css/design-system.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#4A0000">
@@ -312,12 +316,57 @@
       <!-- Recent Activity -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="card" style="padding: 1.5rem;">
-          <h3 style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: var(--color-primary); margin-bottom: 1rem;">Recent Members</h3>
+          <h3 style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: var(--color-primary); margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between;">
+            Recent Members
+            <a href="members-directory.html" class="btn btn-outline btn-sm">View All</a>
+          </h3>
           <div id="recent-members"><div class="spinner"></div></div>
         </div>
         <div class="card" style="padding: 1.5rem;">
-          <h3 style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: var(--color-primary); margin-bottom: 1rem;">Recent Scores</h3>
+          <h3 style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: var(--color-primary); margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between;">
+            Recent Scores
+            <a href="scores.html" class="btn btn-outline btn-sm">View All</a>
+          </h3>
           <div id="recent-scores"><div class="spinner"></div></div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="card" style="padding: 1.5rem; margin-top: 2rem;">
+        <h3 style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: var(--color-primary); margin-bottom: 1rem;">Quick Actions</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <a href="create-event.html" class="card" style="padding: 1.25rem; text-align: center; text-decoration: none; transition: all 0.2s;">
+            <span class="material-symbols-outlined" style="font-size: 32px; color: var(--color-primary); display: block; margin-bottom: 0.5rem;">event</span>
+            <span style="font-weight: 600; color: var(--color-text); font-size: 0.9rem;">Create Event</span>
+          </a>
+          <a href="event-songs.html" class="card" style="padding: 1.25rem; text-align: center; text-decoration: none; transition: all 0.2s;">
+            <span class="material-symbols-outlined" style="font-size: 32px; color: var(--color-accent); display: block; margin-bottom: 0.5rem;">library_music</span>
+            <span style="font-weight: 600; color: var(--color-text); font-size: 0.9rem;">Song List Builder</span>
+          </a>
+          <a href="attendance.html" class="card" style="padding: 1.25rem; text-align: center; text-decoration: none; transition: all 0.2s;">
+            <span class="material-symbols-outlined" style="font-size: 32px; color: var(--color-success); display: block; margin-bottom: 0.5rem;">fact_check</span>
+            <span style="font-weight: 600; color: var(--color-text); font-size: 0.9rem;">Choir Attendance</span>
+          </a>
+          <a href="musical-score.html" class="card" style="padding: 1.25rem; text-align: center; text-decoration: none; transition: all 0.2s;">
+            <span class="material-symbols-outlined" style="font-size: 32px; color: var(--color-info); display: block; margin-bottom: 0.5rem;">upload_file</span>
+            <span style="font-weight: 600; color: var(--color-text); font-size: 0.9rem;">Upload Score</span>
+          </a>
+          <a href="members-directory.html" class="card" style="padding: 1.25rem; text-align: center; text-decoration: none; transition: all 0.2s;">
+            <span class="material-symbols-outlined" style="font-size: 32px; color: var(--color-primary); display: block; margin-bottom: 0.5rem;">groups</span>
+            <span style="font-weight: 600; color: var(--color-text); font-size: 0.9rem;">Members Directory</span>
+          </a>
+          <a href="announcement-box.html" class="card" style="padding: 1.25rem; text-align: center; text-decoration: none; transition: all 0.2s;">
+            <span class="material-symbols-outlined" style="font-size: 32px; color: var(--color-accent); display: block; margin-bottom: 0.5rem;">campaign</span>
+            <span style="font-weight: 600; color: var(--color-text); font-size: 0.9rem;">Send Notice</span>
+          </a>
+          <a href="executives.html" class="card" style="padding: 1.25rem; text-align: center; text-decoration: none; transition: all 0.2s;">
+            <span class="material-symbols-outlined" style="font-size: 32px; color: var(--color-success); display: block; margin-bottom: 0.5rem;">badge</span>
+            <span style="font-weight: 600; color: var(--color-text); font-size: 0.9rem;">Executives</span>
+          </a>
+          <a href="image-gallery.html" class="card" style="padding: 1.25rem; text-align: center; text-decoration: none; transition: all 0.2s;">
+            <span class="material-symbols-outlined" style="font-size: 32px; color: var(--color-info); display: block; margin-bottom: 0.5rem;">photo_library</span>
+            <span style="font-weight: 600; color: var(--color-text); font-size: 0.9rem;">Image Gallery</span>
+          </a>
         </div>
       </div>
 

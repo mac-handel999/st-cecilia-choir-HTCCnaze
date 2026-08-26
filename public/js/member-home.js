@@ -224,27 +224,75 @@ async function loadAnnouncements() {
   if (!container) return;
 
   try {
-    const announcements = asArray(await api.get('/announcements'));
-    const display = announcements.slice(0, 4);
+    const [announcements, scores, events] = await Promise.all([
+      api.get('/announcements').catch(() => []),
+      api.get('/scores?limit=3&order=created_at&ascending=false').catch(() => []),
+      api.get('/events?limit=3&order=event_date&ascending=false').catch(() => [])
+    ]);
+
+    const annItems = asArray(announcements).map(ann => ({
+      type: 'announcement',
+      id: ann.id,
+      title: ann.title || 'Announcement',
+      message: ann.message || '',
+      date: ann.created_at,
+      link: ann.link || null,
+      deletable: true
+    }));
+
+    const scoreItems = asArray(scores).map(s => ({
+      type: 'score',
+      id: s.id,
+      title: s.title || 'New Score',
+      message: `Uploaded to ${s.category || 'General'} category`,
+      date: s.created_at,
+      link: 'scores.html',
+      deletable: false
+    }));
+
+    const eventItems = asArray(events).map(e => ({
+      type: 'event',
+      id: e.id,
+      title: e.title || 'New Event',
+      message: `${e.type || 'Event'} on ${e.event_date || 'TBD'}${e.event_time ? ' at ' + e.event_time : ''}${e.location ? ' • ' + e.location : ''}`,
+      date: e.created_at,
+      link: 'events.html',
+      deletable: false
+    }));
+
+    const allItems = [...annItems, ...scoreItems, ...eventItems];
+    allItems.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+    const display = allItems.slice(0, 6);
 
     if (display.length === 0) {
-      container.innerHTML = '<div class="announcement-item"><h4>No announcements yet</h4><p>Check back for choir updates.</p></div>';
+      container.innerHTML = '<div class="announcement-item"><h4>No updates yet</h4><p>Check back for choir updates.</p></div>';
       return;
     }
 
     const currentUser = getCurrentUser();
     const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'exco';
 
-    container.innerHTML = display.map((ann, i) => `
-      <div class="announcement-item ${i === 0 ? 'announcement-featured' : ''}" data-id="${ann.id}">
-        <div class="announcement-top">
-          <h4>${escapeHtml(ann.title)}</h4>
-          <span>${formatDate(ann.created_at)}</span>
+    const typeConfig = {
+      announcement: { icon: 'campaign', color: 'var(--color-accent)', label: 'Announcement' },
+      score: { icon: 'library_music', color: 'var(--color-primary)', label: 'New Score' },
+      event: { icon: 'event', color: 'var(--color-success)', label: 'New Event' }
+    };
+
+    container.innerHTML = display.map((item, i) => {
+      const config = typeConfig[item.type] || typeConfig.announcement;
+      const messageHtml = item.type === 'announcement' ? parseMarkdown(item.message) : escapeHtml(item.message);
+      return `
+        <div class="announcement-item ${i === 0 ? 'announcement-featured' : ''}" data-type="${item.type}" data-id="${item.id}">
+          <div class="announcement-top">
+            <h4><span class="material-symbols-outlined" style="font-size: 18px; vertical-align: middle; color: ${config.color}; margin-right: 0.35rem;">${config.icon}</span> ${escapeHtml(item.title)}</h4>
+            <span>${formatDate(item.date)}</span>
+          </div>
+          <p>${messageHtml}</p>
+          ${item.link ? `<a href="${escapeHtml(item.link)}" class="announcement-link">View Details →</a>` : ''}
+          ${isAdmin && item.deletable ? `<button class="btn-icon delete-announcement" data-id="${item.id}" title="Delete" style="color: var(--color-error); padding: 4px; margin-top: 0.5rem;"><span class="material-symbols-outlined" style="font-size: 18px;">delete</span></button>` : ''}
         </div>
-        <p>${escapeHtml(ann.message)}</p>
-        ${isAdmin ? `<button class="btn-icon delete-announcement" data-id="${ann.id}" title="Delete" style="color: var(--color-error); padding: 4px; margin-top: 0.5rem;"><span class="material-symbols-outlined" style="font-size: 18px;">delete</span></button>` : ''}
-      </div>
-    `).join('');
+      `;
+    }).join('');
 
     container.querySelectorAll('.delete-announcement').forEach(btn => {
       btn.addEventListener('click', async (e) => {
@@ -261,7 +309,7 @@ async function loadAnnouncements() {
       });
     });
   } catch {
-    container.innerHTML = '<div class="announcement-item"><h4>Announcements</h4><p>Unable to load announcements right now.</p></div>';
+    container.innerHTML = '<div class="announcement-item"><h4>Announcements</h4><p>Unable to load updates right now.</p></div>';
   }
 }
 

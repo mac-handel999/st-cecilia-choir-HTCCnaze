@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             ${ann.link ? `<span><span class="material-symbols-outlined">link</span> Link</span>` : ''}
             <span><span class="material-symbols-outlined">person</span> ${escapeHtml(ann.created_by_name || 'Admin')}</span>
           </div>
-          <p class="announcement-list-message">${escapeHtml(ann.message)}</p>
+          <p class="announcement-list-message">${parseMarkdown(ann.message)}</p>
           ${ann.link ? `<a href="${escapeHtml(ann.link)}" target="_blank" rel="noopener" class="announcement-list-link"><span class="material-symbols-outlined">open_in_new</span> View Link</a>` : ''}
           <div class="announcement-list-actions">
             <button class="btn btn-outline btn-sm edit-announcement" data-id="${ann.id}">
@@ -120,16 +120,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (editingId) {
           await api.put('/announcements/' + editingId, { title, message, announcement_date, announcement_time, link });
           Toast.success('Announcement updated');
+          showPushNotification('Announcement Updated', {
+            body: 'Your announcement has been updated.',
+            icon: '/IMAGES/choir-logo.jpg'
+          });
           editingId = null;
           submitBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 18px;">send</span> Send Announcement';
         } else {
           await api.post('/announcements', { title, message, announcement_date, announcement_time, link });
           Toast.success('Announcement sent');
+          showPushNotification('Announcement Sent', {
+            body: 'Your announcement has been broadcast to the choir.',
+            icon: '/IMAGES/choir-logo.jpg'
+          });
           form.reset();
         }
         await loadAnnouncements();
       } catch (error) {
-        showAlert('announcement-alert', error.message || 'Failed to save announcement.', 'error');
+        const friendlyError = getUserFriendlyError(error);
+        showAlert('announcement-alert', friendlyError, 'error');
+        showPushNotification('Announcement Failed', {
+          body: friendlyError,
+          icon: '/IMAGES/choir-logo.jpg'
+        });
       } finally {
         submitBtn.disabled = false;
         if (!editingId) {

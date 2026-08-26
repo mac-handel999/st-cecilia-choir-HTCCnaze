@@ -186,12 +186,21 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
 
       Toast.success('Song added successfully!');
+      showPushNotification('Song Added', {
+        body: `"${escapeHtml(title)}" has been added to the song list.`,
+        icon: '/IMAGES/choir-logo.jpg'
+      });
       addSongForm.reset();
       document.getElementById('song-order').value = nextOrder + 1;
       nextOrder++;
       await loadSongList();
     } catch (error) {
-      Toast.error('Failed to add song: ' + error.message);
+      const friendlyError = getUserFriendlyError(error);
+      Toast.error(friendlyError);
+      showPushNotification('Song Add Failed', {
+        body: friendlyError,
+        icon: '/IMAGES/choir-logo.jpg'
+      });
     } finally {
       addSongBtn.disabled = false;
       addSongBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 18px;">add</span> Add Song';

@@ -119,6 +119,81 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
+function parseMarkdown(text) {
+  if (!text) return '';
+  let html = escapeHtml(text);
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+  html = html.replace(/_(.*?)_/g, '<em>$1</em>');
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  html = html.replace(/^(#{1,6})\s+(.+)$/gm, (match, hashes, content) => {
+    const level = hashes.length;
+    return `<h${level} style="font-family: var(--font-heading); color: var(--color-primary); margin: 0.5rem 0;">${content}</h${level}>`;
+  });
+  html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+  html = html.replace(/(<li>.*<\/li>)/s, '<ul style="margin-left: 1.5rem; margin-bottom: 0.5rem;">$1</ul>');
+  html = html.replace(/<\/li>\n<li>/g, '</li><li>');
+  html = html.replace(/\n/g, '<br>');
+  return html;
+}
+
+async function showPushNotification(title, options = {}) {
+  if (!('Notification' in window)) return;
+  
+  const defaultOptions = {
+    icon: '/IMAGES/choir-logo.jpg',
+    badge: '/IMAGES/choir-logo.jpg',
+    vibrate: [100, 50, 100],
+    requireInteraction: false,
+    ...options
+  };
+
+  try {
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      new Notification(title, defaultOptions);
+    }
+  } catch (e) {
+    console.warn('Push notification failed:', e);
+  }
+}
+
+function getUserFriendlyError(error) {
+  if (!error) return 'Something went wrong. Please try again.';
+  
+  const message = error.message || String(error);
+  
+  if (message.includes('network') || message.includes('fetch') || message.includes('Failed to fetch')) {
+    return 'Network error. Please check your internet connection and try again.';
+  }
+  if (message.includes('401') || message.includes('Unauthorized')) {
+    return 'Your session has expired. Please log in again.';
+  }
+  if (message.includes('403') || message.includes('Forbidden')) {
+    return 'You don\'t have permission to perform this action.';
+  }
+  if (message.includes('404') || message.includes('Not found')) {
+    return 'The requested item was not found.';
+  }
+  if (message.includes('500') || message.includes('Server error')) {
+    return 'Server error. Please try again in a moment.';
+  }
+  if (message.includes('timeout') || message.includes('ETIMEDOUT')) {
+    return 'Request timed out. Please check your connection and try again.';
+  }
+  if (message.includes('PDF') || message.includes('pdf')) {
+    return 'PDF file error. Please ensure the file is valid and try again.';
+  }
+  if (message.includes('size') || message.includes('large') || message.includes('exceeds')) {
+    return 'File is too large. Please choose a smaller file.';
+  }
+  if (message.includes('duplicate') || message.includes('already exists')) {
+    return 'This item already exists. Please use a different name.';
+  }
+  
+  return message;
+}
+
 function formatDateTime(iso) {
   if (!iso) return '';
   const d = new Date(iso);
@@ -910,9 +985,12 @@ function updateNotificationBadge(count) {
   badges.forEach(badge => {
     if (count > 0) {
       badge.textContent = count > 99 ? '99+' : count;
-      badge.style.display = 'flex';
+      badge.style.display = 'inline-flex';
+      badge.style.alignItems = 'center';
+      badge.style.justifyContent = 'center';
     } else {
       badge.style.display = 'none';
+      badge.textContent = '';
     }
   });
 }
@@ -955,5 +1033,39 @@ if (document.readyState === 'loading') {
   });
 } else {
   loadNotificationBadge();
+}
+
+// Global error handler
+window.addEventListener('error', (event) => {
+  console.error('Global error:', event.error);
+  const friendlyMessage = getUserFriendlyError(event.error);
+  showPushNotification('Application Error', {
+    body: friendlyMessage,
+    icon: '/IMAGES/choir-logo.jpg'
+  });
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('Unhandled promise rejection:', event.reason);
+  const friendlyMessage = getUserFriendlyError(event.reason);
+  showPushNotification('Application Error', {
+    body: friendlyMessage,
+    icon: '/IMAGES/choir-logo.jpg'
+  });
+});
+
+// Performance: lazy load non-critical resources
+if ('loading' in HTMLImageElement.prototype) {
+  const images = document.querySelectorAll('img[loading="lazy"]');
+  images.forEach(img => {
+    if (!img.loading) img.loading = 'lazy';
+  });
+}
+
+// Performance: reduce motion for users who prefer it
+if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  document.documentElement.style.setProperty('--transition-fast', '0s');
+  document.documentElement.style.setProperty('--transition-normal', '0s');
+  document.documentElement.style.setProperty('--transition-slow', '0s');
 }
 

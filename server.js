@@ -535,7 +535,10 @@ app.delete('/api/scores/:id', authMiddleware, adminOrExco, async (req, res) => {
 
 // ==================== GOOGLE DRIVE SCORES ROUTES ====================
 
-const driveUpload = multer({ storage: multer.memoryStorage() });
+const driveUpload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB max
+});
 const driveService = require('./server/driveService');
 
 // GET /api/drive/scores - list all PDFs from Google Drive
@@ -1722,6 +1725,17 @@ app.get('/api/health', (req, res) => {
 });
 
 // ==================== FALLBACK ====================
+
+app.use((err, req, res, next) => {
+  if (err) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ message: 'File size exceeds 10MB limit. Please choose a smaller PDF.' });
+    }
+    console.error('Unhandled server error:', err);
+    return res.status(500).json({ message: 'Something went wrong. Please try again.' });
+  }
+  next();
+});
 
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));

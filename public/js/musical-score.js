@@ -62,11 +62,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         showAlert('upload-alert', 'Score uploaded successfully!', 'success');
+        showPushNotification('Score Uploaded', {
+          body: 'Your musical score has been uploaded successfully.',
+          icon: '/IMAGES/choir-logo.jpg'
+        });
         uploadForm.reset();
         await loadScores();
       } catch (error) {
         console.error('Upload error:', error);
-        showAlert('upload-alert', error.message || 'Upload failed. Please try again.', 'error');
+        const friendlyError = getUserFriendlyError(error);
+        showAlert('upload-alert', friendlyError, 'error');
+        showPushNotification('Upload Failed', {
+          body: friendlyError,
+          icon: '/IMAGES/choir-logo.jpg'
+        });
       } finally {
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 18px;">cloud_upload</span> Upload Score';

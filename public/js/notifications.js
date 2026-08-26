@@ -169,7 +169,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           </div>
           <div class="feed-content">
             <div class="feed-title">${escapeHtml(item.title)}</div>
-            <div class="feed-message">${escapeHtml(item.message)}</div>
+            <div class="feed-message">${item.type === 'announcement' ? parseMarkdown(item.message) : escapeHtml(item.message)}</div>
             <div class="feed-time">${timeAgo}</div>
           </div>
           ${item.read ? '' : '<span class="badge badge-primary feed-badge">New</span>'}

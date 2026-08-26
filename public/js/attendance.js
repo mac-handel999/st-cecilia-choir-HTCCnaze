@@ -189,9 +189,18 @@ document.addEventListener('DOMContentLoaded', async () => {
           });
 
           Toast.success('Attendance saved!');
+          showPushNotification('Attendance Saved', {
+            body: 'Your attendance has been recorded successfully.',
+            icon: '/IMAGES/choir-logo.jpg'
+          });
           await loadSavedAttendance();
         } catch (error) {
-          Toast.error('Failed to save: ' + error.message);
+          const friendlyError = getUserFriendlyError(error);
+          Toast.error(friendlyError);
+          showPushNotification('Attendance Error', {
+            body: friendlyError,
+            icon: '/IMAGES/choir-logo.jpg'
+          });
         } finally {
           saveMyBtn.disabled = false;
           saveMyBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 18px;">save</span> Save My Attendance';

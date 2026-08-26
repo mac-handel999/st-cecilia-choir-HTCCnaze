@@ -1,10 +1,12 @@
-const CACHE_NAME = 'st-cecilia-choir-v5';
+const CACHE_NAME = 'st-cecilia-choir-v6';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/css/design-system.css',
   '/css/components.css',
   '/css/styles.css',
+  '/css/order-of-mass.css',
+  '/css/announcement-box.css',
   '/manifest.json',
   '/IMAGES/choir-logo.jpg'
 ];
@@ -16,7 +18,19 @@ const JS_FILES = [
   '/js/member-home.js',
   '/js/cecilia-ai.js',
   '/js/executives.js',
-  '/js/image-gallery.js'
+  '/js/image-gallery.js',
+  '/js/notifications.js',
+  '/js/attendance.js',
+  '/js/events.js',
+  '/js/announcement-box.js',
+  '/js/order-of-mass.js',
+  '/js/admin-dashboard.js',
+  '/js/create-event.js',
+  '/js/event-songs.js'
+];
+
+const IMAGE_ASSETS = [
+  '/IMAGES/choir-logo.jpg'
 ];
 
 // Install event - cache static assets
@@ -27,7 +41,8 @@ self.addEventListener('install', (event) => {
         console.log('Caching static assets');
         return Promise.allSettled([
           ...STATIC_ASSETS.map(asset => cache.add(asset).catch(err => console.log('Failed to cache:', asset, err))),
-          ...JS_FILES.map(asset => cache.add(asset).catch(err => console.log('Failed to cache JS:', asset, err)))
+          ...JS_FILES.map(asset => cache.add(asset).catch(err => console.log('Failed to cache JS:', asset, err))),
+          ...IMAGE_ASSETS.map(asset => cache.add(asset).catch(err => console.log('Failed to cache image:', asset, err)))
         ]);
       })
       .then(() => self.skipWaiting())
@@ -57,8 +72,8 @@ self.addEventListener('fetch', (event) => {
   // Skip non-GET requests
   if (event.request.method !== 'GET') return;
 
-  // For API requests and JS files: always go to network first
-  if (url.pathname.includes('/api/') || url.pathname.endsWith('.js')) {
+  // For API requests: network first, cache fallback
+  if (url.pathname.includes('/api/')) {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
@@ -71,49 +86,57 @@ self.addEventListener('fetch', (event) => {
         })
         .catch(() => {
           return caches.match(event.request)
-            .then(cached => cached || new Response('Offline', { status: 503 }));
+            .then(cached => cached || new Response(JSON.stringify({ message: 'You are offline. Please check your connection.' }), {
+              status: 503,
+              headers: { 'Content-Type': 'application/json' }
+            }));
         })
     );
     return;
   }
 
-  // For static assets: cache first, then network
-  event.respondWith(
-    caches.match(event.request)
-      .then((cachedResponse) => {
-        if (cachedResponse) {
-          const fetchPromise = fetch(event.request)
-            .then((networkResponse) => {
-              if (networkResponse.ok) {
-                const responseClone = networkResponse.clone();
-                caches.open(CACHE_NAME)
-                  .then((cache) => cache.put(event.request, responseClone));
-              }
-              return networkResponse;
-            })
-            .catch(() => cachedResponse);
-
-          return cachedResponse;
-        }
-
-        return fetch(event.request)
-          .then((response) => {
-            if (!response || response.status !== 200 || response.type !== 'basic') {
-              return response;
-            }
-
+  // For JS files: network first, cache fallback
+  if (url.pathname.endsWith('.js')) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response.ok) {
             const responseClone = response.clone();
             caches.open(CACHE_NAME)
               .then((cache) => cache.put(event.request, responseClone));
+          }
+          return response;
+        })
+        .catch(() => {
+          return caches.match(event.request)
+            .then(cached => cached || new Response('// Offline - JS not cached', { status: 503, headers: { 'Content-Type': 'application/javascript' } }));
+        })
+    );
+    return;
+  }
 
-            return response;
-          })
-          .catch(() => {
-            if (event.request.headers.get('accept') && event.request.headers.get('accept').includes('text/html')) {
-              return caches.match('/index.html');
+  // For static assets: stale-while-revalidate
+  event.respondWith(
+    caches.match(event.request)
+      .then((cachedResponse) => {
+        const networkFetch = fetch(event.request)
+          .then((networkResponse) => {
+            if (networkResponse && networkResponse.ok) {
+              const responseClone = networkResponse.clone();
+              caches.open(CACHE_NAME)
+                .then((cache) => cache.put(event.request, responseClone));
             }
-            return new Response('Offline - content not cached', { status: 503 });
-          });
+            return networkResponse;
+          })
+          .catch(() => cachedResponse);
+
+        return cachedResponse || networkFetch;
+      })
+      .catch(() => {
+        if (event.request.headers.get('accept') && event.request.headers.get('accept').includes('text/html')) {
+          return caches.match('/index.html');
+        }
+        return new Response('Offline - content not cached', { status: 503 });
       })
   );
 });

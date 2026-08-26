@@ -71,20 +71,31 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Recent scores
   try {
-    const { data: scores } = await api.get('/scores?select=title,created_at&order=created_at&ascending=false&limit=5');
+    const scores = await api.get('/scores?select=title,created_at&order=created_at&ascending=false');
     const scoresContainer = document.getElementById('recent-scores');
-    if (scores && scores.length > 0) {
-      scoresContainer.innerHTML = scores.map(s => `
-        <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--color-border-light);">
-          <div style="font-weight: 600; color: var(--color-text); font-size: 0.9rem;">${escapeHtml(s.title)}</div>
-          <div style="font-size: 0.75rem; color: var(--color-text-light);">${formatDate(s.created_at)}</div>
-        </div>
-      `).join('');
-    } else {
-      scoresContainer.innerHTML = '<p style="color: var(--color-text-muted); text-align: center; padding: 1rem;">No scores yet</p>';
+    if (scoresContainer) {
+      const scoresList = asArray(scores);
+      if (scoresList.length > 0) {
+        scoresContainer.innerHTML = `
+          <div style="display: flex; flex-direction: column; gap: 0.5rem; max-height: 300px; overflow-y: auto;">
+            ${scoresList.map(s => `
+              <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; border-bottom: 1px solid var(--color-border-light);">
+                <div style="font-weight: 600; color: var(--color-text); font-size: 0.9rem; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(s.title)}</div>
+                <div style="font-size: 0.75rem; color: var(--color-text-light); margin-left: 1rem; white-space: nowrap;">${formatDate(s.created_at)}</div>
+              </div>
+            `).join('')}
+          </div>
+          <a href="scores.html" class="btn btn-outline btn-sm" style="margin-top: 1rem; width: 100%; text-align: center;">View All Scores</a>
+        `;
+      } else {
+        scoresContainer.innerHTML = '<p style="color: var(--color-text-muted); text-align: center; padding: 1rem;">No scores yet</p>';
+      }
     }
   } catch (error) {
-    document.getElementById('recent-scores').innerHTML = '<p style="color: var(--color-text-muted); text-align: center; padding: 1rem;">Failed to load</p>';
+    const scoresContainer = document.getElementById('recent-scores');
+    if (scoresContainer) {
+      scoresContainer.innerHTML = '<p style="color: var(--color-text-muted); text-align: center; padding: 1rem;">Failed to load</p>';
+    }
   }
 
   // All users management
