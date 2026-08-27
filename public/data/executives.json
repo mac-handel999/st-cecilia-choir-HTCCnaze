@@ -1,7 +1,7 @@
 [
-  { "name": "Alaribe Eziuche Mac-George Bruno", "position": "Musical Director", "image": "IMAGES/bruno.png", "contact": "+2347042799614", "choir_part": "Director" },
+  { "name": "Alaribe Eziuche Mac-George Bruno", "position": "Musical Director", "image": "IMAGES/bruno-choir.png", "contact": "+2347042799614", "choir_part": "Director" },
   { "name": "Ochemba Chibuzor Collins", "position": "Chief Choir Master", "image": "IMAGES/choir-logo.jpg", "contact": "+2348139651114", "choir_part": "Tenor" },
-  { "name": "Nnaocha Jennifer Kelechi", "position": "Choir Master", "image": "IMAGES/jenny.jpg", "contact": "+2347063553107", "choir_part": "Director" },
+  { "name": "Nnaocha Jennifer Kelechi", "position": "Choir Master", "image": "IMAGES/jenny-choir.png", "contact": "+2347063553107", "choir_part": "Director" },
   { "name": "Ochemba Kosisochukwu Basil", "position": "Keyboardist / Organist", "image": "IMAGES/kosi.jpg", "contact": "+234-", "choir_part": "Organist" },
   { "name": "Nwachukwu Assumpta", "position": "Financial Secretary", "image": "IMAGES/choir-logo.jpg", "contact": "+234-", "choir_part": "Soprano" },
   { "name": "Bro Kenneth Ejiogu", "position": "Choir Media Manager", "image": "IMAGES/choir-logo.jpg", "contact": "+234-", "choir_part": "Tenor" },

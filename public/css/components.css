@@ -2,6 +2,16 @@
    SHARED COMPONENTS
    ============================================ */
 
+* {
+  padding:0;
+  margin:0;
+  box-sizing:border-box;
+  scroll-behavior: smooth;
+}
+
+
+
+
 /* Header */
 .site-header {
   background-color: #4A0000;

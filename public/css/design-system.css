@@ -305,13 +305,6 @@
   --color-rose-900: #881337;
 }
 
-* {
-  padding:0;
-  margin:0;
-  box-sizing:border-box;
-  scroll-behavior: smooth;
-}
-
 [data-theme="dark"] {
   --color-primary: #FFFFFF;
   --color-primary-light: #FFFFFF;
