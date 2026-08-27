@@ -12,6 +12,13 @@
   padding: 0;
 }
 
+* {
+  padding:0;
+  margin:0;
+  box-sizing:border-box;
+  scroll-behavior: smooth;
+}
+
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
@@ -3892,6 +3899,45 @@ a:hover {
 @keyframes float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-10px); }
+}
+
+/* --------------------------------------------
+   HERO BACKGROUND (Blurred Image with #4A0000 overlay)
+   Applied to all hero sections across web pages
+   -------------------------------------------- */
+.hero, .about-hero, .member-hero, .auth-hero {
+  position: relative;
+  overflow: hidden;
+  background-color: #4A0000;
+}
+
+.hero::before, .about-hero::before, .member-hero::before, .auth-hero::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: url('../music-boom/IMG_8.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(5px);
+  z-index: 0;
+}
+
+.hero::after, .about-hero::after, .member-hero::after, .auth-hero::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(74, 0, 0, 0.5);
+  z-index: 1;
+}
+
+.hero > *, .about-hero > *, .member-hero > *, .auth-hero > * {
+  position: relative;
+  z-index: 2;
+}
+
+.auth-hero {
+  color: #FFFFFF;
 }
 
 /* --------------------------------------------

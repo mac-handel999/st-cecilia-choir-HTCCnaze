@@ -305,6 +305,13 @@
   --color-rose-900: #881337;
 }
 
+* {
+  padding:0;
+  margin:0;
+  box-sizing:border-box;
+  scroll-behavior: smooth;
+}
+
 [data-theme="dark"] {
   --color-primary: #FFFFFF;
   --color-primary-light: #FFFFFF;
@@ -362,8 +369,9 @@
   .scroll-to-top, .fab,
   .chat-bubble-user,
   .attendance-status-btn[data-status="present"],
-  .attendance-status-btn[data-status="absent"],
-  .admin-sidebar-header {
+   .attendance-status-btn[data-status="absent"],
+   .admin-sidebar-header,
+   .hero, .about-hero, .member-hero, .auth-hero {
     background-color: #4A0000 !important;
     color: #FFFFFF !important;
   }
