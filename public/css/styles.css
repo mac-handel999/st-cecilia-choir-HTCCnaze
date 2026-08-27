@@ -3633,6 +3633,14 @@ a:hover {
 @media (max-width: 767px) {
   .hide-scrollbar::-webkit-scrollbar { display: none; }
   .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* Cecilia AI: lift chat input above the mobile bottom nav */
+  .chat-container {
+    bottom: calc(var(--bottom-nav-height) + var(--safe-area-bottom));
+  }
+  .chat-input-area {
+    padding-bottom: calc(1rem + var(--safe-area-bottom));
+  }
 }
 
 /* --------------------------------------------

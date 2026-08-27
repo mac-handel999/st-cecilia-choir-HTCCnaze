@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   try {
     const events = asArray(await api.get('/events'));
-    events.sort((a, b) => new Date(a.event_date || 0) - new Date(b.event_date || 0));
+    events.sort((a, b) => new Date(b.event_date || 0) - new Date(a.event_date || 0));
 
     eventSelect.innerHTML = '<option value="">Choose an event...</option>' + events.map(e => {
       const dateStr = e.event_date ? new Date(e.event_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
