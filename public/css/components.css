@@ -244,6 +244,16 @@
   flex-wrap: wrap;
 }
 
+.site-footer p,
+.site-footer a,
+.site-footer span {
+  color: #fff;
+}
+
+.site-footer .btn-accent {
+  color: #fff;
+}
+
 .site-footer .footer-social-link {
   width: 44px;
   height: 44px;
