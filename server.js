@@ -12,10 +12,7 @@ const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors({
-  origin: true,
-  credentials: true
-}));
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -25,57 +22,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Supabase clients
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 const supabaseAdmin = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-
-// Nodemailer transporter (conditional - only if SMTP config is present)
-let transporter = null;
-if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-  transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: false,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS
-    }
-  });
-}
-
-async function sendConfirmationEmail(email, token, fullName) {
-  if (!transporter) {
-    console.warn('SMTP not configured - skipping confirmation email');
-    return { skipped: true };
-  }
-
-  const siteUrl = process.env.SITE_URL || `http://localhost:${process.env.PORT || 5000}`;
-  const confirmUrl = `${siteUrl}/confirm-email.html?token=${token}`;
-
-  const html = `
-    <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; color: #333;">
-      <h2 style="color: #4A0000; border-bottom: 2px solid #4A0000; padding-bottom: 0.5rem;">St. Cecilia Choir HTCC Naze</h2>
-      <p>Dear ${fullName || 'Choir Member'},</p>
-      <p>Thank you for registering with St. Cecilia Choir HTCC Naze! Please confirm your email address by clicking the button below:</p>
-      <p style="text-align: center; margin: 2rem 0;">
-        <a href="${confirmUrl}" style="background: #4A0000; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">Confirm Your Email</a>
-      </p>
-      <p>If the button above doesn't work, copy and paste this link into your browser:</p>
-      <p style="word-break: break-all; font-size: 0.9rem; color: #666;">${confirmUrl}</p>
-      <p style="margin-top: 2rem; font-size: 0.85rem; color: #999;">This link will expire in 24 hours.</p>
-    </div>
-  `;
-
-  try {
-    await transporter.sendMail({
-      from: process.env.SMTP_FROM || process.env.SMTP_USER,
-      to: email,
-      subject: 'Confirm Your Email - St. Cecilia Choir HTCC Naze',
-      html
-    });
-    return { sent: true };
-  } catch (err) {
-    console.error('Failed to send confirmation email:', err);
-    return { sent: false, error: err.message };
-  }
-}
 
 // Groq AI client
 let groq = null;
