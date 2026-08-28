@@ -2533,6 +2533,35 @@ a:hover {
   background: linear-gradient(135deg, #4A0000 0%, #2D0000 100%);
   padding: 2rem 0;
   margin-bottom: 2rem;
+  color: #fff;
+  text-align: center;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+}
+
+.profile-header::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: url('../music-boom/IMG_8.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(5px);
+  z-index: 0;
+}
+
+.profile-header::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(74, 0, 0, 0.5);
+  z-index: 1;
+}
+
+.profile-header > * {
+  position: relative;
+  z-index: 2;
 }
 
 #profile-name {
@@ -3944,7 +3973,39 @@ a:hover {
 /* Ensure white text in member-hero (on dark blurred background) */
 .member-hero {
   color: #FFFFFF;
+  padding: 2.5rem 1.25rem;
+  border-radius: var(--radius-xl);
+  margin-bottom: 1.5rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
 }
+
+.member-hero::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: url('../music-boom/IMG_8.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(5px);
+  z-index: 0;
+}
+
+.member-hero::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(74, 0, 0, 0.5);
+  z-index: 1;
+}
+
+.member-hero > * {
+  position: relative;
+  z-index: 2;
+}
+
 .member-hero-badge,
 .member-hero-title,
 .member-hero-subtitle {
@@ -3952,6 +4013,13 @@ a:hover {
 }
 .member-hero-badge {
   background: rgba(201, 154, 60, 0.15);
+}
+
+@media (min-width: 768px) {
+  .member-hero {
+    padding: 3rem 2rem;
+    margin-bottom: 2rem;
+  }
 }
 
 /* Hero typing animation */
@@ -3967,6 +4035,12 @@ a:hover {
   border-right: 2px solid #fff;
   padding-right: 4px;
   box-sizing: content-box;
+  animation: hero-cursor-blink 1s step-end infinite;
+}
+
+@keyframes hero-cursor-blink {
+  from, to { border-color: #fff; }
+  50% { border-color: transparent; }
 }
 
 /* --------------------------------------------

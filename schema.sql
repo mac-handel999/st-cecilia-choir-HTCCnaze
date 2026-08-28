@@ -22,8 +22,9 @@ CREATE TABLE IF NOT EXISTS users (
   choir_part TEXT CHECK (choir_part IN ('soprano', 'alto', 'tenor', 'bass', 'baritone', 'others')),
   executive_position TEXT,
   tenure TEXT,
-  pledge_accepted BOOLEAN DEFAULT FALSE,
-  role TEXT NOT NULL DEFAULT 'member' CHECK (role IN ('member', 'exco', 'admin')),
+   pledge_accepted BOOLEAN DEFAULT FALSE,
+   email_confirmed BOOLEAN DEFAULT FALSE,
+   role TEXT NOT NULL DEFAULT 'member' CHECK (role IN ('member', 'exco', 'admin')),
   avatar_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
@@ -60,6 +61,17 @@ CREATE TABLE IF NOT EXISTS events (
   created_by UUID REFERENCES users(id) ON DELETE SET NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+-- ============================================
+-- EMAIL CONFIRMATION TOKENS TABLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS email_confirmation_tokens (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token TEXT NOT NULL UNIQUE,
+  expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
 -- ============================================

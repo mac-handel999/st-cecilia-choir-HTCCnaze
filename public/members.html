@@ -90,7 +90,10 @@
             <label class="form-label" for="login-password">Password</label>
             <div class="input-icon-wrapper">
               <span class="material-symbols-outlined input-icon">lock</span>
-              <input type="password" id="login-password" class="form-control" placeholder="Enter your password" required>
+              <input type="password" id="login-password" class="form-control has-toggle" placeholder="Enter your password" required autocomplete="current-password"/>
+              <button type="button" class="password-toggle" id="toggle-login-password" aria-label="Toggle password visibility">
+                <span class="material-symbols-outlined">visibility_off</span>
+              </button>
             </div>
             <div class="form-error" id="login-password-error">Please enter your password</div>
           </div>
@@ -106,6 +109,14 @@
             Don't have an account?
             <button onclick="switchTab('register')" style="color: var(--color-accent); font-weight: 600; background: none; border: none; cursor: pointer; font-size: 0.95rem;">Create an Account</button>
           </p>
+        </div>
+        <div class="text-center" style="margin-top: 0.75rem;">
+          <button type="button" class="link-accent" style="background: none; border: none; font-size: 0.9rem; color: var(--color-accent);" onclick="window.location.href='confirm-email.html'">Resend confirmation email?</button>
+        </div>
+        <div class="auth-footer-links">
+          <a href="terms.html" target="_blank">Terms & Conditions</a>
+          <a href="privacy.html" target="_blank">User Policy / Privacy</a>
+          <a href="constitution.html" target="_blank">User Documentation</a>
         </div>
       </div>
 
@@ -140,7 +151,10 @@
             <label class="form-label" for="reg-password">Password *</label>
             <div class="input-icon-wrapper">
               <span class="material-symbols-outlined input-icon">lock</span>
-              <input type="password" id="reg-password" class="form-control" placeholder="Create a password" required minlength="6">
+              <input type="password" id="reg-password" class="form-control has-toggle" placeholder="Create a password" required minlength="6">
+              <button type="button" class="password-toggle" id="toggle-reg-password" aria-label="Toggle password visibility">
+                <span class="material-symbols-outlined">visibility_off</span>
+              </button>
             </div>
             <div class="form-error" id="reg-password-error">Password must be at least 6 characters</div>
           </div>
@@ -209,6 +223,14 @@
             Already have an account?
             <button onclick="switchTab('login')" style="color: var(--color-accent); font-weight: 600; background: none; border: none; cursor: pointer; font-size: 0.95rem;">Login here</button>
           </p>
+        </div>
+        <div class="text-center" style="margin-top: 0.75rem;">
+          <button type="button" class="link-accent" style="background: none; border: none; font-size: 0.9rem; color: var(--color-accent);" onclick="window.location.href='confirm-email.html'">Resend confirmation email?</button>
+        </div>
+        <div class="auth-footer-links">
+          <a href="terms.html" target="_blank">Terms & Conditions</a>
+          <a href="privacy.html" target="_blank">User Policy / Privacy</a>
+          <a href="constitution.html" target="_blank">User Documentation</a>
         </div>
       </div>
 

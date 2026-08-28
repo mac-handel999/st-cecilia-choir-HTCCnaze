@@ -131,6 +131,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  function setupPasswordToggle(inputId, btnId) {
+    const input = document.getElementById(inputId);
+    const btn = document.getElementById(btnId);
+    if (input && btn) {
+      btn.addEventListener('click', () => {
+        const isPassword = input.type === 'password';
+        input.type = isPassword ? 'text' : 'password';
+        btn.querySelector('.material-symbols-outlined').textContent = isPassword ? 'visibility' : 'visibility_off';
+      });
+    }
+  }
+
+  setupPasswordToggle('current-password', 'toggle-current-password');
+  setupPasswordToggle('new-password', 'toggle-new-password');
+  setupPasswordToggle('confirm-password', 'toggle-confirm-password');
+
   if (form) {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();

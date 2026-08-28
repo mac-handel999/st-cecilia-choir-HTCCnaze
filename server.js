@@ -8,6 +8,8 @@ const Groq = require('groq-sdk');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
+const nodemailer = require('nodemailer');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -22,6 +24,57 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Supabase clients
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 const supabaseAdmin = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+// Nodemailer transporter (conditional - only if SMTP config is present)
+let transporter = null;
+if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+  transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT || '587'),
+    secure: false,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS
+    }
+  });
+}
+
+async function sendConfirmationEmail(email, token, fullName) {
+  if (!transporter) {
+    console.warn('SMTP not configured - skipping confirmation email');
+    return { skipped: true };
+  }
+
+  const siteUrl = process.env.SITE_URL || `http://localhost:${process.env.PORT || 5000}`;
+  const confirmUrl = `${siteUrl}/confirm-email.html?token=${token}`;
+
+  const html = `
+    <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; color: #333;">
+      <h2 style="color: #4A0000; border-bottom: 2px solid #4A0000; padding-bottom: 0.5rem;">St. Cecilia Choir HTCC Naze</h2>
+      <p>Dear ${fullName || 'Choir Member'},</p>
+      <p>Thank you for registering with St. Cecilia Choir HTCC Naze! Please confirm your email address by clicking the button below:</p>
+      <p style="text-align: center; margin: 2rem 0;">
+        <a href="${confirmUrl}" style="background: #4A0000; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">Confirm Your Email</a>
+      </p>
+      <p>If the button above doesn't work, copy and paste this link into your browser:</p>
+      <p style="word-break: break-all; font-size: 0.9rem; color: #666;">${confirmUrl}</p>
+      <p style="margin-top: 2rem; font-size: 0.85rem; color: #999;">This link will expire in 24 hours.</p>
+    </div>
+  `;
+
+  try {
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      to: email,
+      subject: 'Confirm Your Email - St. Cecilia Choir HTCC Naze',
+      html
+    });
+    return { sent: true };
+  } catch (err) {
+    console.error('Failed to send confirmation email:', err);
+    return { sent: false, error: err.message };
+  }
+}
 
 // Groq AI client
 let groq = null;
@@ -158,13 +211,31 @@ app.post('/api/auth/register', async (req, res) => {
 
     if (error) throw error;
 
-    const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role, username: user.username },
-      process.env.JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+    // Generate email confirmation token
+    const confirmationToken = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-    res.status(201).json({ user, token });
+    const { error: tokenError } = await supabaseAdmin
+      .from('email_confirmation_tokens')
+      .insert([{
+        user_id: user.id,
+        token: confirmationToken,
+        expires_at: expiresAt.toISOString()
+      }]);
+
+    if (tokenError) throw tokenError;
+
+    // Send confirmation email
+    const emailResult = await sendConfirmationEmail(email, confirmationToken, metadata.full_name);
+    if (!emailResult.sent) {
+      console.error('Failed to send confirmation email to:', email);
+    }
+
+    res.status(201).json({
+      user,
+      email_sent: emailResult.sent || false,
+      email_skipped: emailResult.skipped || false
+    });
   } catch (err) {
     console.error('Register error:', err);
     res.status(500).json({ message: err.message || 'Registration failed' });
@@ -194,6 +265,10 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
+    if (!user.email_confirmed) {
+      return res.status(403).json({ message: 'Please confirm your email address before logging in. Check your inbox for a confirmation link.', email_confirmed: false });
+    }
+
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role, username: user.username },
       process.env.JWT_SECRET,
@@ -212,11 +287,115 @@ app.post('/api/auth/logout', authMiddleware, (req, res) => {
   res.json({ message: 'Logged out successfully' });
 });
 
+// Email confirmation endpoints
+app.get('/api/auth/confirm-email', async (req, res) => {
+  try {
+    const { token } = req.query;
+
+    if (!token) {
+      return res.status(400).json({ message: 'Token is required' });
+    }
+
+    const { data: tokenData, error: tokenError } = await supabaseAdmin
+      .from('email_confirmation_tokens')
+      .select('user_id, expires_at')
+      .eq('token', token)
+      .single();
+
+    if (tokenError || !tokenData) {
+      return res.status(400).json({ message: 'Invalid or expired confirmation token' });
+    }
+
+    const now = new Date();
+    const expiresAt = new Date(tokenData.expires_at);
+    if (now > expiresAt) {
+      return res.status(400).json({ message: 'Confirmation token has expired' });
+    }
+
+    const { error: updateError } = await supabaseAdmin
+      .from('users')
+      .update({ email_confirmed: true })
+      .eq('id', tokenData.user_id);
+
+    if (updateError) throw updateError;
+
+    // Delete the token
+    await supabaseAdmin
+      .from('email_confirmation_tokens')
+      .delete()
+      .eq('token', token);
+
+    // Return a redirect or success message for the HTML page
+    const siteUrl = process.env.SITE_URL || `http://localhost:${process.env.PORT || 5000}`;
+    res.redirect(302, `${siteUrl}/login.html?confirmed=true`);
+  } catch (err) {
+    console.error('Confirm email error:', err);
+    res.status(500).json({ message: 'Email confirmation failed' });
+  }
+});
+
+app.post('/api/auth/resend-confirmation', async (req, res) => {
+  try {
+    const { email, full_name } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
+
+    const { data: user, error } = await supabaseAdmin
+      .from('users')
+      .select('id, email_confirmed')
+      .eq('email', email)
+      .single();
+
+    if (error || !user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user.email_confirmed) {
+      return res.json({ message: 'Email already confirmed' });
+    }
+
+    // Generate new token
+    const confirmationToken = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    // Delete old tokens for this user and insert new one
+    await supabaseAdmin
+      .from('email_confirmation_tokens')
+      .delete()
+      .eq('user_id', user.id);
+
+    const { error: insertError } = await supabaseAdmin
+      .from('email_confirmation_tokens')
+      .insert([{
+        user_id: user.id,
+        token: confirmationToken,
+        expires_at: expiresAt.toISOString()
+      }]);
+
+    if (insertError) throw insertError;
+
+    const emailResult = await sendConfirmationEmail(email, confirmationToken, full_name);
+
+    if (emailResult.sent) {
+      res.json({ message: 'Confirmation email sent' });
+    } else if (emailResult.skipped) {
+      res.json({ message: 'Confirmation email skipped (SMTP not configured)', skipped: true });
+    } else {
+      res.status(500).json({ message: 'Failed to send confirmation email' });
+    }
+  } catch (err) {
+    console.error('Resend confirmation error:', err);
+    res.status(500).json({ message: 'Failed to send confirmation email' });
+  }
+});
+
 app.get('/api/auth/me', authMiddleware, async (req, res) => {
   try {
     const { data: user, error } = await supabaseAdmin
       .from('users')
-      .select('id, email, username, full_name, phone_number, address, date_of_birth, marital_status, choir_part, executive_position, tenure, pledge_accepted, role, avatar_url, created_at, updated_at')
+      .select('id, email, username, full_name, phone_number, address, date_of_birth, marital_status, choir_part, executive_position, tenure, pledge_accepted, email_confirmed, role, avatar_url, created_at, updated_at')
       .eq('id', req.user.id)
       .single();
 
@@ -301,7 +480,7 @@ app.get('/api/users/:id', authMiddleware, async (req, res) => {
   try {
     const { data, error } = await supabaseAdmin
       .from('users')
-      .select('id, email, username, full_name, phone_number, address, date_of_birth, marital_status, choir_part, executive_position, tenure, pledge_accepted, role, avatar_url, created_at, updated_at')
+      .select('id, email, username, full_name, phone_number, address, date_of_birth, marital_status, choir_part, executive_position, tenure, pledge_accepted, email_confirmed, role, avatar_url, created_at, updated_at')
       .eq('id', req.params.id)
       .single();
 
@@ -326,7 +505,7 @@ app.put('/api/users/:id', authMiddleware, async (req, res) => {
       .from('users')
       .update(updates)
       .eq('id', req.params.id)
-      .select('id, email, username, full_name, phone_number, address, date_of_birth, marital_status, choir_part, executive_position, tenure, pledge_accepted, role, avatar_url, created_at, updated_at')
+      .select('id, email, username, full_name, phone_number, address, date_of_birth, marital_status, choir_part, executive_position, tenure, pledge_accepted, email_confirmed, role, avatar_url, created_at, updated_at')
       .single();
 
     if (error || !data) return res.status(404).json({ message: 'User not found' });

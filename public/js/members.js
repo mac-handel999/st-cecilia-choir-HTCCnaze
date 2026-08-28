@@ -46,6 +46,26 @@ document.addEventListener('DOMContentLoaded', function() {
   ThemeManager.init();
   Toast.init();
 
+  const toggleLoginPassword = document.getElementById('toggle-login-password');
+  const loginPasswordInput = document.getElementById('login-password');
+  if (toggleLoginPassword && loginPasswordInput) {
+    toggleLoginPassword.addEventListener('click', () => {
+      const isPassword = loginPasswordInput.type === 'password';
+      loginPasswordInput.type = isPassword ? 'text' : 'password';
+      toggleLoginPassword.querySelector('.material-symbols-outlined').textContent = isPassword ? 'visibility' : 'visibility_off';
+    });
+  }
+
+  const toggleRegPassword = document.getElementById('toggle-reg-password');
+  const regPasswordInput = document.getElementById('reg-password');
+  if (toggleRegPassword && regPasswordInput) {
+    toggleRegPassword.addEventListener('click', () => {
+      const isPassword = regPasswordInput.type === 'password';
+      regPasswordInput.type = isPassword ? 'text' : 'password';
+      toggleRegPassword.querySelector('.material-symbols-outlined').textContent = isPassword ? 'visibility' : 'visibility_off';
+    });
+  }
+
   const loginForm = document.getElementById('login-form');
   if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
@@ -57,7 +77,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const password = document.getElementById('login-password').value;
 
       let hasError = false;
-      if (!email || !email.includes('@')) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!email || !emailRegex.test(email)) {
         document.getElementById('login-email-error').classList.add('visible');
         hasError = true;
       } else {
@@ -76,7 +97,11 @@ document.addEventListener('DOMContentLoaded', function() {
         Toast.success('Login successful! Redirecting...');
         setTimeout(() => { window.location.href = 'member-home.html'; }, 1000);
       } catch (error) {
-        showAlert('login-alert-container', error.message || 'Login failed. Please check your credentials.', 'error');
+        if (error.status === 403 || error.message?.includes('confirm your email')) {
+          showAlert('login-alert-container', 'Please confirm your email address before logging in. A confirmation link has been sent to your email.', 'success');
+        } else {
+          showAlert('login-alert-container', error.message || 'Login failed. Please check your credentials.', 'error');
+        }
       }
     });
   }
@@ -105,7 +130,8 @@ document.addEventListener('DOMContentLoaded', function() {
         showAlert('register-alert-container', 'Please fill in all required fields.', 'error');
         return;
       }
-      if (!email.includes('@')) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
         showAlert('register-alert-container', 'Please enter a valid email address.', 'error');
         return;
       }
@@ -115,7 +141,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       try {
-        await Auth.register(email, password, {
+         await Auth.register(email, password, {
           full_name: fullName,
           username,
           choir_part: choirPart,
@@ -126,8 +152,9 @@ document.addEventListener('DOMContentLoaded', function() {
           executive_position: executivePosition,
           tenure
         });
-        showAlert('register-alert-container', 'Account created successfully! Redirecting to home...', 'success');
-        setTimeout(() => { window.location.href = 'member-home.html'; }, 1500);
+        showAlert('register-alert-container', 'Registration successful! A confirmation email has been sent. Please check your inbox to confirm your email before logging in.', 'success');
+        registerForm.reset();
+        setTimeout(() => { switchTab('login'); }, 3000);
       } catch (error) {
         showAlert('register-alert-container', error.message || 'Registration failed. Please try again.', 'error');
       }

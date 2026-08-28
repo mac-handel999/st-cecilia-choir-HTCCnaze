@@ -291,6 +291,8 @@ const Auth = {
       password,
       metadata
     });
+    // Do not auto-login after registration - user must confirm email first
+    // setCurrentUser(result.user, result.token, remember);
     return result;
   },
 
