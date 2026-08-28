@@ -46,6 +46,11 @@ document.addEventListener('DOMContentLoaded', function() {
   ThemeManager.init();
   Toast.init();
 
+  if (Auth.isLoggedIn()) {
+    window.location.href = 'member-home.html';
+    return;
+  }
+
   const toggleLoginPassword = document.getElementById('toggle-login-password');
   const loginPasswordInput = document.getElementById('login-password');
   if (toggleLoginPassword && loginPasswordInput) {

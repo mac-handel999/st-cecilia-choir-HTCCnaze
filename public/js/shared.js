@@ -20,9 +20,9 @@ const api = {
 
     if (res.status === 401) {
       const path = window.location.pathname;
-      if (!path.endsWith('/login.html') && !path.endsWith('login.html')) {
+      if (!path.endsWith('/members.html') && !path.endsWith('members.html') && !path.endsWith('/login.html') && !path.endsWith('login.html') && !path.endsWith('/register.html') && !path.endsWith('register.html')) {
         clearCurrentUser();
-        window.location.href = 'login.html';
+        window.location.href = 'members.html';
       }
       throw new Error('Unauthorized');
     }
@@ -106,7 +106,7 @@ function clearCurrentUser() {
 function requireAuth() {
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
   if (!token) {
-    window.location.href = 'login.html';
+    window.location.href = 'members.html';
     return false;
   }
   return true;
@@ -141,7 +141,7 @@ function initHeroTyping() {
   const typingElements = document.querySelectorAll('.hero-typing-text');
   if (!typingElements.length) return;
 
-  const texts = ['SING PRAISES,.....', 'TO THE LORD...!!!!'];
+  const texts = ['SING PRAISES,.....', 'ALLELUIA!!!', 'TO THE LORD...!!!!', 'HALLELUJAH!!!'];
 
   typingElements.forEach(el => {
     let textIndex = 0;

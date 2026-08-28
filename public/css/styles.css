@@ -4219,12 +4219,15 @@ a:hover {
   border: none;
   color: var(--color-text-muted);
   cursor: pointer;
-  padding: 0.25rem;
+  padding: 0.4rem;
+  min-width: 36px;
+  min-height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-sm);
   transition: color 0.2s;
+  z-index: 2;
 }
 
 .password-toggle:hover {
