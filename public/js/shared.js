@@ -137,6 +137,46 @@ function parseMarkdown(text) {
   return html;
 }
 
+function initHeroTyping() {
+  const typingElements = document.querySelectorAll('.hero-typing-text');
+  if (!typingElements.length) return;
+
+  const texts = ['SING PRAISES,.....', 'TO THE LORD...!!!!'];
+
+  typingElements.forEach(el => {
+    let textIndex = 0;
+    let charIndex = 0;
+    let isDeleting = false;
+
+    function type() {
+      const currentText = texts[textIndex];
+
+      if (isDeleting) {
+        charIndex--;
+        el.textContent = currentText.substring(0, charIndex);
+      } else {
+        el.textContent = currentText.substring(0, charIndex + 1);
+        charIndex++;
+      }
+
+      if (!isDeleting && charIndex < currentText.length) {
+        setTimeout(type, 100);
+      } else if (!isDeleting && charIndex >= currentText.length) {
+        setTimeout(() => { isDeleting = true; type(); }, 1500);
+      } else if (isDeleting && charIndex > 0) {
+        setTimeout(type, 50);
+      } else {
+        isDeleting = false;
+        charIndex = 0;
+        textIndex = (textIndex + 1) % texts.length;
+        setTimeout(type, 500);
+      }
+    }
+
+    type();
+  });
+}
+
 async function showPushNotification(title, options = {}) {
   if (!('Notification' in window)) return;
   
@@ -779,6 +819,7 @@ document.addEventListener('DOMContentLoaded', () => {
   ThemeManager.init();
   Toast.init();
   initMobileMenu();
+  initHeroTyping();
   initScrollToTop();
   initAnimatedStats();
 

@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const saveStatus = document.getElementById('save-status');
   const voiceFilters = document.getElementById('voice-filters');
 
-  if (!eventSelect || !memberList) return;
+  if (!eventSelect) return;
 
   const currentUser = getCurrentUser();
   const currentUserId = currentUser?.id;
@@ -24,26 +24,32 @@ document.addEventListener('DOMContentLoaded', async () => {
   const attendanceState = {};
 
   try {
-    const events = asArray(await api.get('/events'));
+    const events = asArray(await api.get('/events?order=event_date&ascending=false'));
     events.sort((a, b) => new Date(b.event_date || 0) - new Date(a.event_date || 0));
 
-    eventSelect.innerHTML = '<option value="">Choose an event...</option>' + events.map(e => {
-      const dateStr = e.event_date ? new Date(e.event_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
-      return `<option value="${e.id}" data-date="${escapeHtml(e.event_date || '')}" data-event-time="${escapeHtml(e.event_time || '')}" data-location="${escapeHtml(e.location || '')}">${escapeHtml(e.title)}${dateStr ? ' - ' + dateStr : ''}</option>`;
-    }).join('');
+    if (events.length === 0) {
+      eventSelect.innerHTML = '<option value="">No events yet...</option>';
+    } else {
+      eventSelect.innerHTML = '<option value="">Choose an event...</option>' + events.map(e => {
+        const dateStr = e.event_date ? new Date(e.event_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+        return `<option value="${e.id}" data-date="${escapeHtml(e.event_date || '')}" data-event-time="${escapeHtml(e.event_time || '')}" data-location="${escapeHtml(e.location || '')}">${escapeHtml(e.title)}${dateStr ? ' - ' + dateStr : ''}</option>`;
+      }).join('');
+    }
 
     eventSelect.addEventListener('change', async () => {
       selectedEventId = eventSelect.value;
       selectedEventName = eventSelect.options[eventSelect.selectedIndex]?.text || '';
 
       if (!selectedEventId) {
-        memberList.innerHTML = `
-          <div class="empty-state">
-            <div class="empty-state-icon">event</div>
-            <div class="empty-state-title">Select an event</div>
-            <div class="empty-state-desc">Choose an event to mark attendance</div>
-          </div>
-        `;
+        if (memberList) {
+          memberList.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">event</div>
+              <div class="empty-state-title">Select an event</div>
+              <div class="empty-state-desc">Choose an event to mark attendance</div>
+            </div>
+          `;
+        }
         if (myAttendanceContent) {
           myAttendanceContent.innerHTML = `
             <div class="empty-state">

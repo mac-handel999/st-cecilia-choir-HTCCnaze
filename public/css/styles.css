@@ -3941,6 +3941,34 @@ a:hover {
   color: #FFFFFF;
 }
 
+/* Ensure white text in member-hero (on dark blurred background) */
+.member-hero {
+  color: #FFFFFF;
+}
+.member-hero-badge,
+.member-hero-title,
+.member-hero-subtitle {
+  color: #FFFFFF !important;
+}
+.member-hero-badge {
+  background: rgba(201, 154, 60, 0.15);
+}
+
+/* Hero typing animation */
+.hero-typing-text {
+  margin: 1rem 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-family: var(--font-heading);
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  display: inline-block;
+  border-right: 2px solid #fff;
+  padding-right: 4px;
+  box-sizing: content-box;
+}
+
 /* --------------------------------------------
    CARD COMPONENTS
    -------------------------------------------- */
