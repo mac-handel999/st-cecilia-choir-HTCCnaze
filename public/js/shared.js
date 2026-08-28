@@ -855,40 +855,15 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function checkBackend() {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 2000);
+
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 2000);
-    
-    const res = await fetch('/api/health', { 
-      method: 'GET',
-      signal: controller.signal 
-    });
-    
+    await api.request('/health', { method: 'GET', signal: controller.signal });
     clearTimeout(timeout);
-    
-    if (!res.ok) {
-      if (res.status === 404) return;
-      throw new Error('Health check failed');
-    }
   } catch (err) {
-    // Try alternate backend port silently
-    try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 2000);
-      
-      const res = await fetch('http://localhost:5000/api/health', { 
-        method: 'GET',
-        signal: controller.signal 
-      });
-      
-      clearTimeout(timeout);
-      
-      if (!res.ok) {
-        showBackendWarning();
-      }
-    } catch (err2) {
-      showBackendWarning();
-    }
+    clearTimeout(timeout);
+    showBackendWarning();
   }
 }
 
@@ -1041,12 +1016,7 @@ function updateNotificationBadge(count) {
 
 async function loadNotificationBadge() {
   try {
-    const res = await fetch('/api/notifications');
-    if (!res.ok) {
-      if (res.status === 401) return;
-      throw new Error('Failed');
-    }
-    const notifications = await res.json();
+    const notifications = await api.get('/notifications');
     const unreadCount = notifications.filter(n => !n.read).length;
     updateNotificationBadge(unreadCount);
 

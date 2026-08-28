@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         formData.append('category', categoryInput.value);
 
         const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-        const response = await fetch('/api/drive/scores/upload', {
+        const response = await fetch(`${API_BASE}/drive/scores/upload`, {
           method: 'POST',
           headers: token ? { 'Authorization': `Bearer ${token}` } : {},
           body: formData

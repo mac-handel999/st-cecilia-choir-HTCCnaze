@@ -14,7 +14,10 @@ const nodemailer = require('nodemailer');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors());
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -25,17 +28,26 @@ app.use(express.static(path.join(__dirname, 'public')));
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 const supabaseAdmin = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-// Nodemailer transporter (conditional - only if SMTP config is present)
+// Nodemailer transporter (conditional - only if SMTP config is present and not placeholder)
 let transporter = null;
-if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+const smtpHost = process.env.SMTP_HOST;
+const smtpUser = process.env.SMTP_USER;
+const smtpPass = process.env.SMTP_PASS;
+const hasSmtpConfig = smtpHost && smtpUser && smtpPass &&
+  smtpUser !== 'your_email@gmail.com' &&
+  smtpPass !== 'your_app_password_here';
+
+if (hasSmtpConfig) {
   transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
+    host: smtpHost,
     port: parseInt(process.env.SMTP_PORT || '587'),
     secure: false,
     auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS
-    }
+      user: smtpUser,
+      pass: smtpPass
+    },
+    // Set a connection timeout to avoid hanging requests
+    connectionTimeout: 5000
   });
 }
 
