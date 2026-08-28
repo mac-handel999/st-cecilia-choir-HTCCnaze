@@ -1049,10 +1049,13 @@ if (document.readyState === 'loading') {
   loadNotificationBadge();
 }
 
-// Global error handler
+// Global error handler (filter out browser extension errors)
 window.addEventListener('error', (event) => {
+  const filename = event.filename || '';
+  if (filename.includes('moz-extension') || filename.includes('chrome-extension')) return;
   console.error('Global error:', event.error);
   const friendlyMessage = getUserFriendlyError(event.error);
+  if (!navigator.onLine) return; // Skip offline errors
   showPushNotification('Application Error', {
     body: friendlyMessage,
     icon: '/IMAGES/choir-logo.jpg'
@@ -1060,6 +1063,9 @@ window.addEventListener('error', (event) => {
 });
 
 window.addEventListener('unhandledrejection', (event) => {
+  const reason = event.reason;
+  if (typeof reason === 'string' && (reason.includes('moz-extension') || reason.includes('chrome-extension'))) return;
+  if (reason && reason.stack && (reason.stack.includes('moz-extension') || reason.stack.includes('chrome-extension'))) return;
   console.error('Unhandled promise rejection:', event.reason);
   const friendlyMessage = getUserFriendlyError(event.reason);
   showPushNotification('Application Error', {
