@@ -245,6 +245,7 @@ ALTER TABLE executives ENABLE ROW LEVEL SECURITY;
 ALTER TABLE gallery ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE announcements ENABLE ROW LEVEL SECURITY;
+ALTER TABLE email_confirmation_tokens ENABLE ROW LEVEL SECURITY;
 ALTER TABLE attendance ENABLE ROW LEVEL SECURITY;
 ALTER TABLE chat_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE event_songs ENABLE ROW LEVEL SECURITY;
@@ -295,6 +296,10 @@ BEGIN
   DROP POLICY IF EXISTS "Exco and admin can insert song list items" ON song_list_items;
   DROP POLICY IF EXISTS "Exco and admin can update song list items" ON song_list_items;
   DROP POLICY IF EXISTS "Exco and admin can delete song list items" ON song_list_items;
+  DROP POLICY IF EXISTS "Anyone can view announcements" ON announcements;
+  DROP POLICY IF EXISTS "Exco and admin can insert announcements" ON announcements;
+  DROP POLICY IF EXISTS "Exco and admin can update announcements" ON announcements;
+  DROP POLICY IF EXISTS "Exco and admin can delete announcements" ON announcements;
 END $$;
 
 -- Users policies
