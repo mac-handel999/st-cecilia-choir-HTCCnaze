@@ -4,12 +4,6 @@ document.addEventListener('DOMContentLoaded', function() {
     return;
   }
 
-  // Show success message if redirected from email confirmation
-  const urlParams = new window.URLSearchParams(window.location.search);
-  if (urlParams.get('confirmed') === 'true') {
-    showAlert('alert-container', 'Your email has been confirmed! You can now log in.', 'success');
-  }
-
   const loginForm = document.getElementById('login-form');
   const alertContainer = document.getElementById('alert-container');
   const loginBtn = document.getElementById('login-btn');
@@ -62,11 +56,7 @@ document.addEventListener('DOMContentLoaded', function() {
       Toast.success('Login successful! Redirecting...');
       setTimeout(() => { window.location.href = 'member-home.html'; }, 1000);
      } catch (error) {
-      if (error.status === 403 || error.message?.includes('confirm your email')) {
-        showAlert('alert-container', 'Please confirm your email address before logging in. A confirmation link has been sent to your email.', 'error');
-      } else {
-        showAlert('alert-container', error.message || 'Login failed. Please check your credentials.', 'error');
-      }
+      showAlert('alert-container', error.message || 'Login failed. Please check your credentials.', 'error');
       loginBtn.disabled = false;
       loginText.textContent = 'Login to Portal';
     }

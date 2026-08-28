@@ -97,11 +97,7 @@ document.addEventListener('DOMContentLoaded', function() {
         Toast.success('Login successful! Redirecting...');
         setTimeout(() => { window.location.href = 'member-home.html'; }, 1000);
       } catch (error) {
-        if (error.status === 403 || error.message?.includes('confirm your email')) {
-          showAlert('login-alert-container', 'Please confirm your email address before logging in. A confirmation link has been sent to your email.', 'success');
-        } else {
-          showAlert('login-alert-container', error.message || 'Login failed. Please check your credentials.', 'error');
-        }
+        showAlert('login-alert-container', error.message || 'Login failed. Please check your credentials.', 'error');
       }
     });
   }
@@ -152,9 +148,8 @@ document.addEventListener('DOMContentLoaded', function() {
           executive_position: executivePosition,
           tenure
         });
-        showAlert('register-alert-container', 'Registration successful! A confirmation email has been sent. Please check your inbox to confirm your email before logging in.', 'success');
-        registerForm.reset();
-        setTimeout(() => { switchTab('login'); }, 3000);
+        showAlert('register-alert-container', 'Account created successfully! Redirecting to home...', 'success');
+        setTimeout(() => { window.location.href = 'member-home.html'; }, 1500);
       } catch (error) {
         showAlert('register-alert-container', error.message || 'Registration failed. Please try again.', 'error');
       }
