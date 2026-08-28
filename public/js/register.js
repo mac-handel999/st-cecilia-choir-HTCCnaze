@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', function() {
     registerBtn.textContent = 'Creating Account...';
 
     try {
-      const result = await Auth.register(email, password, {
+      await Auth.register(email, password, {
         full_name: fullName,
         username,
         choir_part: choirPart,
@@ -69,14 +69,8 @@ document.addEventListener('DOMContentLoaded', function() {
         executive_position: executivePosition,
         tenure
       });
-
-      if (result.email_skipped) {
-        showAlert('alert-container', 'Account created! However, email confirmation could not be sent (SMTP not configured). Please contact the administrator.', 'success');
-        setTimeout(() => { window.location.href = 'members.html'; }, 3000);
-      } else {
-        showAlert('alert-container', 'Registration successful! A confirmation email has been sent. Please check your inbox (and spam folder) to confirm your email before logging in.', 'success');
-        setTimeout(() => { window.location.href = 'members.html'; }, 3000);
-      }
+      showAlert('alert-container', 'Account created successfully! Redirecting to login...', 'success');
+      setTimeout(() => { window.location.href = 'members.html'; }, 2000);
     } catch (error) {
       showAlert('alert-container', error.message || 'Registration failed. Please try again.', 'error');
       registerBtn.disabled = false;
