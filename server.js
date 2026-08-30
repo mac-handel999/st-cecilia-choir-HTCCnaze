@@ -119,9 +119,16 @@ function buildQuery(table, req, defaultSelect) {
 app.post('/api/auth/register', async (req, res) => {
   try {
     const { email, password, metadata = {} } = req.body;
+    const { joinCode, ...meta } = metadata;
 
     if (!email || !password || !metadata.username || !metadata.full_name || !metadata.phone_number || !metadata.address) {
       return res.status(400).json({ message: 'All required fields must be provided' });
+    }
+
+    // Validate Choir Join Code
+    const expectedCode = process.env.CHOIR_JOIN_CODE || 'ST-CECILIA-CHOIR@HTCC#11-22';
+    if (!joinCode || joinCode !== expectedCode) {
+      return res.status(401).json({ message: 'Invalid Choir Join Code. Please ask a choir executive for the current passcode.' });
     }
 
     const { data: existingUser } = await supabaseAdmin

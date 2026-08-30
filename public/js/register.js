@@ -19,6 +19,16 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
+  const toggleJoinCode = document.getElementById('toggle-joinCode');
+  const joinCodeInput = document.getElementById('reg-joinCode');
+  if (toggleJoinCode && joinCodeInput) {
+    toggleJoinCode.addEventListener('click', () => {
+      const isPassword = joinCodeInput.type === 'password';
+      joinCodeInput.type = isPassword ? 'text' : 'password';
+      toggleJoinCode.querySelector('.material-symbols-outlined').textContent = isPassword ? 'visibility' : 'visibility_off';
+    });
+  }
+
   function validateEmail(email) {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return re.test(email);
@@ -39,9 +49,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const maritalStatus = document.getElementById('reg-maritalStatus').value;
     const executivePosition = document.getElementById('reg-executivePosition').value.trim();
     const tenure = document.getElementById('reg-tenure').value.trim();
+    const joinCode = document.getElementById('reg-joinCode').value;
     const pledge = document.getElementById('reg-pledge').checked;
 
-    if (!fullName || !username || !email || !password || !choirPart || !address || !phoneNumber || !pledge) {
+    if (!fullName || !username || !email || !password || !choirPart || !address || !phoneNumber || !joinCode || !pledge) {
       showAlert('alert-container', 'Please fill in all required fields.', 'error');
       return;
     }
@@ -67,7 +78,8 @@ document.addEventListener('DOMContentLoaded', function() {
         date_of_birth: dateOfBirth,
         marital_status: maritalStatus,
         executive_position: executivePosition,
-        tenure
+        tenure,
+        joinCode
       });
       showAlert('alert-container', 'Account created successfully! Redirecting to login...', 'success');
       setTimeout(() => { window.location.href = 'members.html'; }, 2000);

@@ -71,6 +71,16 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
+  const toggleJoinCode = document.getElementById('toggle-joinCode');
+  const joinCodeInput = document.getElementById('reg-joinCode');
+  if (toggleJoinCode && joinCodeInput) {
+    toggleJoinCode.addEventListener('click', () => {
+      const isPassword = joinCodeInput.type === 'password';
+      joinCodeInput.type = isPassword ? 'text' : 'password';
+      toggleJoinCode.querySelector('.material-symbols-outlined').textContent = isPassword ? 'visibility' : 'visibility_off';
+    });
+  }
+
   const loginForm = document.getElementById('login-form');
   if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
@@ -125,9 +135,10 @@ document.addEventListener('DOMContentLoaded', function() {
       const maritalStatus = document.getElementById('reg-maritalStatus').value;
       const executivePosition = document.getElementById('reg-executivePosition').value.trim();
       const tenure = document.getElementById('reg-tenure').value.trim();
+      const joinCode = document.getElementById('reg-joinCode').value;
       const pledge = document.getElementById('reg-pledge').checked;
 
-      if (!fullName || !username || !email || !password || !choirPart || !address || !phoneNumber || !pledge) {
+      if (!fullName || !username || !email || !password || !choirPart || !address || !phoneNumber || !joinCode || !pledge) {
         showAlert('register-alert-container', 'Please fill in all required fields.', 'error');
         return;
       }
@@ -142,7 +153,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       try {
-         await Auth.register(email, password, {
+        await Auth.register(email, password, {
           full_name: fullName,
           username,
           choir_part: choirPart,
@@ -151,7 +162,8 @@ document.addEventListener('DOMContentLoaded', function() {
           date_of_birth: dateOfBirth,
           marital_status: maritalStatus,
           executive_position: executivePosition,
-          tenure
+          tenure,
+          joinCode
         });
         showAlert('register-alert-container', 'Account created successfully! Redirecting to home...', 'success');
         setTimeout(() => { window.location.href = 'member-home.html'; }, 1500);
