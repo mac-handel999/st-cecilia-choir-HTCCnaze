@@ -2,6 +2,33 @@ if (!requireAuth()) {
   throw new Error('Auth required');
 }
 
+function decodeVapidPublicKey(value) {
+  const padding = '='.repeat((4 - value.length % 4) % 4);
+  const base64 = (value + padding).replace(/-/g, '+').replace(/_/g, '/');
+  return Uint8Array.from(atob(base64), character => character.charCodeAt(0));
+}
+
+async function savePushSubscription() {
+  const { publicKey } = await api.get('/push/vapid-public-key');
+  const registration = await navigator.serviceWorker.ready;
+  let subscription = await registration.pushManager.getSubscription();
+  if (!subscription) {
+    subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: decodeVapidPublicKey(publicKey)
+    });
+  }
+  await api.post('/push/subscribe', subscription.toJSON());
+}
+
+async function removePushSubscription() {
+  const registration = await navigator.serviceWorker.getRegistration();
+  const subscription = await registration?.pushManager.getSubscription();
+  if (!subscription) return;
+  await api.delete('/push/subscribe', { endpoint: subscription.endpoint });
+  await subscription.unsubscribe();
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   ThemeManager.init();
   Toast.init();
@@ -72,28 +99,70 @@ document.addEventListener('DOMContentLoaded', async () => {
   const pushNotif = document.getElementById('push-notifications');
   const pushStatus = document.getElementById('push-status');
   if (pushNotif && pushStatus) {
-    if (Notification.permission === 'granted') {
-      pushStatus.textContent = 'Enabled';
-      pushNotif.checked = true;
-    } else if (Notification.permission === 'denied') {
-      pushStatus.textContent = 'Blocked by browser';
+    const pushSupported = 'Notification' in window
+      && 'serviceWorker' in navigator
+      && 'PushManager' in window
+      && window.isSecureContext;
+    if (!pushSupported) {
+      pushStatus.textContent = 'Not available in this browser';
       pushNotif.disabled = true;
+    } else {
+      pushNotif.checked = Notification.permission === 'granted';
+      pushNotif.disabled = Notification.permission === 'denied';
+      pushStatus.textContent = Notification.permission === 'granted'
+        ? 'Allowed on this device'
+        : Notification.permission === 'denied'
+          ? 'Blocked by browser'
+          : 'Not enabled';
     }
     pushNotif.addEventListener('change', async () => {
       if (pushNotif.checked) {
-        const perm = await Notification.requestPermission();
-        if (perm === 'granted') {
-          pushStatus.textContent = 'Enabled';
-          saveSettings({ push_notifications: true });
-          Toast.success('Push notifications enabled');
-        } else {
-          pushStatus.textContent = 'Permission denied';
+        try {
+          const permission = Notification.permission === 'granted'
+            ? 'granted'
+            : await Notification.requestPermission();
+          if (permission !== 'granted') {
+            pushStatus.textContent = permission === 'denied' ? 'Blocked by browser' : 'Not enabled';
+            pushNotif.checked = false;
+            Toast.error('Notifications were not allowed. You can enable them in your browser settings.');
+            return;
+          }
+
+          await navigator.serviceWorker.register('/service-worker.js');
+          await savePushSubscription();
+          const saved = await saveSettings({ push_notifications: true });
+          const user = getCurrentUser();
+          if (user?.id) localStorage.setItem(`st-cecilia-push-enabled:${user.id}`, String(saved));
+          pushStatus.textContent = saved ? 'Allowed on this device' : 'Allowed, but your preference could not be saved';
+          if (saved) Toast.success('Browser notifications are enabled on this device.');
+          else {
+            await removePushSubscription();
+            pushNotif.checked = false;
+          }
+        } catch (error) {
+          pushStatus.textContent = 'Could not enable notifications';
           pushNotif.checked = false;
-          Toast.error('Push notification permission denied');
+          const user = getCurrentUser();
+          if (user?.id) localStorage.setItem(`st-cecilia-push-enabled:${user.id}`, 'false');
+          Toast.error(getUserFriendlyError(error));
         }
       } else {
-        pushStatus.textContent = 'Disabled';
-        saveSettings({ push_notifications: false });
+        const saved = await saveSettings({ push_notifications: false });
+        if (saved) {
+          try {
+            await removePushSubscription();
+            pushStatus.textContent = 'Disabled';
+            const user = getCurrentUser();
+            if (user?.id) localStorage.setItem(`st-cecilia-push-enabled:${user.id}`, 'false');
+            Toast.success('Browser notifications are turned off on this device.');
+          } catch (error) {
+            pushNotif.checked = true;
+            pushStatus.textContent = 'Could not turn off notifications';
+            Toast.error(getUserFriendlyError(error));
+          }
+        } else {
+          pushNotif.checked = true;
+        }
       }
     });
   }
@@ -185,7 +254,22 @@ async function loadSettings() {
     if (emailNotif && settings.email_notifications !== undefined) emailNotif.checked = settings.email_notifications;
 
     const pushNotif = document.getElementById('push-notifications');
-    if (pushNotif && settings.push_notifications !== undefined) pushNotif.checked = settings.push_notifications;
+    if (pushNotif && settings.push_notifications !== undefined) {
+      const enabled = settings.push_notifications && 'Notification' in window && Notification.permission === 'granted';
+      pushNotif.checked = enabled;
+      const user = getCurrentUser();
+      if (user?.id) localStorage.setItem(`st-cecilia-push-enabled:${user.id}`, String(enabled));
+      const pushStatus = document.getElementById('push-status');
+      if (pushStatus && settings.push_notifications && !enabled && 'Notification' in window && Notification.permission === 'denied') {
+        pushStatus.textContent = 'Blocked by browser';
+      }
+      if (enabled && window.isSecureContext && 'serviceWorker' in navigator && 'PushManager' in window) {
+        savePushSubscription().catch(error => {
+          console.error('[Push] Could not restore this device subscription:', error);
+          Toast.error(getUserFriendlyError(error));
+        });
+      }
+    }
 
     const twoFactor = document.getElementById('two-factor-auth');
     const twoFactorLabel = document.getElementById('two-factor-label');
@@ -193,15 +277,17 @@ async function loadSettings() {
       twoFactor.checked = settings.two_factor_enabled;
       if (twoFactorLabel) twoFactorLabel.textContent = twoFactor.checked ? 'On' : 'Off';
     }
-  } catch {
-    /* use local defaults */
+  } catch (error) {
+    Toast.error(getUserFriendlyError(error));
   }
 }
 
 async function saveSettings(partial) {
   try {
     await api.put('/settings', partial);
-  } catch {
-    /* saved locally as fallback */
+    return true;
+  } catch (error) {
+    Toast.error(getUserFriendlyError(error));
+    return false;
   }
 }

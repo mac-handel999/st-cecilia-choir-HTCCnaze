@@ -1,4 +1,4 @@
-const CACHE_NAME = 'st-cecilia-choir-v6';
+const CACHE_NAME = 'st-cecilia-choir-v8';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -158,13 +158,20 @@ async function syncOfflineData() {
 self.addEventListener('push', (event) => {
   if (!event.data) return;
 
-  const data = event.data.json();
+  const text = event.data.text();
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    data = { body: text };
+  }
+  const notificationUrl = getNotificationUrl(data.url);
   const options = {
     body: data.body || 'New notification from St. Cecilia Choir',
     icon: '/IMAGES/choir-logo.jpg',
     badge: '/IMAGES/choir-logo.jpg',
     vibrate: [100, 50, 100],
-    data: data.url || '/',
+    data: notificationUrl,
     actions: [
       { action: 'open', title: 'Open' },
       { action: 'close', title: 'Close' }
@@ -176,24 +183,38 @@ self.addEventListener('push', (event) => {
   );
 });
 
+function getNotificationUrl(value) {
+  try {
+    const url = typeof value === 'string' ? value : value?.url;
+    const target = new URL(url || '/', self.location.origin);
+    return target.origin === self.location.origin
+      ? `${target.pathname}${target.search}${target.hash}`
+      : '/';
+  } catch {
+    return '/';
+  }
+}
+
 // Notification click handler
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
   if (event.action === 'close') return;
 
+  const targetUrl = new URL(getNotificationUrl(event.notification.data), self.location.origin);
   event.waitUntil(
     clients.matchAll({ type: 'window' })
       .then((clientList) => {
-        // If a window is already open, focus it
         for (const client of clientList) {
-          if (client.url === event.notification.data && 'focus' in client) {
+          if (new URL(client.url).origin === targetUrl.origin && 'focus' in client) {
+            if (client.url !== targetUrl.href && 'navigate' in client) {
+              return client.navigate(targetUrl.href).then(() => client.focus());
+            }
             return client.focus();
           }
         }
-        // Otherwise open a new window
         if (clients.openWindow) {
-          return clients.openWindow(event.notification.data || '/');
+          return clients.openWindow(targetUrl.href);
         }
       })
   );

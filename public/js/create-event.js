@@ -80,10 +80,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       await api.post('/events', eventData);
       Toast.success('Event created successfully!');
-      showPushNotification('Event Created', {
-        body: `"${escapeHtml(title)}" has been added to the choir calendar.`,
-        icon: '/IMAGES/choir-logo.jpg'
-      });
       form.reset();
 
       setTimeout(() => {

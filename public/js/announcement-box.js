@@ -120,19 +120,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (editingId) {
           await api.put('/announcements/' + editingId, { title, message, announcement_date, announcement_time, link });
           Toast.success('Announcement updated');
-          showPushNotification('Announcement Updated', {
-            body: 'Your announcement has been updated.',
-            icon: '/IMAGES/choir-logo.jpg'
-          });
           editingId = null;
           submitBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 18px;">send</span> Send Announcement';
         } else {
           await api.post('/announcements', { title, message, announcement_date, announcement_time, link });
           Toast.success('Announcement sent');
-          showPushNotification('Announcement Sent', {
-            body: 'Your announcement has been broadcast to the choir.',
-            icon: '/IMAGES/choir-logo.jpg'
-          });
           form.reset();
         }
         await loadAnnouncements();

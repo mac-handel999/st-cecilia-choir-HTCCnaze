@@ -1,5 +1,11 @@
 {
   "version": 2,
+  "crons": [
+    {
+      "path": "/api/cron/keep-supabase-alive",
+      "schedule": "0 9 * * *"
+    }
+  ],
   "builds": [
     {
       "src": "server.js",

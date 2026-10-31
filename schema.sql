@@ -197,6 +197,16 @@ CREATE TABLE IF NOT EXISTS user_settings (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
+-- Browser push endpoints are private and accessed only by the backend service-role client.
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  endpoint TEXT NOT NULL UNIQUE,
+  subscription JSONB NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
 -- ============================================
 -- INDEXES
 -- ============================================
@@ -222,6 +232,7 @@ CREATE INDEX IF NOT EXISTS idx_song_lists_status ON song_lists(status);
 CREATE INDEX IF NOT EXISTS idx_song_list_items_song_list_id ON song_list_items(song_list_id);
 CREATE INDEX IF NOT EXISTS idx_song_list_items_order ON song_list_items(order_number);
 CREATE INDEX IF NOT EXISTS idx_events_created_by ON events(created_by);
+CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user_id ON push_subscriptions(user_id);
 
 -- ============================================
 -- ROW LEVEL SECURITY
@@ -237,6 +248,7 @@ ALTER TABLE attendance ENABLE ROW LEVEL SECURITY;
 ALTER TABLE chat_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE event_songs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE song_lists ENABLE ROW LEVEL SECURITY;
 ALTER TABLE song_list_items ENABLE ROW LEVEL SECURITY;
 

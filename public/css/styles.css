@@ -12,6 +12,21 @@
   padding: 0;
 }
 
+img, picture, video, canvas, svg {
+  max-width: 100%;
+}
+
+button, input, select, textarea {
+  max-width: 100%;
+  font: inherit;
+}
+
+.grid > *,
+.container,
+.page-content {
+  min-width: 0;
+}
+
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
@@ -38,6 +53,18 @@ body {
 
 @media (min-width: 768px) {
   body {
+    padding-bottom: 3rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .section {
+    padding-top: 3rem;
     padding-bottom: 3rem;
   }
 }

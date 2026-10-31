@@ -195,10 +195,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           });
 
           Toast.success('Attendance saved!');
-          showPushNotification('Attendance Saved', {
-            body: 'Your attendance has been recorded successfully.',
-            icon: '/IMAGES/choir-logo.jpg'
-          });
           await loadSavedAttendance();
         } catch (error) {
           const friendlyError = getUserFriendlyError(error);

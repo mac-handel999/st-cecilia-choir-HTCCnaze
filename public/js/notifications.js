@@ -18,12 +18,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function loadFeed() {
     try {
       const [notifications, events, scores, songLists, attendance, announcements] = await Promise.all([
-        api.get('/notifications').catch(() => []),
-        api.get('/events?limit=10').catch(() => []),
-        api.get('/scores?limit=10').catch(() => []),
-        api.get('/song-lists?limit=10').catch(() => []),
-        api.get('/attendance?limit=10').catch(() => []),
-        api.get('/announcements').catch(() => [])
+        api.get('/notifications'),
+        api.get('/events?limit=10'),
+        api.get('/scores?limit=10'),
+        api.get('/song-lists?limit=10'),
+        api.get('/attendance?limit=10'),
+        api.get('/announcements')
       ]);
 
       const feed = [];
@@ -239,8 +239,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         await api.post('/notifications/mark-read', {});
         updateNotificationBadge(0);
       }
-    } catch {
-      // Silently fail
+    } catch (error) {
+      Toast.error(getUserFriendlyError(error));
     }
   }
 
@@ -264,7 +264,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   Realtime.subscribe('notifications', (payload) => {
     if (payload.eventType === 'INSERT' || payload.type === 'INSERT') {
-      Toast.info('New update received');
+      const notification = payload.new || {};
+      const title = notification.title || 'New choir update';
+      Toast.info(notification.message ? `${title}: ${notification.message}` : title);
       loadFeed();
     } else {
       loadFeed();
@@ -274,5 +276,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   Realtime.subscribe('events', () => loadFeed());
   Realtime.subscribe('scores', () => loadFeed());
   Realtime.subscribe('song_lists', () => loadFeed());
+  Realtime.subscribe('announcements', () => loadFeed());
   Realtime.subscribe('attendance', () => loadFeed());
 });

@@ -4,7 +4,7 @@
 
 Welcome to the official repository for the **St. Cecilia Choir, Holy Trinity Catholic Church (HTCC) Naze**. This platform serves as a centralized hub for choristers to access liturgical music, stay updated on parish events, and celebrate our ministry through media.
 
-Built as a Progressive Web App (PWA), it delivers full offline support, push notifications, and installable mobile app experience.
+Built as a Progressive Web App (PWA), it supports offline access to cached pages, an installable app experience, live in-app updates, and browser notifications when allowed. VAPID-backed push delivery can notify subscribed devices while the app is closed.
 
 ---
 
@@ -31,7 +31,7 @@ The goal of this website is to bridge the gap between traditional liturgical mus
 ## 🚀 Features
 
 ### Core Platform
-* **Progressive Web App (PWA):** Installable on mobile and desktop with service worker for offline caching and push notifications.
+* **Progressive Web App (PWA):** Installable on mobile and desktop, with service-worker caching and VAPID-backed push notifications.
 * **Mobile-First Design:** Easy access to sheet music directly from a smartphone during rehearsals, with bottom navigation bar for mobile app feel.
 * **Dark / Light Mode:** Toggle between themes or auto-switch based on system preference.
 * **Dynamic Greetings:** Personalized welcome messages that adapt based on time of day and liturgical season.
@@ -63,7 +63,7 @@ The goal of this website is to bridge the gap between traditional liturgical mus
 * **Liturgical Music Expertise:** Answers questions about choir music, rehearsals, and liturgy.
 * **Chat History:** Maintains conversation context within a session.
 * **Clear Chat History:** Users can delete all their AI chat history at any time.
-* **Push Notifications:** Browser push notifications for AI chat errors and successes.
+* **Browser Notifications:** Browser alerts for AI chat errors and successes when notifications are allowed.
 
 ### Attendance
 * **Self-Service Attendance:** All logged-in users can mark their own attendance for events.
@@ -73,7 +73,7 @@ The goal of this website is to bridge the gap between traditional liturgical mus
 
 ### Notifications
 * **In-App Notifications:** Center for all choir announcements and reminders.
-* **Push Notifications:** Browser push support via service worker for real-time alerts.
+* **Browser Notifications:** Service-worker notifications for live alerts and VAPID push delivery while the app is closed.
 * **Mark All As Read:** Bulk-read functionality.
 * **Delete All:** Clear all notifications at once.
 * **Announcements Feed:** Announcements from the Announcement Box appear in the notifications feed with delete capability.
@@ -286,6 +286,10 @@ st-cecilia-choir-HTCCnaze/
    CLOUDINARY_CLOUD_NAME=your_cloud_name
    CLOUDINARY_API_KEY=your_api_key
    CLOUDINARY_API_SECRET=your_api_secret
+   VAPID_PUBLIC_KEY=your_vapid_public_key
+   VAPID_PRIVATE_KEY=your_vapid_private_key
+   VAPID_SUBJECT=mailto:your-contact@example.com
+   CRON_SECRET=your_private_cron_secret
    ```
 
 4. **Run the development server:**
@@ -306,6 +310,18 @@ vercel
 ```
 
 Or connect your GitHub repository to Vercel for automatic deployments.
+
+### Daily Supabase Keep-Alive and Browser Push
+
+1. In Supabase, run [`supabase-push-subscriptions.sql`](./supabase-push-subscriptions.sql) once in the SQL Editor. The table stores browser subscriptions privately for the backend to send notifications.
+2. Generate VAPID keys locally with `npx web-push generate-vapid-keys`. In the Vercel project settings, add these environment variables for Production (and Preview if needed):
+   - `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY`: the generated key pair.
+   - `VAPID_SUBJECT`: a contact such as `mailto:stceciliaholytrinitycatholicch@gmail.com`.
+   - `CRON_SECRET`: a private random value (for example, generate one with `openssl rand -hex 32`).
+3. Redeploy after setting the variables. Vercel runs `/api/cron/keep-supabase-alive` daily at 09:00 UTC and uses `CRON_SECRET` to authorize the database check. This daily database read helps prevent inactivity pauses, but it cannot resume a project that has already been paused; resume that project in Supabase first.
+4. Members can enable **Browser Notifications** in Settings. Their device subscribes securely, and newly created choir notifications are sent to enabled subscriptions. Notifications require HTTPS and browser permission.
+
+Do not commit the generated VAPID private key or `CRON_SECRET`. Push delivery will remain disabled until the VAPID variables and Supabase subscription table are configured.
 
 ---
 

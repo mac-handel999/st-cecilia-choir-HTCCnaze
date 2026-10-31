@@ -62,10 +62,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         showAlert('upload-alert', 'Score uploaded successfully!', 'success');
-        showPushNotification('Score Uploaded', {
-          body: 'Your musical score has been uploaded successfully.',
-          icon: '/IMAGES/choir-logo.jpg'
-        });
         uploadForm.reset();
         await loadScores();
       } catch (error) {

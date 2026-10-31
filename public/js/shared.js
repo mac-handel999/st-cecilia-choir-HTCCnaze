@@ -13,22 +13,32 @@ const api = {
       ...(token ? { Authorization: `Bearer ${token}` } : {})
     };
 
-    const res = await fetch(`${API_BASE}${endpoint}`, {
-      ...options,
-      headers: { ...headers, ...options.headers }
-    });
+    let res;
+    try {
+      res = await fetch(`${API_BASE}${endpoint}`, {
+        ...options,
+        headers: { ...headers, ...options.headers }
+      });
+    } catch (error) {
+      console.error('[API] Request could not reach the server:', {
+        endpoint,
+        error: error?.name || 'NetworkError'
+      });
+      throw new Error(getUserFriendlyError(error));
+    }
 
     if (res.status === 401) {
       const path = window.location.pathname;
-      if (!path.endsWith('/members.html') && !path.endsWith('members.html') && !path.endsWith('/login.html') && !path.endsWith('login.html') && !path.endsWith('/register.html') && !path.endsWith('register.html')) {
+      const publicPages = ['/', '/index.html', '/About.html', '/privacy.html', '/terms.html', '/members.html', '/login.html', '/register.html', '/admin-login.html'];
+      if (token && !publicPages.includes(path)) {
         clearCurrentUser();
         window.location.href = 'members.html';
       }
-      throw new Error('Unauthorized');
+      throw new Error(getUserFriendlyError({ message: 'Unauthorized', status: 401 }));
     }
 
     if (res.status === 405) {
-      throw new Error('API not available. Please run: npm start (port 5000)');
+      throw new Error('This service is temporarily unavailable. Please try again later.');
     }
 
     const text = await res.text();
@@ -36,7 +46,14 @@ const api = {
     try { data = JSON.parse(text); } catch { data = { message: text }; }
 
     if (!res.ok) {
-      throw new Error(data.message || `Request failed with status ${res.status}`);
+      console.error('[API] Request failed:', {
+        endpoint,
+        status: res.status
+      });
+      throw new Error(getUserFriendlyError({
+        message: data.message || `Request failed with status ${res.status}`,
+        status: res.status
+      }));
     }
 
     return data;
@@ -70,8 +87,13 @@ const api = {
     return this.request(endpoint, options);
   },
 
-  delete(endpoint) {
-    return this.request(endpoint, { method: 'DELETE' });
+  delete(endpoint, body) {
+    const options = { method: 'DELETE' };
+    if (body !== undefined) {
+      options.body = JSON.stringify(body);
+      options.headers = { 'Content-Type': 'application/json' };
+    }
+    return this.request(endpoint, options);
   }
 };
 
@@ -178,8 +200,11 @@ function initHeroTyping() {
 }
 
 async function showPushNotification(title, options = {}) {
-  if (!('Notification' in window)) return;
-  
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const user = getCurrentUser();
+  const preferenceKey = user?.id ? `st-cecilia-push-enabled:${user.id}` : null;
+  if (!preferenceKey || localStorage.getItem(preferenceKey) !== 'true') return;
+
   const defaultOptions = {
     icon: '/IMAGES/choir-logo.jpg',
     badge: '/IMAGES/choir-logo.jpg',
@@ -189,48 +214,71 @@ async function showPushNotification(title, options = {}) {
   };
 
   try {
-    const permission = await Notification.requestPermission();
-    if (permission === 'granted') {
+    if ('serviceWorker' in navigator) {
+      const registration = await navigator.serviceWorker.getRegistration();
+      if (registration) {
+        await registration.showNotification(title, defaultOptions);
+        return;
+      }
+    }
+
+    if ('Notification' in window) {
       new Notification(title, defaultOptions);
     }
-  } catch (e) {
-    console.warn('Push notification failed:', e);
+  } catch (error) {
+    console.warn('Browser notification could not be displayed:', error);
   }
 }
 
 function getUserFriendlyError(error) {
   if (!error) return 'Something went wrong. Please try again.';
-  
-  const message = error.message || String(error);
-  
-  if (message.includes('network') || message.includes('fetch') || message.includes('Failed to fetch')) {
+
+  const message = String(error.message || error);
+  const normalized = message.toLowerCase();
+  const status = Number(error.status);
+
+  if (normalized.includes('network') || normalized.includes('fetch') || normalized.includes('failed to fetch') || error.name === 'TypeError') {
     return 'Network error. Please check your internet connection and try again.';
   }
-  if (message.includes('401') || message.includes('Unauthorized')) {
+  if (status === 401 || normalized.includes('unauthorized') || normalized.includes('invalid or expired token')) {
     return 'Your session has expired. Please log in again.';
   }
-  if (message.includes('403') || message.includes('Forbidden')) {
+  if (status === 403 || normalized.includes('forbidden') || normalized.includes('permission denied') || normalized.includes('not allowed')) {
     return 'You don\'t have permission to perform this action.';
   }
-  if (message.includes('404') || message.includes('Not found')) {
+  if (status === 404 || normalized.includes('not found')) {
     return 'The requested item was not found.';
   }
-  if (message.includes('500') || message.includes('Server error')) {
-    return 'Server error. Please try again in a moment.';
+  if (normalized.includes('timeout') || normalized.includes('etimedout') || normalized.includes('aborted')) {
+    return 'This is taking longer than expected. Please check your connection and try again.';
   }
-  if (message.includes('timeout') || message.includes('ETIMEDOUT')) {
-    return 'Request timed out. Please check your connection and try again.';
+  if (normalized.includes('google drive') || normalized.includes('drive api') || normalized.includes('quota exceeded')) {
+    return 'We couldn\'t reach the choir music library right now. Please try again in a moment.';
   }
-  if (message.includes('PDF') || message.includes('pdf')) {
+  if (normalized.includes('supabase') || normalized.includes('postgres') || normalized.includes('sqlstate')
+    || /invalid input syntax|row-level security|\brls\b|foreign key|unique constraint|relation .* does not exist/i.test(message)
+    || /\b(?:23505|23503|23502|42501|pgrst\d{3})\b/i.test(message)) {
+    return 'We couldn\'t load or save that information right now. Please try again in a moment.';
+  }
+  if (normalized.includes('500') || normalized.includes('server error') || status >= 500) {
+    return 'Something went wrong on our end. Please try again in a moment.';
+  }
+  if (normalized.includes('pdf') || normalized.includes('invalid file')) {
     return 'PDF file error. Please ensure the file is valid and try again.';
   }
-  if (message.includes('size') || message.includes('large') || message.includes('exceeds')) {
+  if (normalized.includes('size') || normalized.includes('large') || normalized.includes('exceeds')) {
     return 'File is too large. Please choose a smaller file.';
   }
-  if (message.includes('duplicate') || message.includes('already exists')) {
+  if (normalized.includes('duplicate') || normalized.includes('already exists')) {
     return 'This item already exists. Please use a different name.';
   }
-  
+
+  const looksTechnical = /\b(?:error|exception|constraint|relation|column|schema|stack|trace|undefined|null)\b/i.test(message)
+    || message.length > 180
+    || /https?:\/\/| at .*:\d+:\d+/.test(message);
+  if (looksTechnical || (status >= 400 && status < 500 && !message.trim())) {
+    return 'We couldn\'t complete that request. Please check your details and try again.';
+  }
   return message;
 }
 
@@ -267,7 +315,9 @@ function showAlert(containerId, message, type = 'info') {
   if (!container) return;
   const alertDiv = document.createElement('div');
   alertDiv.className = `alert-inline alert-inline-${type}`;
-  alertDiv.textContent = message;
+  alertDiv.setAttribute('role', type === 'error' ? 'alert' : 'status');
+  alertDiv.setAttribute('aria-live', type === 'error' ? 'assertive' : 'polite');
+  alertDiv.textContent = type === 'error' ? getUserFriendlyError(message) : message;
   container.appendChild(alertDiv);
   setTimeout(() => alertDiv.remove(), 5000);
 }
@@ -363,7 +413,10 @@ const Toast = {
     if (!container) return;
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
-    toast.innerHTML = `<span class="toast-message">${escapeHtml(message)}</span>`;
+    toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
+    toast.setAttribute('aria-live', type === 'error' ? 'assertive' : 'polite');
+    const userMessage = type === 'error' ? getUserFriendlyError(message) : message;
+    toast.innerHTML = `<span class="toast-message">${escapeHtml(userMessage)}</span>`;
     container.appendChild(toast);
     setTimeout(() => {
       toast.remove();
@@ -371,19 +424,22 @@ const Toast = {
   },
   success(message) { this.show(message, 'success'); },
   error(message) { this.show(message, 'error'); },
-  info(message) { this.show(message, 'info'); }
+  info(message) { this.show(message, 'info'); },
+  warning(message) { this.show(message, 'warning'); }
 };
 
 const Realtime = {
   connections: new Map(),
 
   subscribe(table, callback) {
-    if (!this.connections.has(table)) {
-      this.connections.set(table, new Set());
+    let connection = this.connections.get(table);
+    if (!connection) {
+      connection = { callbacks: new Set(), controller: null, retryTimer: null, warned: false };
+      this.connections.set(table, connection);
     }
-    this.connections.get(table).add(callback);
+    connection.callbacks.add(callback);
 
-    if (this.connections.get(table).size === 1) {
+    if (connection.callbacks.size === 1) {
       this.startConnection(table);
     }
 
@@ -391,12 +447,12 @@ const Realtime = {
   },
 
   unsubscribe(table, callback) {
-    if (this.connections.has(table)) {
-      this.connections.get(table).delete(callback);
-      if (this.connections.get(table).size === 0) {
-        this.connections.delete(table);
-        this.stopConnection(table);
-      }
+    const connection = this.connections.get(table);
+    if (!connection) return;
+
+    connection.callbacks.delete(callback);
+    if (connection.callbacks.size === 0) {
+      this.stopConnection(table);
     }
   },
 
@@ -407,53 +463,81 @@ const Realtime = {
     const isExpressServer = window.location.port === '5000' || window.location.port === '';
     if (!isExpressServer) return;
 
-    const eventSource = new EventSource(`/api/realtime/${table}?token=${token}`);
-    
-    eventSource.onmessage = (event) => {
+    const connection = this.connections.get(table);
+    if (!connection || connection.controller) return;
+
+    const controller = new AbortController();
+    connection.controller = controller;
+
+    (async () => {
       try {
-        const payload = JSON.parse(event.data);
-        if (this.connections.has(table)) {
-          this.connections.get(table).forEach(callback => callback(payload));
+        const response = await fetch(`/api/realtime/${encodeURIComponent(table)}`, {
+          headers: { Authorization: `Bearer ${token}` },
+          signal: controller.signal
+        });
+        if (!response.ok) {
+          if (response.status === 401) {
+            clearCurrentUser();
+            Toast.error('Your session has expired. Please log in again.');
+            window.location.href = 'members.html';
+          }
+          throw new Error(`Live updates could not connect (${response.status}).`);
         }
-      } catch (err) {
-        console.error('Realtime parse error:', err);
+        if (!response.body) throw new Error('Live updates are not supported by this browser.');
+
+        connection.warned = false;
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (this.connections.get(table) === connection) {
+          const { value, done } = await reader.read();
+          if (done) throw new Error('The live update connection ended.');
+          buffer += decoder.decode(value, { stream: true });
+          const frames = buffer.split(/\r?\n\r?\n/);
+          buffer = frames.pop() || '';
+
+          for (const frame of frames) {
+            const data = frame.split(/\r?\n/)
+              .filter(line => line.startsWith('data:'))
+              .map(line => line.slice(5).trim())
+              .join('\n');
+            if (!data) continue;
+
+            try {
+              const payload = JSON.parse(data);
+              connection.callbacks.forEach(callback => callback(payload));
+            } catch (error) {
+              console.error('Live update could not be read:', error);
+            }
+          }
+        }
+      } catch (error) {
+        if (controller.signal.aborted || this.connections.get(table) !== connection) return;
+        console.error('Live update connection failed:', { table, error: error.message });
+        if (!connection.warned) {
+          Toast.warning('Live updates are temporarily paused. We will try to reconnect.');
+          connection.warned = true;
+        }
+      } finally {
+        if (connection.controller === controller) connection.controller = null;
+        if (this.connections.get(table) === connection && connection.callbacks.size > 0) {
+          connection.retryTimer = setTimeout(() => this.startConnection(table), 3000);
+        }
       }
-    };
-
-    eventSource.onerror = () => {
-      this.connections.delete(table);
-      eventSource.close();
-      
-      const isExpressServer = window.location.port === '5000' || window.location.port === '';
-      if (!isExpressServer) return;
-      
-      setTimeout(() => {
-        if (this.connections.has(table)) {
-          this.startConnection(table);
-        }
-      }, 3000);
-    };
-
-    this.connections.set(table, eventSource);
+    })();
   },
 
   stopConnection(table) {
-    if (this.connections.has(table)) {
-      const connection = this.connections.get(table);
-      if (connection instanceof EventSource) {
-        connection.close();
-      }
-      this.connections.delete(table);
-    }
+    const connection = this.connections.get(table);
+    if (!connection) return;
+    if (connection.retryTimer) clearTimeout(connection.retryTimer);
+    connection.controller?.abort();
+    this.connections.delete(table);
   },
 
   disconnectAll() {
-    this.connections.forEach((connection, table) => {
-      if (connection instanceof EventSource) {
-        connection.close();
-      }
-    });
-    this.connections.clear();
+    Array.from(this.connections.keys()).forEach(table => this.stopConnection(table));
   }
 };
 
@@ -732,7 +816,7 @@ function renderBottomNav(activePage = '') {
 }
 
 function renderScrollToTop() {
-  return `<button class="scroll-to-top" id="scroll-to-top" title="Back to top">${getIcon('arrowUp', 22)}</button>`;
+  return `<button type="button" class="scroll-to-top" id="scroll-to-top" title="Back to top" aria-label="Back to top">${getIcon('arrow_upward', 22)}</button>`;
 }
 
 function initMobileMenu() {
@@ -762,7 +846,11 @@ function initMobileMenu() {
 }
 
 function initScrollToTop() {
-  const btn = document.getElementById('scroll-to-top');
+  let btn = document.getElementById('scroll-to-top');
+  if (!btn) {
+    document.body.insertAdjacentHTML('beforeend', renderScrollToTop());
+    btn = document.getElementById('scroll-to-top');
+  }
   if (!btn) return;
 
   window.addEventListener('scroll', () => {
@@ -829,24 +917,17 @@ document.addEventListener('DOMContentLoaded', () => {
     checkBackend();
   }
 
-  // Register Service Worker for PWA (only on Express server)
+  // Register the service worker once and keep it active for offline and browser notifications.
   const isExpressServer = window.location.port === '5000' || window.location.port === '';
   if ('serviceWorker' in navigator && isExpressServer) {
     window.addEventListener('load', async () => {
-      const registration = await navigator.serviceWorker.getRegistration('/');
-      if (registration) {
-        await registration.unregister();
-        const cacheNames = await caches.keys();
-        await Promise.all(cacheNames.map(name => caches.delete(name)));
-        console.log('ServiceWorker and caches cleared');
-      }
-
       navigator.serviceWorker.register('/service-worker.js')
         .then((reg) => {
           console.log('ServiceWorker registered:', reg.scope);
         })
         .catch((error) => {
-          console.log('ServiceWorker registration failed:', error);
+          console.error('ServiceWorker registration failed:', error);
+          Toast.warning('Offline and browser notifications are unavailable right now.');
         });
     });
   }
@@ -1013,6 +1094,9 @@ function updateNotificationBadge(count) {
 }
 
 async function loadNotificationBadge() {
+  const publicPages = ['/', '/index.html', '/About.html', '/privacy.html', '/terms.html', '/members.html', '/login.html', '/register.html', '/admin-login.html'];
+  if (!Auth.isLoggedIn() || publicPages.includes(window.location.pathname)) return;
+
   try {
     const notifications = await api.get('/notifications');
     const unreadCount = notifications.filter(n => !n.read).length;
@@ -1025,15 +1109,15 @@ async function loadNotificationBadge() {
             try {
               await api.post('/notifications/mark-read', {});
               updateNotificationBadge(0);
-            } catch {
-              // Silently fail
+            } catch (error) {
+              Toast.error(getUserFriendlyError(error));
             }
           }
         });
       }
     });
-  } catch {
-    // Silently fail - badge will just not show
+  } catch (error) {
+    Toast.error(getUserFriendlyError(error));
   }
 }
 
@@ -1053,11 +1137,9 @@ window.addEventListener('error', (event) => {
   if (filename.includes('moz-extension') || filename.includes('chrome-extension')) return;
   console.error('Global error:', event.error);
   const friendlyMessage = getUserFriendlyError(event.error);
-  if (!navigator.onLine) return; // Skip offline errors
-  showPushNotification('Application Error', {
-    body: friendlyMessage,
-    icon: '/IMAGES/choir-logo.jpg'
-  });
+  Toast.error(!navigator.onLine
+    ? 'You appear to be offline. Check your internet connection and try again.'
+    : friendlyMessage);
 });
 
 window.addEventListener('unhandledrejection', (event) => {
@@ -1066,10 +1148,15 @@ window.addEventListener('unhandledrejection', (event) => {
   if (reason && reason.stack && (reason.stack.includes('moz-extension') || reason.stack.includes('chrome-extension'))) return;
   console.error('Unhandled promise rejection:', event.reason);
   const friendlyMessage = getUserFriendlyError(event.reason);
-  showPushNotification('Application Error', {
-    body: friendlyMessage,
-    icon: '/IMAGES/choir-logo.jpg'
-  });
+  Toast.error(friendlyMessage);
+});
+
+window.addEventListener('offline', () => {
+  Toast.warning('You are offline. Some features may not be available until your connection returns.');
+});
+
+window.addEventListener('online', () => {
+  Toast.success('Your internet connection is back.');
 });
 
 // Performance: lazy load non-critical resources
@@ -1191,4 +1278,3 @@ window.addEventListener('beforeunload', () => {
   const overlay = document.getElementById('update-popup-overlay');
   if (overlay) overlay.classList.remove('visible');
 });
-

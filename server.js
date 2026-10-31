@@ -8,6 +8,8 @@ const Groq = require('groq-sdk');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
+const webpush = require('web-push');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -16,12 +18,108 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 // Serve static files from public directory
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Supabase clients
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 const supabaseAdmin = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+const vapidPublicKey = process.env.VAPID_PUBLIC_KEY;
+const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
+const vapidSubject = process.env.VAPID_SUBJECT;
+const webPushConfigured = Boolean(vapidPublicKey && vapidPrivateKey && vapidSubject);
+
+if (webPushConfigured) {
+  webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
+}
+
+async function sendPushToUsers(notification) {
+  if (!webPushConfigured) return;
+
+  try {
+    const settingsQuery = supabaseAdmin
+      .from('user_settings')
+      .select('user_id')
+      .eq('push_notifications', true);
+    if (notification.user_id) settingsQuery.eq('user_id', notification.user_id);
+
+    const { data: settings, error: settingsError } = await settingsQuery;
+    if (settingsError) throw settingsError;
+    const enabledUserIds = (settings || []).map(setting => setting.user_id);
+    if (enabledUserIds.length === 0) return;
+
+    const { data: subscriptions, error: subscriptionsError } = await supabaseAdmin
+      .from('push_subscriptions')
+      .select('endpoint, user_id, subscription')
+      .in('user_id', enabledUserIds);
+    if (subscriptionsError) throw subscriptionsError;
+
+    const payload = JSON.stringify({
+      title: notification.title || 'St. Cecilia Choir',
+      body: notification.message || 'There is a new update from the choir.',
+      url: '/notifications.html'
+    });
+
+    for (let index = 0; index < (subscriptions || []).length; index += 10) {
+      const batch = subscriptions.slice(index, index + 10);
+      await Promise.all(batch.map(async (entry) => {
+        try {
+          await webpush.sendNotification(entry.subscription, payload);
+        } catch (error) {
+          console.error('[Push] Delivery failed:', {
+            statusCode: error.statusCode,
+            message: error.message
+          });
+          if (error.statusCode === 404 || error.statusCode === 410) {
+            const { error: deleteError } = await supabaseAdmin
+              .from('push_subscriptions')
+              .delete()
+              .eq('endpoint', entry.endpoint);
+            if (deleteError) {
+              console.error('[Push] Could not remove expired subscription:', deleteError.message);
+            }
+          }
+        }
+      }));
+    }
+  } catch (error) {
+    console.error('[Push] Could not prepare notification delivery:', error.message);
+  }
+}
+
+async function createNotification(notification) {
+  const { data, error } = await supabaseAdmin
+    .from('notifications')
+    .insert([{ ...notification, user_id: notification.user_id || null }])
+    .select()
+    .single();
+
+  if (error) throw error;
+  if (data) await sendPushToUsers(data);
+  return data;
+}
+
+function isAllowedPushEndpoint(endpoint) {
+  try {
+    const url = new URL(endpoint);
+    const allowedHosts = [
+      'fcm.googleapis.com',
+      'updates.push.services.mozilla.com',
+      'web.push.apple.com',
+      'notify.windows.com'
+    ];
+    return url.protocol === 'https:'
+      && !url.port
+      && allowedHosts.some(host => url.hostname === host || url.hostname.endsWith(`.${host}`));
+  } catch {
+    return false;
+  }
+}
 
 // Groq AI client
 let groq = null;
@@ -606,21 +704,21 @@ app.post('/api/drive/scores/upload', authMiddleware, driveUpload.single('score')
       console.error('Supabase metadata save error:', dbErr);
     }
 
-    res.json({
-      message: 'Score uploaded successfully.',
-      file: driveFile,
-    });
-
     try {
-      await supabaseAdmin.from('notifications').insert([{
+      await createNotification({
         title: 'New Score Uploaded',
         message: `${fileName} was uploaded to ${category || 'General'} by ${uploadedByName || 'a member'}`,
         icon: 'library_music',
         user_id: null
-      }]);
+      });
     } catch (notifErr) {
       console.error('Failed to create score upload notification:', notifErr);
     }
+
+    res.json({
+      message: 'Score uploaded successfully.',
+      file: driveFile,
+    });
   } catch (err) {
     console.error('Drive upload error:', err);
     res.status(500).json({ error: 'Failed to upload score.' });
@@ -790,18 +888,18 @@ app.post('/api/attendance/bulk', authMiddleware, async (req, res) => {
       .select();
 
     if (error) throw error;
-    res.json(data || []);
 
     try {
-      await supabaseAdmin.from('notifications').insert([{
+      await createNotification({
         title: 'Attendance Recorded',
         message: `Attendance marked for ${event_name || 'event'} - ${records.length} records updated`,
         icon: 'fact_check',
         user_id: null
-      }]);
+      });
     } catch (notifErr) {
       console.error('Failed to create attendance notification:', notifErr);
     }
+    res.json(data || []);
   } catch (err) {
     console.error('Attendance bulk upsert error:', err);
     res.status(500).json({ message: 'Failed to bulk save attendance' });
@@ -879,12 +977,12 @@ app.post('/api/events', authMiddleware, adminOrExco, async (req, res) => {
 
     if (data) {
       try {
-        await supabaseAdmin.from('notifications').insert([{
+        await createNotification({
           title: 'New Event Created',
           message: `${title} - ${type || 'Event'} on ${event_date || 'TBD'}${event_time ? ' at ' + event_time : ''}`,
           icon: 'event',
           user_id: null
-        }]);
+        });
       } catch (notifErr) {
         console.error('Failed to create event notification:', notifErr);
       }
@@ -1087,12 +1185,12 @@ app.put('/api/song-lists/:id', authMiddleware, adminOrExco, async (req, res) => 
           console.error('Failed to fetch event title for notification:', eventErr);
         }
 
-        await supabaseAdmin.from('notifications').insert([{
+        await createNotification({
           title: 'Song Plan Published',
           message: `A new song plan has been published for "${eventTitle}"`,
           icon: 'publish',
           user_id: null
-        }]);
+        });
       } catch (notifErr) {
         console.error('Failed to create song list notification:', notifErr);
       }
@@ -1378,13 +1476,7 @@ app.get('/api/notifications', authMiddleware, async (req, res) => {
 app.post('/api/notifications', authMiddleware, adminOrExco, async (req, res) => {
   try {
     const { title, message, icon } = req.body;
-    const { data, error } = await supabaseAdmin
-      .from('notifications')
-      .insert([{ title, message, icon: icon || 'notifications', user_id: null }])
-      .select()
-      .single();
-
-    if (error) throw error;
+    const data = await createNotification({ title, message, icon: icon || 'notifications', user_id: null });
     res.status(201).json(data);
   } catch (err) {
     console.error('Notification create error:', err);
@@ -1436,6 +1528,74 @@ app.delete('/api/notifications/:id', authMiddleware, async (req, res) => {
   }
 });
 
+app.get('/api/push/vapid-public-key', authMiddleware, (req, res) => {
+  if (!webPushConfigured) {
+    return res.status(503).json({ message: 'Browser notifications are not configured yet.' });
+  }
+  res.json({ publicKey: vapidPublicKey });
+});
+
+app.post('/api/push/subscribe', authMiddleware, async (req, res) => {
+  if (!webPushConfigured) {
+    return res.status(503).json({ message: 'Browser notifications are not configured yet.' });
+  }
+
+  const subscription = req.body;
+  const endpoint = subscription?.endpoint;
+  const keys = subscription?.keys;
+  if (typeof endpoint !== 'string' || endpoint.length > 2048 || !isAllowedPushEndpoint(endpoint)
+    || typeof keys?.p256dh !== 'string' || typeof keys?.auth !== 'string') {
+    return res.status(400).json({ message: 'This device could not be registered for notifications.' });
+  }
+
+  try {
+    const { data: existing, error: lookupError } = await supabaseAdmin
+      .from('push_subscriptions')
+      .select('user_id')
+      .eq('endpoint', endpoint)
+      .limit(1);
+    if (lookupError) throw lookupError;
+    if (existing?.length && existing[0].user_id !== req.user.id) {
+      return res.status(409).json({ message: 'This device is already registered to another account.' });
+    }
+
+    const { error } = await supabaseAdmin
+      .from('push_subscriptions')
+      .upsert({
+        endpoint,
+        user_id: req.user.id,
+        subscription,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'endpoint' });
+    if (error) throw error;
+
+    res.status(201).json({ message: 'This device is ready to receive choir notifications.' });
+  } catch (error) {
+    console.error('[Push] Subscription save failed:', error.message);
+    res.status(500).json({ message: 'We could not save notification settings for this device.' });
+  }
+});
+
+app.delete('/api/push/subscribe', authMiddleware, async (req, res) => {
+  const endpoint = req.body?.endpoint;
+  if (typeof endpoint !== 'string' || endpoint.length > 2048) {
+    return res.status(400).json({ message: 'This device could not be removed from notifications.' });
+  }
+
+  try {
+    const { error } = await supabaseAdmin
+      .from('push_subscriptions')
+      .delete()
+      .eq('endpoint', endpoint)
+      .eq('user_id', req.user.id);
+    if (error) throw error;
+    res.json({ message: 'Browser notifications have been turned off for this device.' });
+  } catch (error) {
+    console.error('[Push] Subscription removal failed:', error.message);
+    res.status(500).json({ message: 'We could not turn off notifications for this device.' });
+  }
+});
+
 // ==================== ANNOUNCEMENTS ROUTES ====================
 
 app.get('/api/announcements', authMiddleware, async (req, res) => {
@@ -1479,6 +1639,11 @@ app.post('/api/announcements', authMiddleware, adminOrExco, async (req, res) => 
       .single();
 
     if (error) throw error;
+    await sendPushToUsers({
+      title: data.title,
+      message: data.message,
+      user_id: null
+    });
     res.status(201).json(data);
   } catch (err) {
     console.error('Announcement create error:', err);
@@ -1504,6 +1669,11 @@ app.put('/api/announcements/:id', authMiddleware, adminOrExco, async (req, res) 
       .single();
 
     if (error) throw error;
+    await sendPushToUsers({
+      title: data.title,
+      message: data.message,
+      user_id: null
+    });
     res.json(data);
   } catch (err) {
     console.error('Announcement update error:', err);
@@ -1717,7 +1887,7 @@ app.get('/api/dashboard/stats', authMiddleware, async (req, res) => {
 
 app.get('/api/realtime/:table', authMiddleware, (req, res) => {
   const table = req.params.table;
-  const allowedTables = ['users', 'scores', 'events', 'executives', 'gallery', 'notifications', 'attendance', 'chat_history'];
+  const allowedTables = ['users', 'scores', 'events', 'song_lists', 'announcements', 'notifications', 'attendance'];
   
   if (!allowedTables.includes(table)) {
     return res.status(400).json({ message: 'Invalid table for real-time' });
@@ -1731,11 +1901,29 @@ app.get('/api/realtime/:table', authMiddleware, (req, res) => {
   const subscription = supabaseAdmin
     .channel(`public:${table}`)
     .on('postgres_changes', { event: '*', schema: 'public', table }, (payload) => {
-      res.write(`data: ${JSON.stringify(payload)}\n\n`);
+      if (res.writableEnded || res.destroyed) return;
+      const record = payload.new && Object.keys(payload.new).length ? payload.new : payload.old;
+      if (table === 'notifications' && record?.user_id && record.user_id !== req.user.id) return;
+
+      const update = {
+        table,
+        eventType: payload.eventType,
+        id: record?.id || null
+      };
+      if (table === 'notifications' && record) {
+        update.new = {
+          id: record.id,
+          user_id: record.user_id,
+          title: record.title,
+          message: record.message,
+          created_at: record.created_at
+        };
+      }
+      res.write(`data: ${JSON.stringify(update)}\n\n`);
     })
     .subscribe();
 
-  req.on('close', () => {
+  res.on('close', () => {
     supabaseAdmin.removeChannel(subscription);
   });
 });
@@ -1744,6 +1932,32 @@ app.get('/api/realtime/:table', authMiddleware, (req, res) => {
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+app.get('/api/cron/keep-supabase-alive', async (req, res) => {
+  const expectedSecret = process.env.CRON_SECRET;
+  const authorization = req.get('authorization') || '';
+  const suppliedSecret = authorization.match(/^Bearer\s+(.+)$/i)?.[1] || '';
+
+  if (!expectedSecret) {
+    console.error('[KeepAlive] CRON_SECRET is not configured.');
+    return res.status(503).json({ message: 'Scheduled database check is not configured.' });
+  }
+
+  const expected = Buffer.from(expectedSecret);
+  const supplied = Buffer.from(suppliedSecret);
+  if (expected.length !== supplied.length || !crypto.timingSafeEqual(expected, supplied)) {
+    return res.status(401).json({ message: 'Unauthorized.' });
+  }
+
+  try {
+    const { error } = await supabaseAdmin.from('users').select('id').limit(1);
+    if (error) throw error;
+    res.json({ status: 'ok', checked_at: new Date().toISOString() });
+  } catch (error) {
+    console.error('[KeepAlive] Supabase database check failed:', error.message);
+    res.status(503).json({ message: 'The database could not be reached.' });
+  }
 });
 
 // ==================== FALLBACK ====================
@@ -1820,7 +2034,7 @@ async function sendRehearsalReminders() {
     }
 
     for (const note of notificationsToCreate) {
-      await supabaseAdmin.from('notifications').insert([{ ...note, user_id: null }]);
+      await createNotification({ ...note, user_id: null });
     }
 
     if (notificationsToCreate.length > 0) {
