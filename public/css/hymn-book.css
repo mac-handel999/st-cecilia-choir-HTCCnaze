@@ -1,0 +1,362 @@
+.hymn-book-hero {
+  padding: clamp(2.5rem, 7vw, 5rem) 1rem 2.5rem;
+  text-align: center;
+  background: linear-gradient(145deg, var(--color-primary-dark), var(--color-primary));
+  color: #fff;
+}
+
+.hymn-book-hero .container {
+  max-width: 760px;
+}
+
+.hymn-book-hero-icon {
+  font-size: 2.5rem;
+  color: var(--color-accent);
+}
+
+.hymn-book-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.hymn-book-eyebrow {
+  margin: 0.5rem 0;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hymn-book-hero .page-title {
+  color: #fff;
+  font-size: clamp(2rem, 7vw, 3.25rem);
+}
+
+.hymn-book-hero .page-subtitle {
+  max-width: 620px;
+  margin: 0.75rem auto 0;
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.hymn-book-content {
+  padding-top: 2rem;
+  padding-bottom: 4rem;
+}
+
+.hymn-back-link {
+  display: inline-flex;
+  margin: 1rem max(1rem, calc((100% - 1200px) / 2));
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.hymn-catalog-content {
+  padding-top: 2rem;
+  padding-bottom: 4rem;
+}
+
+.hymn-catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+  gap: 1rem;
+}
+
+.hymn-catalog-card {
+  display: flex;
+  min-height: 230px;
+  padding: 1.5rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  color: var(--color-text);
+  text-decoration: none;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.hymn-catalog-card:hover,
+.hymn-catalog-card:focus-visible {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.hymn-catalog-icon {
+  color: var(--color-primary);
+  font-size: 2rem;
+}
+
+.hymn-catalog-title {
+  color: var(--color-primary);
+  font-family: var(--font-heading);
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.hymn-catalog-description {
+  color: var(--color-text-muted);
+  line-height: 1.55;
+}
+
+.hymn-catalog-status {
+  margin-top: auto;
+  color: var(--color-warning);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.hymn-catalog-status.is-ready {
+  color: var(--color-success);
+}
+
+.hymn-catalog-error {
+  max-width: 760px;
+  margin: 1rem auto;
+  color: var(--color-error);
+  text-align: center;
+}
+
+.hymn-book-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0.5rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+}
+
+.hymn-book-tools input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.65rem 0.25rem;
+  color: var(--color-text);
+  background: transparent;
+  border: 0;
+  outline: 0;
+}
+
+.hymn-book-tools select {
+  max-width: 190px;
+  min-width: 135px;
+  padding: 0.65rem 2rem 0.65rem 0.75rem;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.hymn-search-icon {
+  margin-left: 0.5rem;
+  color: var(--color-primary);
+}
+
+.hymn-book-status-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: 760px;
+  min-height: 2.5rem;
+  margin: 1rem auto;
+  align-items: center;
+}
+
+.hymn-book-status-row p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.hymn-connection-status {
+  color: var(--color-success);
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.hymn-connection-status.is-offline {
+  color: var(--color-warning);
+}
+
+.hymn-book-layout {
+  display: grid;
+  grid-template-columns: minmax(230px, 0.8fr) minmax(0, 1.6fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.hymn-results,
+.hymn-reader {
+  min-width: 0;
+  padding: 1rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+}
+
+.hymn-results {
+  display: grid;
+  gap: 0.5rem;
+  max-height: 70vh;
+  overflow: auto;
+}
+
+.hymn-result {
+  display: flex;
+  gap: 0.8rem;
+  width: 100%;
+  padding: 0.85rem;
+  align-items: baseline;
+  text-align: left;
+  color: var(--color-text);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.hymn-result:hover,
+.hymn-result.is-selected {
+  background: var(--color-surface-alt);
+  border-color: var(--color-border);
+}
+
+.hymn-result-number,
+.hymn-reader-number {
+  color: var(--color-primary);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.hymn-result-title {
+  overflow-wrap: anywhere;
+}
+
+.hymn-reader {
+  min-height: 300px;
+  padding: clamp(1.25rem, 4vw, 2.5rem);
+}
+
+.hymn-reader-heading {
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.hymn-reader-heading h2 {
+  margin-top: 0.4rem;
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  overflow-wrap: anywhere;
+}
+
+.hymn-reader-detail {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.hymn-stanza {
+  margin: 0.4rem 0 1.5rem;
+  color: var(--color-text);
+  font-family: var(--font-heading);
+  font-size: clamp(1rem, 2vw, 1.15rem);
+  line-height: 1.9;
+  white-space: pre-line;
+}
+
+.hymn-verse {
+  margin-top: 1.25rem;
+}
+
+.hymn-verse-label {
+  color: var(--color-primary);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.hymn-chorus {
+  padding: 1rem 1.25rem 0;
+  background: var(--color-surface-alt);
+  border-left: 3px solid var(--color-accent);
+  border-radius: var(--radius-md);
+}
+
+.hymn-reader-empty,
+.hymn-empty-state {
+  padding: 2.5rem 1rem;
+  text-align: center;
+}
+
+.hymn-reader-empty .material-symbols-outlined {
+  color: var(--color-accent);
+  font-size: 2.5rem;
+}
+
+.hymn-reader-empty h2,
+.hymn-empty-state h2 {
+  margin: 0.75rem 0 0.4rem;
+  font-size: 1.2rem;
+}
+
+.hymn-book-credit {
+  margin: 1.5rem 0 0;
+  text-align: center;
+  font-size: 0.8rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 700px) {
+  .hymn-book-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .hymn-book-tools {
+    flex-wrap: wrap;
+  }
+
+  .hymn-book-tools input {
+    flex: 1 1 calc(100% - 5rem);
+  }
+
+  .hymn-book-tools select {
+    flex: 1 1 100%;
+    max-width: none;
+  }
+
+  .hymn-results {
+    max-height: 36vh;
+  }
+}
+
+@media (max-width: 420px) {
+  .hymn-book-status-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .hymn-book-tools {
+    gap: 0.4rem;
+  }
+
+  .hymn-book-tools .btn {
+    padding: 0.5rem 0.65rem;
+  }
+}

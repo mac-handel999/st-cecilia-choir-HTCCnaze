@@ -10,6 +10,7 @@ const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 const webpush = require('web-push');
+const { answerFromChoirReferences } = require('./server/choir-knowledge');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -20,6 +21,32 @@ app.use(express.urlencoded({ extended: true }));
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.use(/^\/data\/(?:hymns|assumpta-hymns|legion-of-mary-hymns)\.json$/, authMiddleware, (req, res, next) => {
+  res.set('Cache-Control', 'private, no-store');
+  res.vary('Authorization');
+  next();
+});
+
+app.get('/api/hymns', authMiddleware, async (req, res) => {
+  const books = {
+    catholic: 'hymns.json',
+    assumpta: 'assumpta-hymns.json',
+    'legion-of-mary': 'legion-of-mary-hymns.json'
+  };
+  const filename = books[req.query.book || 'catholic'];
+  if (!filename) return res.status(400).json({ message: 'Please choose a valid hymn book.' });
+
+  try {
+    const data = await fs.promises.readFile(path.join(__dirname, 'public', 'data', filename), 'utf8');
+    res.set('Cache-Control', 'private, no-store');
+    res.vary('Authorization');
+    res.json(JSON.parse(data));
+  } catch (error) {
+    console.error('[Hymns] Could not load hymn book:', { book: req.query.book || 'catholic', message: error.message });
+    res.status(500).json({ message: 'This hymn book could not be opened right now. Please try again later.' });
+  }
 });
 
 // Serve static files from public directory
@@ -1752,7 +1779,18 @@ app.put('/api/settings', authMiddleware, async (req, res) => {
 app.post('/api/ai/chat', authMiddleware, async (req, res) => {
   try {
     const { message, mode = 'general', history = [], context = 'general_portal' } = req.body;
-    if (!message) return res.status(400).json({ message: 'Message is required' });
+    if (typeof message !== 'string' || !message.trim()) {
+      return res.status(400).json({ message: 'Please enter a message before sending.' });
+    }
+
+    const referenceAnswer = answerFromChoirReferences(message);
+    if (referenceAnswer) {
+      const { error: historyError } = await supabaseAdmin
+        .from('chat_history')
+        .insert([{ user_id: req.user.id, message, response: referenceAnswer.reply, mode: 'reference' }]);
+      if (historyError) console.error('[AI] Could not save reference answer to chat history:', historyError.message);
+      return res.json({ ...referenceAnswer, mode: 'reference' });
+    }
 
     if (!groq) {
       return res.status(500).json({ message: 'AI service not configured' });
@@ -1791,6 +1829,7 @@ Your focus areas:
 
 Guidelines:
 - Always keep responses focused on liturgical and sacred music
+- Never invent hymn lyrics, Mass responses, or choir by-law wording. Exact questions about these sources are answered from verified text; if a source is missing or incomplete, say so plainly.
 - If asked non-music questions, gently redirect: "I'm here to help with all things related to our sacred music and liturgy, my dear. Is there a particular hymn or Mass setting you'd like to explore?"
 - Reference St. Cecilia's patronage of music when appropriate
 - Be encouraging: "Remember, every voice in God's choir matters beautifully"

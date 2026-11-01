@@ -15,6 +15,7 @@ The goal of this website is to bridge the gap between traditional liturgical mus
 ### Key Modules
 
 * **🎼 Musical Scores & Scripts Library:** A searchable database of PDF scores, Tonic Sol-fa sheets, and MIDI/MP3 rehearsal files categorized by Liturgical Season (Advent, Lent, Ordinary Time, etc.). Features Google Drive integration for score storage and retrieval.
+* **📖 Member Hymn Library:** Logged-in members can search the Catholic, Assumpta, and Legion of Mary collections by hymn number or title. Authorized hymn data is cached on the device after first access for offline reading.
 * **📅 Choir Events Page:** An integrated calendar for tracking rehearsal schedules, Feast Day celebrations, and Archdiocesan competitions.
 * **🤖 Cecilia AI Chat Assistant:** An AI-powered liturgical music assistant powered by Groq, capable of answering questions about music, liturgy, choir policies, and more.
 * **👥 Member Portal:** A personalized dashboard for choristers with a Next Rehearsal countdown, quick-access cards, and dynamic time-based greetings.
@@ -58,8 +59,31 @@ The goal of this website is to bridge the gap between traditional liturgical mus
 * **Category Filters:** Browse by liturgical season, voice part, or composer.
 * **Google Drive Integration:** Scores stored and streamed from Google Drive via the Drive API.
 
+### Member Hymn Library
+* Members open the hymn-book catalogue from the dashboard. It currently lists the Catholic Hymn Book, Assumpta Hymnal, and Legion of Mary Hymn Book.
+* Hymn records are served through the authenticated `/api/hymns?book=<book-id>` endpoint. The JSON files are not meant to be opened as public static URLs. Successful authenticated API responses can be cached by the service worker for use on that device while offline.
+* Search matches hymn number, title, and optional category. The reader is shared by all books and selects the requested collection through its `book` query parameter.
+* Add records to the appropriate file: `public/data/hymns.json`, `public/data/assumpta-hymns.json`, or `public/data/legion-of-mary-hymns.json`. The format is a root-level array. Each verse has a display label and text lines; an optional `chorus` or `refrain` can be supplied separately. Include text only when it is public domain or the choir has permission to reproduce it:
+  ```json
+  [
+    {
+      "number": 1,
+      "suffix": "",
+      "title": "Hymn title",
+      "category": "Opening",
+      "verses": [
+        { "label": "Stanza 1", "lines": ["First line", "Second line"] }
+      ],
+      "chorus": { "label": "Chorus", "lines": ["Chorus line"] }
+    }
+  ]
+  ```
+
 ### Cecilia AI
-* **AI-Powered Assistant:** Chat-based interaction using Groq LLM.
+* **Source-grounded references:** Exact hymn, Order of Mass, and available constitution questions are answered from the local data, with a source label. If the requested text is missing or the constitution does not contain numbered sections, Cecilia says so rather than guessing.
+* The structured constitution reference at `public/data/choir-constitution.json` is marked partial; update it only from the complete, approved choir document.
+* For exact section lookups, store approved sections under their article as `{ "number": 20, "text": "Exact approved wording" }`. Cecilia will quote a matching section and will ask for the article if the section number is ambiguous.
+* **AI-Powered Assistant:** Chat-based interaction using Groq LLM for general liturgical and music conversation.
 * **Liturgical Music Expertise:** Answers questions about choir music, rehearsals, and liturgy.
 * **Chat History:** Maintains conversation context within a session.
 * **Clear Chat History:** Users can delete all their AI chat history at any time.

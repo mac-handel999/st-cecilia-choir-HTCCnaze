@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#4A0000">
+  <meta name="description" content="Search the St. Cecilia Choir hymn book by hymn number or title, online or offline.">
+  <title>Hymn Book - St. Cecilia Choir HTCC Naze</title>
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/hymn-book.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/jpeg" href="IMAGES/choir-logo.jpg">
+</head>
+<body>
+  <a class="hymn-back-link" href="hymn-books.html">← All hymn books</a>
+  <main class="page-content">
+    <section class="hymn-book-hero">
+      <div class="container">
+        <svg class="hymn-book-hero-icon hymn-book-icon" aria-hidden="true" viewBox="0 0 48 48" focusable="false"><path d="M24 12c-5-4-12-5-19-4v29c7-1 14 0 19 4 5-4 12-5 19-4V8c-7-1-14 0-19 4Zm-2 25c-4-2-9-3-13-3V12c5 0 9 1 13 3v22Zm15-3c-4 0-9 1-13 3V15c4-2 8-3 13-3v22Z" fill="currentColor"/></svg>
+        <p class="hymn-book-eyebrow">St. Cecilia Choir · HTCC Naze</p>
+        <h1 class="page-title" id="hymn-book-title">Catholic Hymn Book</h1>
+        <p class="page-subtitle">Find a hymn by its number or name. The book is available online and can be browsed offline.</p>
+      </div>
+    </section>
+
+    <section class="container hymn-book-content" aria-labelledby="hymn-search-label">
+      <div class="hymn-book-tools">
+        <label class="sr-only" id="hymn-search-label" for="hymn-search">Search by hymn number or name</label>
+        <span class="material-symbols-outlined hymn-search-icon" aria-hidden="true">search</span>
+        <input id="hymn-search" type="search" inputmode="search" autocomplete="off" placeholder="Enter a hymn number or name">
+        <label class="sr-only" for="hymn-category-filter">Filter by hymn category</label>
+        <select id="hymn-category-filter" aria-label="Filter by hymn category">
+          <option value="">All categories</option>
+        </select>
+        <button id="clear-hymn-search" class="btn btn-outline btn-sm" type="button" aria-label="Clear search">Clear</button>
+      </div>
+      <div class="hymn-book-status-row">
+        <p id="hymn-book-status" role="status" aria-live="polite">Loading hymn book…</p>
+        <span id="hymn-book-connection" class="hymn-connection-status"></span>
+      </div>
+      <div class="hymn-book-layout">
+        <section id="hymn-results" class="hymn-results" aria-label="Hymn search results"></section>
+        <article id="hymn-reader" class="hymn-reader" aria-live="polite">
+          <div class="hymn-reader-empty">
+            <span class="material-symbols-outlined" aria-hidden="true">music_note</span>
+            <h2>Select a hymn</h2>
+            <p>Choose a hymn from the list to read its words.</p>
+          </div>
+        </article>
+      </div>
+      <p class="hymn-book-credit">Hymn texts should be added only when they are public domain or you have permission to reproduce them.</p>
+    </section>
+  </main>
+  <script src="js/shared.js"></script>
+  <script src="js/hymn-book.js"></script>
+</body>
+</html>

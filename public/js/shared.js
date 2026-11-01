@@ -816,7 +816,7 @@ function renderBottomNav(activePage = '') {
 }
 
 function renderScrollToTop() {
-  return `<button type="button" class="scroll-to-top" id="scroll-to-top" title="Back to top" aria-label="Back to top">${getIcon('arrow_upward', 22)}</button>`;
+  return `<button type="button" class="scroll-to-top" id="scroll-to-top" title="Back to top" aria-label="Back to top"><svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" focusable="false"><path fill="currentColor" d="M12 4 4 12l1.41 1.41L11 7.83V20h2V7.83l5.59 5.58L20 12z"/></svg></button>`;
 }
 
 function initMobileMenu() {

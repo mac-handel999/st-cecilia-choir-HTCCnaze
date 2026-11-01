@@ -1,10 +1,13 @@
-const CACHE_NAME = 'st-cecilia-choir-v8';
+const CACHE_NAME = 'st-cecilia-choir-v11';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
+  '/hymn-books.html',
+  '/hymn-book.html',
   '/css/design-system.css',
   '/css/components.css',
   '/css/styles.css',
+  '/css/hymn-book.css',
   '/css/order-of-mass.css',
   '/css/announcement-box.css',
   '/manifest.json',
@@ -13,6 +16,8 @@ const STATIC_ASSETS = [
 
 const JS_FILES = [
   '/js/shared.js',
+  '/js/hymn-books.js',
+  '/js/hymn-book.js',
   '/js/musical-score.js',
   '/js/scores.js',
   '/js/member-home.js',
