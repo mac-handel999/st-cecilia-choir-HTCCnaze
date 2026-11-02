@@ -143,26 +143,26 @@ function startSundayMassCountdown() {
     const currentDay = now.getDay();
     
     const masses = [
-      { hours: 6, minutes: 30, label: '6:30 AM' },
-      { hours: 9, minutes: 30, label: '9:30 AM' }
+      { hours: 5, minutes: 30, label: '5:30 AM First Mass' },
+      { hours: 10, minutes: 0, label: '10:00 AM Second Mass' }
     ];
 
-    const daysUntilSunday = currentDay === 0 ? 7 : 7 - currentDay;
     const nextSunday = new Date(now);
-    nextSunday.setDate(now.getDate() + daysUntilSunday);
     nextSunday.setHours(0, 0, 0, 0);
+    if (currentDay !== 0) {
+      nextSunday.setDate(nextSunday.getDate() + (7 - currentDay));
+    }
 
     let nextMass = null;
-    let minDiff = Infinity;
-
-    for (const mass of masses) {
-      const candidate = new Date(nextSunday);
-      candidate.setHours(mass.hours, mass.minutes, 0, 0);
-      
-      const diff = candidate - now;
-      if (diff > 0 && diff < minDiff) {
-        minDiff = diff;
-        nextMass = { date: candidate, label: mass.label };
+    for (let week = 0; week < 2 && !nextMass; week++) {
+      for (const mass of masses) {
+        const candidate = new Date(nextSunday);
+        candidate.setDate(candidate.getDate() + week * 7);
+        candidate.setHours(mass.hours, mass.minutes, 0, 0);
+        if (candidate > now) {
+          nextMass = { date: candidate, label: mass.label };
+          break;
+        }
       }
     }
 
@@ -172,11 +172,11 @@ function startSundayMassCountdown() {
   const nextMass = getNextSundayMass();
   if (nextMass) {
     const options = { weekday: 'long', month: 'short', day: 'numeric' };
-    timeEl.textContent = `Every Sunday, 6:30 AM & 9:30 AM — Next: ${nextMass.label} (${nextMass.date.toLocaleDateString('en-US', options)})`;
+    timeEl.textContent = `Every Sunday, 5:30 AM (First Mass) & 10:00 AM (Second Mass) — Next: ${nextMass.label} (${nextMass.date.toLocaleDateString('en-US', options)})`;
     if (badgeEl) badgeEl.textContent = 'This Sunday';
     startCountdown(nextMass.date, countdownEl);
   } else {
-    timeEl.textContent = 'Every Sunday, 6:30 AM & 9:30 AM';
+    timeEl.textContent = 'Every Sunday, 5:30 AM (First Mass) & 10:00 AM (Second Mass)';
     if (badgeEl) badgeEl.textContent = 'Sunday';
   }
 }
@@ -317,70 +317,77 @@ async function loadUpcomingEvent() {
   const container = document.getElementById('upcoming-event-card');
   if (!container) return;
 
+  const featuredEvents = window.FEATURED_CHOIR_EVENTS || [];
+  const currentUser = getCurrentUser();
+  const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'exco';
+
   try {
     const events = asArray(await api.get('/events'));
     const now = new Date();
-    const upcoming = events
-      .filter(e => e.event_date && new Date(e.event_date) >= now)
-      .sort((a, b) => new Date(a.event_date) - new Date(b.event_date))[0];
+    const additionalEvents = events
+      .filter(event => {
+        if (!event.event_date || new Date(`${event.event_date}T23:59:59`) < now) return false;
+        return !featuredEvents.some(featured =>
+          featured.event_date === event.event_date
+          && String(event.title || '').toLocaleLowerCase().includes(
+            featured.id === 'music-boom-2026' ? 'music boom' : 'cecilia'
+          )
+        );
+      })
+      .sort((a, b) => new Date(a.event_date) - new Date(b.event_date))
+      .slice(0, 1);
 
-    const currentUser = getCurrentUser();
-    const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'exco';
-
-    if (!upcoming) {
-      const nextDate = getNextRehearsal();
-      if (nextDate && nextDate._slot) {
-        const slot = nextDate._slot;
-        container.innerHTML = `
-          <div class="upcoming-event-img upcoming-event-placeholder"><span class="material-symbols-outlined">music_note</span></div>
+    const additionalMarkup = additionalEvents.map((event, index) => {
+      const eventDateTime = event.event_time
+        ? new Date(`${event.event_date}T${event.event_time}`)
+        : new Date(event.event_date);
+      return `
+        <article class="upcoming-event-extra card">
+          ${event.image_url ? `<img src="${escapeHtml(event.image_url)}" alt="${escapeHtml(event.title)}" class="upcoming-event-img" loading="lazy">` : ''}
           <div class="upcoming-event-body">
-            <span class="bento-badge">Next Practice</span>
-            <h4>${slot.label} Rehearsal</h4>
-            <p><span class="material-symbols-outlined">schedule</span> ${nextDate.toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' })} — ${slot.target}</p>
-            <p><span class="material-symbols-outlined">location_on</span> Holy Trinity Catholic Church (HTCC) Naze</p>
+            <span class="bento-badge">Upcoming</span>
+            <h4>${escapeHtml(event.title || 'Choir event')}</h4>
+            <p><span class="material-symbols-outlined">schedule</span> ${formatDate(event.event_date)}${event.event_time ? ` at ${escapeHtml(event.event_time)}` : ''}</p>
+            ${event.location ? `<p><span class="material-symbols-outlined">location_on</span> ${escapeHtml(event.location)}</p>` : ''}
+            <div id="additional-event-countdown-${index}" class="countdown-wrap"></div>
+            <div class="upcoming-event-actions">
+              <a href="events.html" class="btn btn-outline btn-sm">View All Events</a>
+              ${isAdmin ? `<button class="btn btn-outline btn-sm delete-event-btn" data-id="${escapeHtml(event.id)}">Delete</button>` : ''}
+            </div>
           </div>
-        `;
-      } else {
-        container.innerHTML = '<p style="color: var(--color-text-muted); padding: 1rem;">No upcoming events scheduled.</p>';
-      }
-      return;
-    }
-
-    const eventDate = new Date(upcoming.event_date);
-    const eventDateTime = upcoming.event_time ? new Date(`${upcoming.event_date}T${upcoming.event_time}`) : eventDate;
+        </article>
+      `;
+    }).join('');
 
     container.innerHTML = `
-      ${upcoming.image_url ? `<img src="${escapeHtml(upcoming.image_url)}" alt="${escapeHtml(upcoming.title)}" class="upcoming-event-img" loading="lazy">` : '<div class="upcoming-event-img upcoming-event-placeholder"><span class="material-symbols-outlined">church</span></div>'}
-      <div class="upcoming-event-body">
-        <span class="bento-badge">Upcoming</span>
-        <h4>${escapeHtml(upcoming.title)}</h4>
-        <p><span class="material-symbols-outlined">schedule</span> ${formatDate(upcoming.event_date)}${upcoming.event_time ? ' at ' + escapeHtml(upcoming.event_time) : ''}</p>
-        ${upcoming.location ? `<p><span class="material-symbols-outlined">location_on</span> ${escapeHtml(upcoming.location)}</p>` : ''}
-        <div id="event-countdown" style="margin-top: 0.75rem;"></div>
-        <div style="margin-top: 0.75rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
-          <a href="events.html" class="btn btn-outline btn-sm">View All Events</a>
-          ${isAdmin ? `<button class="btn btn-outline btn-sm delete-event-btn" data-id="${upcoming.id}" style="color: var(--color-error); border-color: var(--color-error);"><span class="material-symbols-outlined" style="font-size: 16px;">delete</span> Delete</button>` : ''}
-        </div>
+      <div class="member-upcoming-event-grid">
+        ${featuredEvents.map(event => window.renderFeaturedEventCard?.(event, { compact: true }) || '').join('')}
+        ${additionalMarkup}
       </div>
     `;
+    window.updateFeaturedEventCountdowns?.();
+    additionalEvents.forEach((event, index) => {
+      const eventDateTime = event.event_time
+        ? new Date(`${event.event_date}T${event.event_time}`)
+        : new Date(event.event_date);
+      startCountdown(eventDateTime, document.getElementById(`additional-event-countdown-${index}`));
+    });
 
-    startCountdown(eventDateTime, document.getElementById('event-countdown'));
-
-    const deleteBtn = container.querySelector('.delete-event-btn');
-    if (deleteBtn) {
-      deleteBtn.addEventListener('click', async () => {
+    container.querySelectorAll('.delete-event-btn').forEach(button => {
+      button.addEventListener('click', async () => {
         if (!confirm('Delete this event?')) return;
         try {
-          await api.delete('/events/' + upcoming.id);
+          await api.delete(`/events/${encodeURIComponent(button.dataset.id)}`);
           Toast.success('Event deleted');
           await loadUpcomingEvent();
         } catch (error) {
-          Toast.error('Failed to delete: ' + error.message);
+          Toast.error(`Failed to delete: ${error.message}`);
         }
       });
-    }
+    });
   } catch {
-    container.innerHTML = '<p style="color: var(--color-text-muted); padding: 1rem;">Events will appear here when scheduled.</p>';
+    container.innerHTML = `<div class="member-upcoming-event-grid">${featuredEvents.map(event => window.renderFeaturedEventCard?.(event, { compact: true }) || '').join('')}</div>`;
+    window.updateFeaturedEventCountdowns?.();
   }
 }
 

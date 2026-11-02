@@ -1,13 +1,15 @@
-const CACHE_NAME = 'st-cecilia-choir-v11';
+const CACHE_NAME = 'st-cecilia-choir-v12';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
+  '/events.html',
   '/hymn-books.html',
   '/hymn-book.html',
   '/css/design-system.css',
   '/css/components.css',
   '/css/styles.css',
   '/css/hymn-book.css',
+  '/css/featured-events.css',
   '/css/order-of-mass.css',
   '/css/announcement-box.css',
   '/manifest.json',
@@ -16,6 +18,8 @@ const STATIC_ASSETS = [
 
 const JS_FILES = [
   '/js/shared.js',
+  '/js/featured-events.js',
+  '/js/events.js',
   '/js/hymn-books.js',
   '/js/hymn-book.js',
   '/js/musical-score.js',
@@ -26,7 +30,6 @@ const JS_FILES = [
   '/js/image-gallery.js',
   '/js/notifications.js',
   '/js/attendance.js',
-  '/js/events.js',
   '/js/announcement-box.js',
   '/js/order-of-mass.js',
   '/js/admin-dashboard.js',
@@ -35,7 +38,9 @@ const JS_FILES = [
 ];
 
 const IMAGE_ASSETS = [
-  '/IMAGES/choir-logo.jpg'
+  '/IMAGES/choir-logo.jpg',
+  '/IMAGES/music-boom-2026.jpg',
+  '/IMAGES/november-choir-month-2026.png'
 ];
 
 // Install event - cache static assets

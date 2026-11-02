@@ -16,7 +16,7 @@ The goal of this website is to bridge the gap between traditional liturgical mus
 
 * **🎼 Musical Scores & Scripts Library:** A searchable database of PDF scores, Tonic Sol-fa sheets, and MIDI/MP3 rehearsal files categorized by Liturgical Season (Advent, Lent, Ordinary Time, etc.). Features Google Drive integration for score storage and retrieval.
 * **📖 Member Hymn Library:** Logged-in members can search the Catholic, Assumpta, and Legion of Mary collections by hymn number or title. Authorized hymn data is cached on the device after first access for offline reading.
-* **📅 Choir Events Page:** An integrated calendar for tracking rehearsal schedules, Feast Day celebrations, and Archdiocesan competitions.
+* **📅 Choir Events Page:** A public event page for rehearsal schedules, Feast Day celebrations, and Archdiocesan competitions. Featured November and December 2026 events include flyers and automatically updating days-left countdowns.
 * **🤖 Cecilia AI Chat Assistant:** An AI-powered liturgical music assistant powered by Groq, capable of answering questions about music, liturgy, choir policies, and more.
 * **👥 Member Portal:** A personalized dashboard for choristers with a Next Rehearsal countdown, quick-access cards, and dynamic time-based greetings.
 * **📸 Media Gallery:** A responsive carousel and grid view showcasing photographs and videos from various performances and church functions.
@@ -47,6 +47,8 @@ The goal of this website is to bridge the gap between traditional liturgical mus
 ### Member Portal
 * **Next Rehearsal Countdown:** Real-time countdown timer showing time remaining until the next scheduled rehearsal.
 * **Sunday Mass Countdown:** Countdown timer for the next scheduled Sunday Mass.
+* **Sunday Mass Times:** First Mass at 5:30 AM and second Mass at 10:00 AM.
+* **Daily Rehearsals:** The dashboard highlights ongoing rehearsals preparing for St. Cecilia’s Feast, Music Boom, and the 2026 Christmas and New Year celebrations.
 * **Quick-Access Cards:** Bento-style grid for Scores, Attendance, Cecilia AI, Events, Order of Mass, and more.
 * **Personalized Dashboard:** Tailored home screen for logged-in members.
 * **Mixed Updates Feed:** Announcements, new scores, and new events displayed together in the Announcements section with type icons and colors.

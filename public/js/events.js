@@ -1,34 +1,50 @@
-if (!requireAuth()) {
-  throw new Error('Auth required');
-}
-
 document.addEventListener('DOMContentLoaded', async () => {
   ThemeManager.init();
   Toast.init();
 
   const container = document.getElementById('events-list');
-  const searchInput = document.getElementById('search-events');
-  const filterBtns = document.querySelectorAll('.event-filter-btn');
-
+  const searchInput = document.getElementById('event-search');
+  const filterBtns = document.querySelectorAll('[data-event-filter]');
   if (!container) return;
 
-  container.innerHTML = '<div class="spinner"></div>';
-
-  let eventsData = [];
+  let eventsData = [...(window.FEATURED_CHOIR_EVENTS || [])];
   let activeFilter = 'all';
 
-  function getEventIcon(type) {
-    const icons = { 'Mass': 'church', 'Rehearsal': 'music_note', 'Concert': 'mic', 'Social': 'groups' };
-    return icons[type] || 'event';
+  function isFeaturedEvent(event) {
+    return String(event.id || '').startsWith('st-cecilia-') || String(event.id || '').startsWith('music-boom-');
+  }
+
+  function renderEvent(event, canDelete) {
+    if (isFeaturedEvent(event) && window.renderFeaturedEventCard) {
+      return window.renderFeaturedEventCard(event);
+    }
+
+    const icons = { Mass: 'church', Rehearsal: 'music_note', Concert: 'mic', Social: 'groups' };
+    const icon = icons[event.type] || 'event';
+    return `
+      <article class="event-card" data-event-id="${escapeHtml(event.id || '')}">
+        <div class="event-image" style="${event.image_url ? '' : 'display: flex; align-items: center; justify-content: center; color: var(--color-text-muted);'}">
+          ${event.image_url ? `<img src="${escapeHtml(event.image_url)}" alt="${escapeHtml(event.title || 'Event')}" style="width: 100%; height: 200px; object-fit: contain;" loading="lazy" onerror="this.style.display='none'">` : `<span class="material-symbols-outlined" style="font-size: 48px; opacity: 0.3;">${icon}</span>`}
+          ${canDelete ? `<button class="btn-icon delete-event" data-id="${escapeHtml(event.id)}" title="Delete event" style="position: absolute; top: 0.5rem; right: 0.5rem; background: rgba(255,255,255,0.9); color: var(--color-error);"><span class="material-symbols-outlined">delete</span></button>` : ''}
+        </div>
+        <div class="event-body">
+          <div class="event-date"><span class="material-symbols-outlined" style="font-size: 16px;">calendar_today</span> ${formatDate(event.event_date)}${event.event_time ? ` at ${escapeHtml(event.event_time)}` : ''}</div>
+          <h3>${escapeHtml(event.title || 'Choir event')}</h3>
+          <p>${escapeHtml(event.description || '')}</p>
+          ${event.location ? `<p class="event-location"><span class="material-symbols-outlined">location_on</span> ${escapeHtml(event.location)}</p>` : ''}
+          <span class="badge badge-accent">${escapeHtml(event.type || 'Event')}</span>
+        </div>
+      </article>
+    `;
   }
 
   function render(list) {
-    if (list.length === 0) {
+    if (!list.length) {
       container.innerHTML = `
         <div class="empty-state">
           <div class="empty-state-icon">📅</div>
           <div class="empty-state-title">No events found</div>
-          <div class="empty-state-desc">Check back soon for new events.</div>
+          <div class="empty-state-desc">Try another search or filter.</div>
         </div>
       `;
       return;
@@ -36,154 +52,69 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const user = getCurrentUser();
     const canDelete = user && (user.role === 'admin' || user.role === 'exco');
-
-    container.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3" style="gap: 1.5rem;">${list.map(e => `
-      <div class="event-card" data-event-id="${e.id}">
-        <div class="event-image" style="${e.image_url ? '' : 'display: flex; align-items: center; justify-content: center; color: var(--color-text-muted);'}">
-          ${e.image_url ? `<img src="${escapeHtml(e.image_url)}" alt="${escapeHtml(e.title || 'Event')}" style="width: 100%; height: 200px; object-fit: contain;" loading="lazy" onerror="this.style.display='none'">` : `<span class="material-symbols-outlined" style="font-size: 48px; opacity: 0.3;">${getEventIcon(e.type)}</span>`}
-          ${canDelete ? `<button class="btn-icon delete-event" data-id="${e.id}" title="Delete event" style="position: absolute; top: 0.5rem; right: 0.5rem; background: rgba(255,255,255,0.9); color: var(--color-error);"><span class="material-symbols-outlined">delete</span></button>` : ''}
-        </div>
-        <div class="event-body">
-          <div class="event-date"><span class="material-symbols-outlined" style="font-size: 16px;">calendar_today</span> ${formatDate(e.event_date)}${e.event_time ? ' at ' + escapeHtml(e.event_time) : ''}</div>
-          <h3 style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: var(--color-primary); margin-bottom: 0.5rem;">${escapeHtml(e.title)}</h3>
-          <p style="color: var(--color-text-muted); font-size: 0.9rem;">${escapeHtml(e.description || '')}</p>
-          ${e.location ? `<p style="font-size: 0.8rem; color: var(--color-text-light); margin-top: 0.5rem;"><span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">location_on</span> ${escapeHtml(e.location)}</p>` : ''}
-          <span class="badge badge-accent" style="margin-top: 0.75rem;">${escapeHtml(e.type || 'Event')}</span>
-        </div>
-      </div>
-    `).join('')}</div>`;
+    container.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 event-list-grid">${list.map(event => renderEvent(event, canDelete && !isFeaturedEvent(event))).join('')}</div>`;
+    window.updateFeaturedEventCountdowns?.();
 
     if (canDelete) {
-      document.querySelectorAll('.delete-event').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-          e.stopPropagation();
-          const id = btn.dataset.id;
+      container.querySelectorAll('.delete-event').forEach(button => {
+        button.addEventListener('click', async event => {
+          event.stopPropagation();
+          const id = button.dataset.id;
           if (!confirm('Delete this event? This will also remove related song lists and attendance records.')) return;
           try {
-            await api.delete('/events/' + id);
+            await api.delete(`/events/${encodeURIComponent(id)}`);
             Toast.success('Event deleted');
-            eventsData = eventsData.filter(ev => ev.id !== id);
-            render(eventsData);
+            eventsData = eventsData.filter(item => item.id !== id);
+            render(getFilteredEvents());
           } catch (error) {
-            Toast.error('Failed to delete: ' + error.message);
+            Toast.error(`Failed to delete: ${error.message}`);
           }
         });
       });
     }
   }
 
-  const FALLBACK_EVENTS = [
-    {
-      id: 'fallback-1',
-      title: 'THE MUSIC BOOM SEASON 2',
-      description: 'A night of classical & native carols and orchestral performances celebrating the birth of Christ.',
-      event_date: '2025-12-20',
-      time: '18:00',
-      location: 'Parish House',
-      type: 'Concert',
-      image_url: 'IMAGES/choir.jpg'
-    },
-    {
-      id: 'fallback-2',
-      title: "ST. CECILIA'S FEAST DAY",
-      description: 'Our patronal feast day celebration featuring a grand high mass and choral banquet.',
-      event_date: '2025-11-22',
-      time: '10:00',
-      location: 'Holy Trinity Catholic Church',
-      type: 'Mass',
-      image_url: 'IMAGES/HTCC.png'
-    },
-    {
-      id: 'fallback-3',
-      title: 'CHOIR OLD SCHOOLS DAY',
-      description: 'A day to embrace our rich cultural and african musical heritage and celebrate the legacy of St. Cecilia.',
-      event_date: '2025-10-15',
-      time: '12:00',
-      location: 'Parish House',
-      type: 'Social',
-      image_url: 'IMAGES/singers1.png'
-    },
-    {
-      id: 'fallback-4',
-      title: 'THE MUSIC BOOM SEASON 1',
-      description: 'A night of classical & native carols and orchestral performances celebrating the birth of Christ.',
-      event_date: '2024-12-20',
-      time: '18:00',
-      location: 'Parish House',
-      type: 'Concert',
-      image_url: 'IMAGES/choir.jpg'
-    },
-    {
-      id: 'fallback-5',
-      title: "ST. CECILIA'S FEAST DAY 2024",
-      description: 'Our patronal feast day celebration featuring a grand high mass and choral banquet.',
-      event_date: '2024-11-22',
-      time: '10:00',
-      location: 'Holy Trinity Catholic Church',
-      type: 'Mass',
-      image_url: 'IMAGES/logo-2.jpg'
-    },
-    {
-      id: 'fallback-6',
-      title: 'CHOIR OLD SCHOOLS DAY 2024',
-      description: 'A day to embrace our rich cultural and african musical heritage and celebrate the legacy of St. Cecilia.',
-      event_date: '2024-10-15',
-      time: '12:00',
-      location: 'Parish House',
-      type: 'Social',
-      image_url: 'IMAGES/singers2.jpg'
-    }
-  ];
-
-  try {
-    const { data, error } = await api.get('/events?select=*&order=event_date&ascending=true');
-    if (error) throw new Error(error.message || 'Request failed');
-    eventsData = data || [];
-    if (eventsData.length === 0) {
-      eventsData = FALLBACK_EVENTS;
-    }
-    render(eventsData);
-  } catch (error) {
-    Toast.error('Failed to load events: ' + error.message);
-    eventsData = FALLBACK_EVENTS;
-    render(eventsData);
+  function getFilteredEvents() {
+    const query = searchInput?.value.trim().toLocaleLowerCase() || '';
+    return eventsData.filter(event => {
+      const matchesFilter = activeFilter === 'all'
+        || String(event.type || '').toLocaleLowerCase() === activeFilter.toLocaleLowerCase();
+      const searchableText = `${event.title || ''} ${event.description || ''} ${event.location || ''} ${event.theme || ''}`.toLocaleLowerCase();
+      return matchesFilter && (!query || searchableText.includes(query));
+    });
   }
 
-  if (searchInput) {
-    searchInput.addEventListener('input', debounce(() => {
-      const q = searchInput.value.toLowerCase();
-      let filtered = eventsData;
-      if (activeFilter !== 'all') {
-        filtered = filtered.filter(e => (e.type || '').toLowerCase() === activeFilter.toLowerCase());
-      }
-      if (q) {
-        filtered = filtered.filter(e =>
-          (e.title || '').toLowerCase().includes(q) ||
-          (e.description || '').toLowerCase().includes(q) ||
-          (e.location || '').toLowerCase().includes(q)
-        );
-      }
-      render(filtered);
-    }, 300));
+  function updateList() {
+    render(getFilteredEvents());
   }
 
-  filterBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      filterBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      activeFilter = btn.dataset.filter;
-      const q = searchInput?.value?.toLowerCase() || '';
-      let filtered = eventsData;
-      if (activeFilter !== 'all') {
-        filtered = filtered.filter(e => (e.type || '').toLowerCase() === activeFilter.toLowerCase());
-      }
-      if (q) {
-        filtered = filtered.filter(e =>
-          (e.title || '').toLowerCase().includes(q) ||
-          (e.description || '').toLowerCase().includes(q)
-        );
-      }
-      render(filtered);
+  updateList();
+  searchInput?.addEventListener('input', debounce(updateList, 250));
+  filterBtns.forEach(button => {
+    button.addEventListener('click', () => {
+      filterBtns.forEach(item => item.classList.remove('active'));
+      button.classList.add('active');
+      activeFilter = button.dataset.eventFilter || 'all';
+      updateList();
     });
   });
+
+  try {
+    const response = await api.get('/events?select=*&order=event_date&ascending=true');
+    const existingEvents = asArray(response);
+    const featuredIds = new Set(eventsData.map(event => event.id));
+    const featuredTitles = new Set(eventsData.map(event => String(event.title).toLocaleLowerCase()));
+    eventsData = [
+      ...eventsData,
+      ...existingEvents.filter(event =>
+        !featuredIds.has(event.id)
+        && !featuredTitles.has(String(event.title || '').toLocaleLowerCase())
+      )
+    ].sort((a, b) => new Date(a.event_date) - new Date(b.event_date));
+  } catch (error) {
+    console.error('[Events] Could not load saved events:', error);
+    Toast.error('Some older event listings could not be loaded. The featured events are still shown.');
+  }
+
+  updateList();
 });

@@ -981,7 +981,7 @@ app.delete('/api/attendance/event/:eventDate', authMiddleware, adminOrExco, asyn
 
 app.get('/api/events', async (req, res) => {
   try {
-    const { data, error } = await buildQuery('events', req, 'id, title, description, event_date, event_time, location, image_url, created_at');
+    const { data, error } = await buildQuery('events', req, 'id, title, type, description, event_date, event_time, location, image_url, created_at');
 
     if (error) throw error;
     res.json(data || []);

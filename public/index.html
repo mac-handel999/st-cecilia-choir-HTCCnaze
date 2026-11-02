@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="css/design-system.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/featured-events.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"/>
@@ -36,6 +37,7 @@
       <nav class="header-nav">
         <a href="index.html" class="active">Home</a>
         <a href="About.html">About</a>
+        <a href="events.html">Events</a>
         <a href="members.html">Membership Portal</a>
       </nav>
     </div>
@@ -224,6 +226,14 @@
       </div>
     </section>
 
+    <section class="section" id="featured-choir-events">
+      <div class="container">
+        <h2 class="section-title">Upcoming Choir Events</h2>
+        <p class="section-subtitle">Join us as we celebrate our patron saint and the birth of Christ.</p>
+        <div id="home-featured-events" class="featured-events-grid" aria-live="polite"></div>
+      </div>
+    </section>
+
     <section class="section" id="support-us">
       <div class="container">
         <h2 class="section-title">Support Us / Donate</h2>
@@ -295,6 +305,7 @@
   </footer>
 
   <script src="js/shared.js"></script>
+  <script src="js/featured-events.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       ThemeManager.init();
