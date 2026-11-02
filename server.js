@@ -10,6 +10,8 @@ const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 const webpush = require('web-push');
+const nodemailer = require('nodemailer');
+const QRCode = require('qrcode');
 const { answerFromChoirReferences } = require('./server/choir-knowledge');
 
 const app = express();
@@ -171,6 +173,135 @@ if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY) {
 
 // Multer for file uploads - use memory storage for serverless compatibility
 const upload = multer({ storage: multer.memoryStorage() });
+const ticketProofUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 4 * 1024 * 1024, files: 1 }
+});
+
+const ticketRateLimits = new Map();
+const ticketProofBucket = process.env.TICKET_PROOF_BUCKET || 'ticket-payment-proofs';
+const ticketCodeAlphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+function ticketSubmissionLimit(req, res, next) {
+  const key = req.ip || req.socket.remoteAddress || 'unknown';
+  const now = Date.now();
+  if (ticketRateLimits.size > 10000) {
+    for (const [address, limit] of ticketRateLimits) {
+      if (limit.resetAt <= now) ticketRateLimits.delete(address);
+    }
+  }
+  const current = ticketRateLimits.get(key);
+  if (!current || current.resetAt <= now) {
+    ticketRateLimits.set(key, { count: 1, resetAt: now + 15 * 60 * 1000 });
+    return next();
+  }
+  if (current.count >= 20) {
+    return res.status(429).json({ message: 'Too many ticket requests. Please wait a little while and try again.' });
+  }
+  current.count += 1;
+  return next();
+}
+
+function createTicketCode(length = 10) {
+  return Array.from({ length }, () => ticketCodeAlphabet[crypto.randomInt(ticketCodeAlphabet.length)]).join('');
+}
+
+function ticketCodes(quantity) {
+  return Array.from({ length: quantity }, () => createTicketCode());
+}
+
+function normalizeTicketPhone(value) {
+  return String(value || '').trim().replace(/[()\s.-]/g, '');
+}
+
+function isValidTicketImage(file) {
+  if (!file || file.size === 0) return false;
+  if (file.mimetype === 'application/pdf') return file.buffer.subarray(0, 5).toString() === '%PDF-';
+  if (file.mimetype === 'image/png') return file.buffer.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
+  if (file.mimetype === 'image/jpeg') return file.buffer[0] === 0xff && file.buffer[1] === 0xd8 && file.buffer[2] === 0xff;
+  if (file.mimetype === 'image/webp') return file.buffer.subarray(0, 4).toString() === 'RIFF'
+    && file.buffer.subarray(8, 12).toString() === 'WEBP';
+  return false;
+}
+
+function getTicketMailTransport() {
+  const host = process.env.SMTP_HOST;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  if (!host || !user || !pass) return null;
+
+  const port = Number(process.env.SMTP_PORT || 587);
+  return nodemailer.createTransport({
+    host,
+    port,
+    secure: port === 465,
+    auth: { user, pass },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000
+  });
+}
+
+function escapeEmailHtml(value) {
+  return String(value || '').replace(/[&<>"']/g, character => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  })[character]);
+}
+
+async function deliverTicketEmail(order, tickets, packageName) {
+  if (!order.email) return 'failed';
+  const mail = getTicketMailTransport();
+  if (!mail) return 'not_configured';
+
+  const attachments = await Promise.all(tickets.map(async (ticket, index) => ({
+    filename: `music-boom-ticket-${index + 1}.png`,
+    cid: `music-boom-ticket-${index}`,
+    content: await QRCode.toBuffer(ticket.code, { width: 360, margin: 2 })
+  })));
+  const ticketCards = tickets.map((ticket, index) => `
+    <div style="border:1px solid #e6d9c4;border-radius:12px;padding:16px;margin:16px 0;text-align:center">
+      <img src="cid:music-boom-ticket-${index}" width="220" height="220" alt="Ticket QR code">
+      <p><strong>Ticket ${index + 1} of ${tickets.length}</strong></p>
+      <p>Ticket code: <strong>${escapeEmailHtml(ticket.code)}</strong></p>
+      ${ticket.serial ? `<p>Printed serial: <strong>${escapeEmailHtml(ticket.serial)}</strong></p>` : ''}
+    </div>
+  `).join('');
+  const eventDate = '20 December 2026';
+  const recipientName = escapeEmailHtml(order.buyer_name);
+  const amount = new Intl.NumberFormat('en-NG').format(order.amount_ngn);
+  const from = process.env.TICKETS_FROM_EMAIL || process.env.SMTP_USER;
+
+  await mail.sendMail({
+    from: `"Holy Trinity Choir" <${from}>`,
+    to: order.email,
+    subject: `Your Music Boom tickets — order ${order.code}`,
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:640px;margin:auto;color:#231918">
+        <h1 style="color:#4a0000">Your tickets are confirmed</h1>
+        <p>Hello ${recipientName},</p>
+        <p>Your payment has been confirmed. Here are your purchase details:</p>
+        <ul>
+          <li>Order code: <strong>${escapeEmailHtml(order.code)}</strong></li>
+          <li>Package: <strong>${escapeEmailHtml(packageName)}</strong></li>
+          <li>Quantity: <strong>${order.quantity}</strong></li>
+          <li>Total: <strong>₦${amount}</strong></li>
+        </ul>
+        <p><strong>Music Boom — Egwu Anuri</strong><br>
+          ${eventDate} · Red carpet 3:00 PM · Main event 4:00 PM<br>
+          Holy Trinity Catholic Church, Umuakali Naze, Owerri</p>
+        <p>Show one QR code for each ticket at the entrance. Keep this email safe.</p>
+        ${ticketCards}
+        <p>For event enquiries: 07042799614 / 07063553107 / 08084191017.</p>
+      </div>
+    `,
+    attachments
+  });
+  return 'sent';
+}
 
 // JWT middleware
 function authMiddleware(req, res, next) {
@@ -974,6 +1105,494 @@ app.delete('/api/attendance/event/:eventDate', authMiddleware, adminOrExco, asyn
   } catch (err) {
     console.error('Attendance event delete error:', err);
     res.status(500).json({ message: 'Failed to delete attendance records' });
+  }
+});
+
+// ==================== EVENTS ROUTES ====================
+
+// ==================== MUSIC BOOM TICKETS ====================
+
+app.use('/api/tickets', (req, res, next) => {
+  res.set('Cache-Control', 'no-store');
+  next();
+});
+
+async function expireTicketReservations() {
+  const { error } = await supabaseAdmin.rpc('expire_ticket_reservations');
+  if (error) throw error;
+}
+
+app.get('/api/tickets/config', async (req, res) => {
+  try {
+    const [packageResult, salesResult] = await Promise.all([
+      supabaseAdmin
+        .from('ticket_packages')
+        .select('id, slug, name, price_ngn, description, capacity, active')
+        .eq('active', true)
+        .order('price_ngn', { ascending: true }),
+      supabaseAdmin.from('ticket_sales_summary').select('package_id, available')
+    ]);
+    if (packageResult.error) throw packageResult.error;
+    if (salesResult.error) throw salesResult.error;
+
+    const availability = new Map((salesResult.data || [])
+      .filter(row => row.available !== null)
+      .map(row => [row.package_id, row.available]));
+    const packages = (packageResult.data || []).map(item => ({
+      ...item,
+      available: availability.get(item.id) ?? null
+    }));
+
+    res.set('Cache-Control', 'no-store');
+    res.json({
+      packages,
+      bank: {
+        name: process.env.BANK_ACCOUNT_NAME || '',
+        number: process.env.BANK_ACCOUNT_NUMBER || '',
+        bank: process.env.BANK_NAME || ''
+      },
+      bankConfigured: Boolean(
+        process.env.BANK_ACCOUNT_NAME
+        && process.env.BANK_ACCOUNT_NUMBER
+        && process.env.BANK_NAME
+      )
+    });
+  } catch (error) {
+    console.error('[Tickets] Could not load ticket configuration:', error.message);
+    res.status(503).json({ message: 'Ticket sales are temporarily unavailable. Please try again later.' });
+  }
+});
+
+app.post('/api/tickets/orders', ticketSubmissionLimit, async (req, res) => {
+  const { package_id: packageId, quantity } = req.body;
+  const buyerName = String(req.body.buyer_name || '').trim();
+  const email = String(req.body.email || '').trim().toLowerCase();
+  const phone = normalizeTicketPhone(req.body.phone);
+
+  if (!process.env.BANK_ACCOUNT_NAME || !process.env.BANK_ACCOUNT_NUMBER || !process.env.BANK_NAME) {
+    return res.status(503).json({
+      message: 'Online ticket reservations are not open yet. Please contact the choir for ticket information.'
+    });
+  }
+  if (!Number.isInteger(Number(packageId)) || Number(packageId) < 1
+      || !Number.isInteger(Number(quantity)) || Number(quantity) < 1 || Number(quantity) > 20
+      || buyerName.length < 2 || buyerName.length > 120
+      || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254
+      || !/^\+?\d{10,15}$/.test(phone)) {
+    return res.status(400).json({
+      message: 'Please check your ticket choice, quantity, name, email address, and phone number.'
+    });
+  }
+
+  try {
+    const { data, error } = await supabaseAdmin.rpc('reserve_ticket_order', {
+      p_package_id: Number(packageId),
+      p_quantity: Number(quantity),
+      p_buyer_name: buyerName,
+      p_email: email,
+      p_phone: phone,
+      p_code: createTicketCode(12)
+    });
+    if (error) {
+      console.error('[Tickets] Reservation was not created:', error.message);
+      return res.status(409).json({
+        message: error.message.includes('not enough tickets')
+          ? 'There are not enough tickets left in that package.'
+          : 'We could not reserve those tickets. Please check the package and try again.'
+      });
+    }
+
+    res.status(201).json({
+      order: {
+        code: data.code,
+        buyer_name: data.buyer_name,
+        email: data.email,
+        quantity: data.quantity,
+        amount_ngn: data.amount_ngn,
+        expires_at: data.expires_at,
+        status: data.status
+      },
+      bank: {
+        name: process.env.BANK_ACCOUNT_NAME,
+        number: process.env.BANK_ACCOUNT_NUMBER,
+        bank: process.env.BANK_NAME
+      }
+    });
+  } catch (error) {
+    console.error('[Tickets] Reservation error:', error.message);
+    res.status(500).json({ message: 'We could not reserve your tickets just now. Please try again.' });
+  }
+});
+
+app.get('/api/tickets/orders/:code', ticketSubmissionLimit, async (req, res) => {
+  const code = String(req.params.code || '').trim().toUpperCase();
+  const email = String(req.query.email || '').trim().toLowerCase();
+  if (!/^[A-HJ-NP-Z2-9]{12}$/.test(code) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ message: 'Enter the order code and email address used when ordering.' });
+  }
+
+  try {
+    await expireTicketReservations();
+    const { data: order, error } = await supabaseAdmin
+      .from('ticket_orders')
+      .select('code, buyer_name, email, quantity, amount_ngn, status, expires_at, created_at, paid_at, rejection_reason, email_status, ticket_packages(name), issued_tickets(code, serial, status)')
+      .eq('code', code)
+      .eq('email', email)
+      .single();
+    if (error || !order) return res.status(404).json({ message: 'We could not find an order matching those details.' });
+    res.set('Cache-Control', 'no-store');
+    res.json({ order });
+  } catch (error) {
+    console.error('[Tickets] Order lookup failed:', error.message);
+    res.status(500).json({ message: 'We could not check that order right now. Please try again.' });
+  }
+});
+
+app.post('/api/tickets/orders/:code/proof', ticketSubmissionLimit, ticketProofUpload.single('receipt'), async (req, res) => {
+  const code = String(req.params.code || '').trim().toUpperCase();
+  const email = String(req.body.email || '').trim().toLowerCase();
+  const reference = String(req.body.payment_reference || '').trim().slice(0, 120);
+  const file = req.file;
+  if (!/^[A-HJ-NP-Z2-9]{12}$/.test(code) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ message: 'Enter the order code and email address used when ordering.' });
+  }
+  if (!reference && !file) {
+    return res.status(400).json({ message: 'Enter your transfer reference or upload a payment receipt.' });
+  }
+  if (file && !isValidTicketImage(file)) {
+    return res.status(400).json({ message: 'Please upload a valid JPG, PNG, WebP, or PDF payment receipt.' });
+  }
+
+  let proofPath = null;
+  try {
+    if (file) {
+      const extension = ({
+        'image/jpeg': 'jpg',
+        'image/png': 'png',
+        'image/webp': 'webp',
+        'application/pdf': 'pdf'
+      })[file.mimetype];
+      proofPath = `${code}/${crypto.randomUUID()}.${extension}`;
+      const { error: uploadError } = await supabaseAdmin.storage
+        .from(ticketProofBucket)
+        .upload(proofPath, file.buffer, { contentType: file.mimetype, upsert: false });
+      if (uploadError) throw uploadError;
+    }
+
+    const { data, error } = await supabaseAdmin.rpc('submit_ticket_payment_proof', {
+      p_order_code: code,
+      p_email: email,
+      p_payment_reference: reference || null,
+      p_proof_path: proofPath
+    });
+    if (error) {
+      if (proofPath) await supabaseAdmin.storage.from(ticketProofBucket).remove([proofPath]);
+      return res.status(409).json({
+        message: error.message.includes('expired')
+          ? 'This reservation has expired. Please start a new order.'
+          : error.message.includes('already used')
+            ? 'That transfer reference has already been submitted.'
+            : 'We could not submit those payment details. Check your order and try again.'
+      });
+    }
+    if (data.status === 'expired') {
+      if (proofPath) await supabaseAdmin.storage.from(ticketProofBucket).remove([proofPath]);
+      return res.status(409).json({ message: 'This reservation has expired. Please start a new order.' });
+    }
+    res.json({ message: 'Payment details received. The choir team will review them and email you when your payment is confirmed.', status: data.status });
+  } catch (error) {
+    console.error('[Tickets] Payment proof submission failed:', error.message);
+    if (proofPath) {
+      const { error: cleanupError } = await supabaseAdmin.storage.from(ticketProofBucket).remove([proofPath]);
+      if (cleanupError) console.error('[Tickets] Could not remove unused receipt upload:', cleanupError.message);
+    }
+    res.status(500).json({ message: 'We could not submit your payment details right now. Please try again.' });
+  }
+});
+
+app.get('/api/tickets/admin/summary', authMiddleware, adminOrExco, async (req, res) => {
+  try {
+    await expireTicketReservations();
+    const [statsResult, auditResult] = await Promise.all([
+      supabaseAdmin.from('ticket_sales_summary').select('*').order('price_ngn', { ascending: true }),
+      supabaseAdmin.from('ticket_audit_log')
+        .select('id, at, actor, action, entity, entity_id, details, previous_hash, entry_hash')
+        .order('id', { ascending: false }).limit(30)
+    ]);
+    if (statsResult.error) throw statsResult.error;
+    if (auditResult.error) throw auditResult.error;
+    res.json({ stats: statsResult.data || [], audit: auditResult.data || [] });
+  } catch (error) {
+    console.error('[Tickets] Could not load admin summary:', error.message);
+    res.status(500).json({ message: 'Ticket sales summary could not be loaded.' });
+  }
+});
+
+app.get('/api/tickets/admin/orders', authMiddleware, adminOrExco, async (req, res) => {
+  const allowedStatuses = new Set(['reserved', 'pending_review', 'paid', 'rejected']);
+  const status = String(req.query.status || 'pending_review');
+  if (!allowedStatuses.has(status)) return res.status(400).json({ message: 'Choose a valid order status.' });
+
+  try {
+    await expireTicketReservations();
+    const { data, error } = await supabaseAdmin
+      .from('ticket_orders')
+      .select('*, ticket_packages(name, slug), issued_tickets(id, code, serial, status, used_at)')
+      .eq('status', status)
+      .order('created_at', { ascending: false })
+      .limit(100);
+    if (error) throw error;
+
+    const orders = await Promise.all((data || []).map(async order => {
+      if (order.proof_path) {
+        const { data: signed, error: signedError } = await supabaseAdmin.storage
+          .from(ticketProofBucket)
+          .createSignedUrl(order.proof_path, 300);
+        if (signedError) console.error('[Tickets] Receipt preview link failed:', signedError.message);
+        order.proof_url = signed?.signedUrl || null;
+      }
+      return order;
+    }));
+    res.set('Cache-Control', 'no-store');
+    res.json({ orders });
+  } catch (error) {
+    console.error('[Tickets] Could not load ticket orders:', error.message);
+    res.status(500).json({ message: 'Ticket orders could not be loaded.' });
+  }
+});
+
+app.get('/api/tickets/admin/sellers', authMiddleware, adminOrExco, async (req, res) => {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('users')
+      .select('id, full_name, username, role')
+      .order('full_name', { ascending: true })
+      .limit(500);
+    if (error) throw error;
+    res.json({ sellers: data || [] });
+  } catch (error) {
+    console.error('[Tickets] Could not load seller list:', error.message);
+    res.status(500).json({ message: 'The choir seller list could not be loaded.' });
+  }
+});
+
+app.post('/api/tickets/admin/orders/:id/approve', authMiddleware, adminOrExco, async (req, res) => {
+  try {
+    const { data, error } = await supabaseAdmin.rpc('approve_ticket_order', {
+      p_order_id: req.params.id,
+      p_actor: req.user.id,
+      p_ticket_codes: ticketCodes(Number(req.body.quantity || 0))
+    });
+    if (error) {
+      console.error('[Tickets] Order approval failed:', error.message);
+      return res.status(409).json({ message: 'This order could not be approved. Refresh the list and check its status.' });
+    }
+
+    const order = data.order;
+    const tickets = data.tickets || [];
+    const { data: ticketPackage, error: packageError } = await supabaseAdmin
+      .from('ticket_packages')
+      .select('name')
+      .eq('id', order.package_id)
+      .single();
+    if (packageError) console.error('[Tickets] Approved package name lookup failed:', packageError.message);
+
+    let emailStatus;
+    try {
+      emailStatus = await deliverTicketEmail(order, tickets, ticketPackage?.name || 'Choir event');
+    } catch (emailError) {
+      emailStatus = 'failed';
+      console.error('[Tickets] Confirmed tickets could not be emailed:', emailError.message);
+    }
+    const { error: updateEmailError } = await supabaseAdmin
+      .from('ticket_orders')
+      .update({
+        email_status: emailStatus,
+        email_error: emailStatus === 'failed' ? 'Email delivery failed. Retry after checking SMTP settings.' : null
+      })
+      .eq('id', order.id)
+      .eq('status', 'paid');
+    if (updateEmailError) console.error('[Tickets] Could not update ticket email status:', updateEmailError.message);
+
+    res.json({
+      message: emailStatus === 'sent'
+        ? 'Payment confirmed and tickets emailed to the buyer.'
+        : 'Payment confirmed and tickets created. Email delivery needs attention in settings.',
+      email_status: emailStatus,
+      ticket_count: tickets.length
+    });
+  } catch (error) {
+    console.error('[Tickets] Order approval error:', error.message);
+    res.status(500).json({ message: 'The order could not be approved right now.' });
+  }
+});
+
+app.post('/api/tickets/admin/orders/:id/reject', authMiddleware, adminOrExco, async (req, res) => {
+  const reason = String(req.body.reason || '').trim().slice(0, 300);
+  try {
+    const { error } = await supabaseAdmin.rpc('reject_ticket_order', {
+      p_order_id: req.params.id,
+      p_actor: req.user.id,
+      p_reason: reason || 'Payment could not be confirmed'
+    });
+    if (error) {
+      console.error('[Tickets] Order rejection failed:', error.message);
+      return res.status(409).json({ message: 'This order could not be rejected. Refresh the list and check its status.' });
+    }
+    res.json({ message: 'Order marked as rejected.' });
+  } catch (error) {
+    console.error('[Tickets] Order rejection error:', error.message);
+    res.status(500).json({ message: 'The order could not be rejected right now.' });
+  }
+});
+
+app.post('/api/tickets/admin/orders/:id/resend', authMiddleware, adminOrExco, async (req, res) => {
+  try {
+    const { data: order, error: orderError } = await supabaseAdmin
+      .from('ticket_orders')
+      .select('*, ticket_packages(name), issued_tickets(code, serial)')
+      .eq('id', req.params.id)
+      .eq('status', 'paid')
+      .single();
+    if (orderError || !order) return res.status(404).json({ message: 'A paid order with tickets could not be found.' });
+    if (!order.email) return res.status(400).json({ message: 'This order does not have a buyer email address.' });
+
+    const emailStatus = await deliverTicketEmail(
+      order,
+      order.issued_tickets || [],
+      order.ticket_packages?.name || 'Choir event'
+    );
+    const { error: updateError } = await supabaseAdmin
+      .from('ticket_orders')
+      .update({
+        email_status: emailStatus,
+        email_error: emailStatus === 'sent' ? null : 'Email settings are not configured.'
+      })
+      .eq('id', order.id)
+      .eq('status', 'paid');
+    if (updateError) throw updateError;
+    if (emailStatus !== 'sent') {
+      return res.status(503).json({
+        message: 'Ticket email is not configured. Add the SMTP settings before retrying.',
+        email_status: emailStatus
+      });
+    }
+    res.json({ message: 'Tickets have been emailed to the buyer.', email_status: 'sent' });
+  } catch (error) {
+    console.error('[Tickets] Ticket email retry failed:', error.message);
+    const { error: updateError } = await supabaseAdmin
+      .from('ticket_orders')
+      .update({
+        email_status: getTicketMailTransport() ? 'failed' : 'not_configured',
+        email_error: 'Email delivery failed. Check the email settings and try again.'
+      })
+      .eq('id', req.params.id)
+      .eq('status', 'paid');
+    if (updateError) console.error('[Tickets] Could not update failed email status:', updateError.message);
+    res.status(503).json({
+      message: getTicketMailTransport()
+        ? 'The ticket email could not be sent. Check the mail settings and try again.'
+        : 'Ticket email is not configured. Add the SMTP settings before retrying.'
+    });
+  }
+});
+
+app.post('/api/tickets/admin/physical-sales', authMiddleware, adminOrExco, async (req, res) => {
+  const packageId = Number(req.body.package_id);
+  const quantity = Number(req.body.quantity);
+  const buyerName = String(req.body.buyer_name || '').trim();
+  const email = String(req.body.email || '').trim().toLowerCase();
+  const phone = normalizeTicketPhone(req.body.phone);
+  const serials = Array.isArray(req.body.serials)
+    ? req.body.serials.map(serial => String(serial).trim().toUpperCase())
+    : String(req.body.serials || '').split(/[\s,]+/).filter(Boolean).map(serial => serial.toUpperCase());
+  const sellerId = String(req.body.seller_id || req.user.id);
+  if (!Number.isInteger(packageId) || !Number.isInteger(quantity) || quantity < 1 || quantity > 20
+      || buyerName.length < 2 || buyerName.length > 120
+      || (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+      || !/^\+?\d{10,15}$/.test(phone)
+      || serials.length !== quantity
+      || serials.some(serial => !/^[A-Z0-9-]{3,40}$/.test(serial))
+      || new Set(serials).size !== serials.length) {
+    return res.status(400).json({ message: 'Check the buyer details, quantity, and provide one unique printed serial number per ticket.' });
+  }
+  try {
+    const { data: seller, error: sellerError } = await supabaseAdmin
+      .from('users').select('id').eq('id', sellerId).single();
+    if (sellerError || !seller) return res.status(400).json({ message: 'Choose a valid choir member as the ticket seller.' });
+
+    const codes = ticketCodes(quantity);
+    const { data, error } = await supabaseAdmin.rpc('record_physical_ticket_sale', {
+      p_package_id: packageId,
+      p_quantity: quantity,
+      p_buyer_name: buyerName,
+      p_email: email || null,
+      p_phone: phone,
+      p_seller_id: sellerId,
+      p_order_code: createTicketCode(12),
+      p_ticket_codes: codes,
+      p_serials: serials
+    });
+    if (error) {
+      console.error('[Tickets] Physical sale recording failed:', error.message);
+      return res.status(409).json({ message: 'This sale could not be recorded. Check the package and make sure the ticket serials have not already been sold.' });
+    }
+
+    let emailStatus = 'not_sent';
+    if (email) {
+      try {
+        const { data: ticketPackage } = await supabaseAdmin
+          .from('ticket_packages').select('name').eq('id', packageId).single();
+        emailStatus = await deliverTicketEmail(data.order, data.tickets || [], ticketPackage?.name || 'Choir event');
+      } catch (emailError) {
+        emailStatus = 'failed';
+        console.error('[Tickets] Physical ticket email failed:', emailError.message);
+      }
+      const { error: updateEmailError } = await supabaseAdmin
+        .from('ticket_orders')
+        .update({
+          email_status: emailStatus,
+          email_error: emailStatus === 'failed' ? 'Email delivery failed. Retry after checking SMTP settings.' : null
+        })
+        .eq('id', data.order.id)
+        .eq('status', 'paid');
+      if (updateEmailError) console.error('[Tickets] Physical sale email status update failed:', updateEmailError.message);
+    }
+
+    res.status(201).json({
+      message: emailStatus === 'sent'
+        ? 'Physical sale recorded and tickets emailed.'
+        : 'Physical sale recorded. Give the printed tickets to the buyer.',
+      order: data.order,
+      tickets: data.tickets || [],
+      email_status: emailStatus
+    });
+  } catch (error) {
+    console.error('[Tickets] Physical sale error:', error.message);
+    res.status(500).json({ message: 'The physical sale could not be recorded right now.' });
+  }
+});
+
+app.post('/api/tickets/admin/check-in', authMiddleware, adminOrExco, async (req, res) => {
+  const code = String(req.body.code || '').trim().toUpperCase();
+  if (!/^[A-Z0-9-]{3,40}$/.test(code)) {
+    return res.status(400).json({ message: 'Scan a ticket QR code or enter its printed serial number.' });
+  }
+  try {
+    const { data, error } = await supabaseAdmin.rpc('check_in_ticket', {
+      p_code: code,
+      p_actor: req.user.id
+    });
+    if (error) throw error;
+    const result = {
+      invalid: 'This ticket was not found. Check the QR code or printed serial.',
+      already_used: 'This ticket has already been scanned at the entrance.',
+      ok: 'Ticket checked in. Welcome!'
+    };
+    res.json({ ...data, message: result[data.result] || 'Ticket check-in complete.' });
+  } catch (error) {
+    console.error('[Tickets] Check-in failed:', error.message);
+    res.status(500).json({ message: 'We could not check in this ticket. Please try again.' });
   }
 });
 
@@ -2004,7 +2623,14 @@ app.get('/api/cron/keep-supabase-alive', async (req, res) => {
 app.use((err, req, res, next) => {
   if (err) {
     if (err.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({ message: 'File size exceeds 10MB limit. Please choose a smaller PDF.' });
+      return res.status(400).json({
+        message: req.path.startsWith('/api/tickets/')
+          ? 'Your payment receipt must be 4 MB or smaller. Please choose a smaller file.'
+          : 'File size exceeds the 10 MB limit. Please choose a smaller file.'
+      });
+    }
+    if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+      return res.status(400).json({ message: 'Please upload only one payment receipt.' });
     }
     console.error('Unhandled server error:', err);
     return res.status(500).json({ message: 'Something went wrong. Please try again.' });

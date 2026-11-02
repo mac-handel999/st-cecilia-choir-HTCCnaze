@@ -1,8 +1,10 @@
-const CACHE_NAME = 'st-cecilia-choir-v12';
+const CACHE_NAME = 'st-cecilia-choir-v13';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/events.html',
+  '/tickets.html',
+  '/ticket-admin.html',
   '/hymn-books.html',
   '/hymn-book.html',
   '/css/design-system.css',
@@ -10,6 +12,7 @@ const STATIC_ASSETS = [
   '/css/styles.css',
   '/css/hymn-book.css',
   '/css/featured-events.css',
+  '/css/tickets.css',
   '/css/order-of-mass.css',
   '/css/announcement-box.css',
   '/manifest.json',
@@ -19,6 +22,8 @@ const STATIC_ASSETS = [
 const JS_FILES = [
   '/js/shared.js',
   '/js/featured-events.js',
+  '/js/tickets.js',
+  '/js/ticket-admin.js',
   '/js/events.js',
   '/js/hymn-books.js',
   '/js/hymn-book.js',
@@ -84,6 +89,18 @@ self.addEventListener('fetch', (event) => {
 
   // For API requests: network first, cache fallback
   if (url.pathname.includes('/api/')) {
+    if (url.pathname.startsWith('/api/tickets/')) {
+      event.respondWith(
+        fetch(event.request).catch(() => new Response(JSON.stringify({
+          message: 'Ticket services need an internet connection. Please reconnect and try again.'
+        }), {
+          status: 503,
+          headers: { 'Content-Type': 'application/json' }
+        }))
+      );
+      return;
+    }
+
     event.respondWith(
       fetch(event.request)
         .then((response) => {

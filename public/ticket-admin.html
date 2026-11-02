@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#4A0000">
+  <title>Ticket Desk - St. Cecilia Choir</title>
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/tickets.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+</head>
+<body class="portal-page ticket-site-page">
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="member-home.html" class="header-logo">
+        <img src="IMAGES/choir-logo.jpg" alt="" class="header-logo-img">
+        <span class="header-logo-text">Ticket Desk</span>
+      </a>
+      <nav class="header-nav" aria-label="Main navigation">
+        <a href="member-home.html">Member home</a>
+        <a href="events.html">Events</a>
+        <a href="tickets.html">Public ticket page</a>
+      </nav>
+    </div>
+  </header>
+  <main class="ticket-page ticket-admin-page">
+    <div class="ticket-admin-heading">
+      <div>
+        <p class="ticket-eyebrow">Staff access · Admin and Exco</p>
+        <h1>Music Boom ticket desk</h1>
+      </div>
+      <button id="refresh-ticket-data" class="btn btn-outline" type="button">Refresh</button>
+    </div>
+    <div id="ticket-admin-alert" class="ticket-alert" role="status" aria-live="polite" hidden></div>
+
+    <section class="ticket-panel" aria-labelledby="sales-heading">
+      <h2 id="sales-heading">Sales summary</h2>
+      <div id="ticket-sales-summary" class="ticket-stats"><p>Loading sales…</p></div>
+    </section>
+
+    <section class="ticket-panel" aria-labelledby="orders-heading">
+      <div class="ticket-section-heading">
+        <h2 id="orders-heading">Online orders</h2>
+        <label>Show
+          <select id="order-status-filter">
+            <option value="pending_review">Awaiting payment review</option>
+            <option value="reserved">Reserved / not yet paid</option>
+            <option value="paid">Paid</option>
+            <option value="rejected">Rejected</option>
+            <option value="expired">Expired</option>
+          </select>
+        </label>
+      </div>
+      <div id="ticket-orders"><p>Loading orders…</p></div>
+    </section>
+
+    <section class="ticket-panel" aria-labelledby="physical-heading">
+      <h2 id="physical-heading">Record a physical ticket sale</h2>
+      <p>Enter the printed serial number for each ticket sold. One serial is required per ticket.</p>
+      <form id="physical-sale-form" class="ticket-form">
+        <label>Ticket package
+          <select name="package_id" required><option value="">Loading…</option></select>
+        </label>
+        <div class="ticket-field-row">
+          <label>Quantity
+            <input name="quantity" type="number" min="1" max="20" value="1" required>
+          </label>
+          <label>Seller
+            <select name="seller_id" required><option value="">Loading choir members…</option></select>
+          </label>
+        </div>
+        <label>Buyer name
+          <input name="buyer_name" type="text" maxlength="120" required>
+        </label>
+        <div class="ticket-field-row">
+          <label>Buyer phone
+            <input name="phone" type="tel" inputmode="tel" required>
+          </label>
+          <label>Buyer email (optional)
+            <input name="email" type="email">
+          </label>
+        </div>
+        <label>Printed serial numbers
+          <textarea name="serials" rows="3" placeholder="Enter one serial per line" required></textarea>
+        </label>
+        <button class="btn btn-primary" type="submit">Record sale</button>
+      </form>
+      <div id="physical-sale-result" class="ticket-order-result" aria-live="polite"></div>
+    </section>
+
+    <section class="ticket-panel" aria-labelledby="checkin-heading">
+      <h2 id="checkin-heading">Door check-in</h2>
+      <p>Focus the field and scan a QR code with a keyboard-enabled scanner, or type the printed serial number.</p>
+      <form id="checkin-form" class="ticket-form ticket-lookup-form">
+        <label>Ticket QR code or serial
+          <input name="code" type="text" autocomplete="off" required>
+        </label>
+        <button class="btn btn-primary" type="submit">Check in ticket</button>
+      </form>
+      <div id="checkin-result" class="ticket-checkin-result" aria-live="assertive"></div>
+    </section>
+
+    <section class="ticket-panel" aria-labelledby="audit-heading">
+      <h2 id="audit-heading">Recent ticket activity</h2>
+      <div id="ticket-audit"><p>Loading recent activity…</p></div>
+    </section>
+  </main>
+  <script src="js/shared.js"></script>
+  <script src="js/ticket-admin.js"></script>
+</body>
+</html>

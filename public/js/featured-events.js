@@ -49,6 +49,9 @@ window.renderFeaturedEventCard = function renderFeaturedEventCard(event, options
   const contactLine = event.contacts?.length
     ? `<p><strong>For enquiries:</strong> ${event.contacts.map(escapeHtml).join(' / ')}</p>`
     : '';
+  const ticketLink = event.id === 'music-boom-2026'
+    ? '<a class="btn btn-primary btn-sm" href="tickets.html">Reserve tickets</a>'
+    : '';
   const content = compact
     ? `<p>${escapeHtml(event.description)}</p>${event.ticketNotice ? `<p class="featured-event-ticket-note">${escapeHtml(event.ticketNotice)}</p>` : ''}`
     : `<p>${escapeHtml(event.description)}</p>${event.theme ? `<p><strong>Theme:</strong> ${escapeHtml(event.theme)}</p>` : ''}${event.featuring ? `<p><strong>Featuring:</strong> ${escapeHtml(event.featuring)}</p>` : ''}${event.invitation ? `<p>${escapeHtml(event.invitation)}</p>` : ''}${event.ticketNotice ? `<p class="featured-event-ticket-note">${escapeHtml(event.ticketNotice)}</p>` : ''}${schedule}${contactLine}`;
@@ -64,6 +67,7 @@ window.renderFeaturedEventCard = function renderFeaturedEventCard(event, options
         <div class="featured-event-details">${details}</div>
         ${content}
         <p class="featured-event-countdown" data-event-countdown="${escapeHtml(event.id)}" data-target="${escapeHtml(event.target)}" aria-live="polite"></p>
+        ${ticketLink}
         ${compact ? '' : '<a class="btn btn-outline btn-sm" href="events.html">View all events</a>'}
       </div>
     </article>

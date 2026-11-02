@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#4A0000">
+  <title>Music Boom Tickets - St. Cecilia Choir</title>
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/tickets.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+</head>
+<body class="portal-page ticket-site-page">
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="header-logo">
+        <img src="IMAGES/choir-logo.jpg" alt="" class="header-logo-img">
+        <span class="header-logo-text">St. Cecilia Choir</span>
+      </a>
+      <nav class="header-nav" aria-label="Main navigation">
+        <a href="index.html">Home</a>
+        <a href="events.html">Events</a>
+        <a href="members.html">Member portal</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="ticket-page">
+    <section class="ticket-hero">
+      <img src="IMAGES/music-boom-2026.jpg" alt="Music Boom — Egwu Anuri event flyer">
+      <div>
+        <p class="ticket-eyebrow">Holy Trinity Catholic Church Choir</p>
+        <h1>Music Boom — <em>Egwu Anuri</em></h1>
+        <p>Join us for an atmosphere of worship, music, drama, and celebration of the birth of Jesus Christ.</p>
+        <p><strong>20 December 2026</strong><br>Red carpet 3:00 PM · Main event 4:00 PM<br>Holy Trinity Catholic Church, Umuakali Naze, Owerri</p>
+        <p>For event enquiries: 07042799614 / 07063553107 / 08084191017</p>
+      </div>
+    </section>
+
+    <section class="ticket-panel" aria-labelledby="reserve-heading">
+      <h2 id="reserve-heading">Reserve tickets</h2>
+      <p>Choose your ticket package and enter your details. Your reservation is held for 24 hours while you make a bank transfer.</p>
+      <div id="ticket-alert" class="ticket-alert" role="status" aria-live="polite" hidden></div>
+      <form id="reserve-form" class="ticket-form">
+        <label>Ticket package
+          <select id="ticket-package" name="package_id" required>
+            <option value="">Loading ticket packages…</option>
+          </select>
+        </label>
+        <div class="ticket-field-row">
+          <label>Number of packages
+            <input id="ticket-quantity" name="quantity" type="number" min="1" max="20" value="1" required>
+          </label>
+          <div class="ticket-total" aria-live="polite">
+            <span>Estimated total</span>
+            <strong id="ticket-total">—</strong>
+          </div>
+        </div>
+        <label>Your full name
+          <input name="buyer_name" type="text" autocomplete="name" maxlength="120" required>
+        </label>
+        <label>Email address
+          <input name="email" type="email" autocomplete="email" maxlength="254" required>
+        </label>
+        <label>Phone number
+          <input name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="e.g. 08012345678" required>
+        </label>
+        <button id="reserve-button" class="btn btn-primary" type="submit" disabled>Reserve tickets</button>
+      </form>
+
+      <section id="payment-instructions" class="ticket-instructions" hidden aria-live="polite"></section>
+    </section>
+
+    <section class="ticket-panel" aria-labelledby="order-status-heading">
+      <h2 id="order-status-heading">Check an order or send payment details</h2>
+      <p>Use the order code and email address from your reservation.</p>
+      <form id="lookup-form" class="ticket-form ticket-lookup-form">
+        <label>Order code
+          <input name="code" type="text" minlength="12" maxlength="12" autocomplete="off" required>
+        </label>
+        <label>Email address
+          <input name="email" type="email" autocomplete="email" required>
+        </label>
+        <button class="btn btn-outline" type="submit">Check order</button>
+      </form>
+      <div id="order-result" class="ticket-order-result" aria-live="polite"></div>
+      <form id="proof-form" class="ticket-form ticket-proof-form" hidden>
+        <h3>Send your bank transfer details</h3>
+        <input type="hidden" name="code">
+        <input type="hidden" name="email">
+        <label>Transfer reference (if available)
+          <input name="payment_reference" type="text" maxlength="120" autocomplete="off">
+        </label>
+        <label>Payment receipt (optional)
+          <input name="receipt" type="file" accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf">
+          <small>JPG, PNG, WebP, or PDF · maximum 4 MB</small>
+        </label>
+        <button class="btn btn-primary" type="submit">Send payment details</button>
+      </form>
+    </section>
+    <p class="ticket-footnote">Tickets are issued after the choir team checks the transfer against the bank account. A transfer reference or receipt is not an automatic payment confirmation.</p>
+  </main>
+  <script src="js/shared.js"></script>
+  <script src="js/tickets.js"></script>
+</body>
+</html>

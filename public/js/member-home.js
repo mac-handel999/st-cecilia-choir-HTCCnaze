@@ -16,8 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     if (user?.role === 'admin' || user?.role === 'exco') {
-      const adminLink = document.getElementById('admin-dashboard-link');
-      if (adminLink) adminLink.classList.remove('hidden');
+      document.querySelectorAll('.quick-action-admin').forEach(link => link.classList.remove('hidden'));
 
       const adminFab = document.getElementById('admin-fab');
       if (adminFab) adminFab.classList.remove('hidden');

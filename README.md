@@ -349,6 +349,23 @@ Or connect your GitHub repository to Vercel for automatic deployments.
 
 Do not commit the generated VAPID private key or `CRON_SECRET`. Push delivery will remain disabled until the VAPID variables and Supabase subscription table are configured.
 
+### Music Boom ticket sales
+
+The public [Music Boom ticket page](./public/tickets.html) supports ticket reservations, bank-transfer references or receipt uploads, and order status checks. Payment is **not automatic**: an admin or exco member must compare the submitted details with the bank account before confirming an order. Confirmed tickets receive unique QR codes; email delivery is recorded separately so an SMTP outage does not undo a confirmed payment. The staff desk at `ticket-admin.html` supports online-order review, physical sales, QR/manual serial check-in, and recent audit history.
+
+Before opening ticket sales:
+
+1. Run [`supabase-ticketing.sql`](./supabase-ticketing.sql) in the Supabase SQL Editor. It creates ticket packages, orders, issued tickets, the private receipt bucket, database functions, and the audit log.
+2. The migration seeds Regular (₦500), VIP (₦10,000), and Family (₦15,000) packages. Set each package's `capacity` in `public.ticket_packages` before sales if there is a known limit. A `NULL` capacity means unlimited; no capacity or Family admission count has been assumed.
+3. Configure these server-side environment variables in `.env` for local work and in the deployment provider for production:
+   - `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` for the backend's database access. Never expose the service-role key in browser code.
+   - `BANK_NAME`, `BANK_ACCOUNT_NAME`, and `BANK_ACCOUNT_NUMBER` with the choir's verified transfer details. Reservation and payment proof submission remain unavailable until all three are set.
+   - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, and optionally `TICKETS_FROM_EMAIL` for emailed QR tickets. Without SMTP, orders can still be approved, but the desk reports that email delivery needs configuration and provides an email retry action.
+   - Optionally set `TICKET_PROOF_BUCKET` if the private bucket uses a different name from `ticket-payment-proofs`.
+4. Test the complete reservation, proof review, ticket email, physical-sale, and check-in flows using a test Supabase project before opening sales. Keep the receipt bucket private and never share the service-role key or SMTP password.
+
+Admin and exco accounts can review or reject online orders, record physical sales, and check tickets in. Receipt preview links expire after five minutes. Ticket APIs are network-only and are not cached by the service worker. The audit log is append-only for application operations and hash-chained to make changes detectable; it is not protection against a project owner who can alter the database schema.
+
 ---
 
 ## 🤝 Contribution
