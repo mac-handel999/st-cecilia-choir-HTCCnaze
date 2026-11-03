@@ -290,6 +290,13 @@ function getTicketMailTransport() {
   });
 }
 
+function isTicketEmailConfigured() {
+  return Boolean(
+    (process.env.SENDLIBERTY_API_KEY && process.env.SENDLIBERTY_FROM_EMAIL)
+    || getTicketMailTransport()
+  );
+}
+
 function escapeEmailHtml(value) {
   return String(value || '').replace(/[&<>"']/g, character => ({
     '&': '&amp;',
@@ -302,32 +309,26 @@ function escapeEmailHtml(value) {
 
 async function deliverTicketEmail(order, tickets, packageName) {
   if (!order.email) return 'failed';
-  const mail = getTicketMailTransport();
-  if (!mail) return 'not_configured';
 
   const attachments = await Promise.all(tickets.map(async (ticket, index) => ({
     filename: `music-boom-ticket-${index + 1}.png`,
-    cid: `music-boom-ticket-${index}`,
     content: await QRCode.toBuffer(ticket.code, { width: 360, margin: 2 })
   })));
   const ticketCards = tickets.map((ticket, index) => `
     <div style="border:1px solid #e6d9c4;border-radius:12px;padding:16px;margin:16px 0;text-align:center">
-      <img src="cid:music-boom-ticket-${index}" width="220" height="220" alt="Ticket QR code">
       <p><strong>Ticket ${index + 1} of ${tickets.length}</strong></p>
       <p>Ticket code: <strong>${escapeEmailHtml(ticket.code)}</strong></p>
       ${ticket.serial ? `<p>Printed serial: <strong>${escapeEmailHtml(ticket.serial)}</strong></p>` : ''}
+      <p>The QR code is attached as music-boom-ticket-${index + 1}.png.</p>
     </div>
   `).join('');
   const eventDate = '20 December 2026';
   const recipientName = escapeEmailHtml(order.buyer_name);
   const amount = new Intl.NumberFormat('en-NG').format(order.amount_ngn);
-  const from = process.env.TICKETS_FROM_EMAIL || process.env.SMTP_USER;
-
-  await mail.sendMail({
-    from: `"Holy Trinity Choir" <${from}>`,
-    to: order.email,
-    subject: `Your Music Boom tickets — order ${order.code}`,
-    html: `
+  const from = process.env.SENDLIBERTY_FROM_EMAIL || process.env.TICKETS_FROM_EMAIL || process.env.SMTP_USER;
+  const subject = `Your Music Boom tickets — order ${order.code}`;
+  const text = `Hello ${order.buyer_name}, your payment has been confirmed. Order: ${order.code}. Package: ${packageName}. Quantity: ${order.quantity}. Total: ₦${amount}. Your ${tickets.length} ticket QR code(s) are attached. Music Boom — Egwu Anuri is on ${eventDate} at Holy Trinity Catholic Church, Umuakali Naze, Owerri.`;
+  const html = `
       <div style="font-family:Arial,sans-serif;max-width:640px;margin:auto;color:#231918">
         <h1 style="color:#4a0000">Your tickets are confirmed</h1>
         <p>Hello ${recipientName},</p>
@@ -345,7 +346,50 @@ async function deliverTicketEmail(order, tickets, packageName) {
         ${ticketCards}
         <p>For event enquiries: 07042799614 / 07063553107 / 08084191017.</p>
       </div>
-    `,
+    `;
+
+  if (process.env.SENDLIBERTY_API_KEY && process.env.SENDLIBERTY_FROM_EMAIL) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+    try {
+      const response = await fetch('https://sendliberty.com/api/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': process.env.SENDLIBERTY_API_KEY
+        },
+        body: JSON.stringify({
+          from: `"Holy Trinity Choir" <${process.env.SENDLIBERTY_FROM_EMAIL}>`,
+          to: order.email,
+          subject,
+          html,
+          text,
+          attachments: attachments.map(attachment => ({
+            filename: attachment.filename,
+            content: attachment.content.toString('base64'),
+            type: 'image/png'
+          }))
+        }),
+        signal: controller.signal
+      });
+      if (!response.ok) {
+        console.error('[Tickets] Sendliberty rejected ticket email:', { status: response.status });
+        throw new Error(`Sendliberty email request failed with status ${response.status}.`);
+      }
+    } finally {
+      clearTimeout(timeout);
+    }
+    return 'sent';
+  }
+
+  const mail = getTicketMailTransport();
+  if (!mail) return 'not_configured';
+  await mail.sendMail({
+    from: `"Holy Trinity Choir" <${from}>`,
+    to: order.email,
+    subject,
+    html,
+    text,
     attachments
   });
   return 'sent';
@@ -2240,14 +2284,14 @@ app.post('/api/tickets/admin/orders/:id/resend', authMiddleware, adminOrExco, as
     const { error: updateError } = await supabaseAdmin
       .from('ticket_orders')
       .update({
-        email_status: getTicketMailTransport() ? 'failed' : 'not_configured',
+        email_status: isTicketEmailConfigured() ? 'failed' : 'not_configured',
         email_error: 'Email delivery failed. Check the email settings and try again.'
       })
       .eq('id', req.params.id)
       .eq('status', 'paid');
     if (updateError) console.error('[Tickets] Could not update failed email status:', updateError.message);
     res.status(503).json({
-      message: getTicketMailTransport()
+      message: isTicketEmailConfigured()
         ? 'The ticket email could not be sent. Check the mail settings and try again.'
         : 'Ticket email is not configured. Add the SMTP settings before retrying.'
     });
