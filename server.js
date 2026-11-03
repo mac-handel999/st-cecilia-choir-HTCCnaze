@@ -361,9 +361,12 @@ async function deliverTicketEmail(order, tickets, packageName) {
         body: JSON.stringify({
           from: `"Holy Trinity Choir" <${process.env.SENDLIBERTY_FROM_EMAIL}>`,
           to: order.email,
-          subject,
-          html,
-          text,
+          template: process.env.SENDLIBERTY_TICKET_TEMPLATE || 'payment-successful',
+          data: {
+            amount: `₦${amount}`,
+            name: order.buyer_name,
+            product: `Music Boom ${packageName} x ${order.quantity} · order ${order.code}. Ticket QR codes are attached.`
+          },
           attachments: attachments.map(attachment => ({
             filename: attachment.filename,
             content: attachment.content.toString('base64'),
@@ -373,7 +376,18 @@ async function deliverTicketEmail(order, tickets, packageName) {
         signal: controller.signal
       });
       if (!response.ok) {
-        console.error('[Tickets] Sendliberty rejected ticket email:', { status: response.status });
+        const responseBody = await response.text();
+        let providerMessage = '';
+        try {
+          const errorBody = JSON.parse(responseBody);
+          providerMessage = String(errorBody.message || errorBody.error || '').slice(0, 300);
+        } catch {
+          providerMessage = '';
+        }
+        console.error('[Tickets] Sendliberty rejected ticket email:', {
+          status: response.status,
+          message: providerMessage || 'Provider returned an error response.'
+        });
         throw new Error(`Sendliberty email request failed with status ${response.status}.`);
       }
     } finally {
@@ -2105,7 +2119,7 @@ app.get('/api/tickets/admin/summary', authMiddleware, adminOrExco, async (req, r
 });
 
 app.get('/api/tickets/admin/orders', authMiddleware, adminOrExco, async (req, res) => {
-  const allowedStatuses = new Set(['reserved', 'pending_review', 'paid', 'rejected']);
+  const allowedStatuses = new Set(['reserved', 'pending_review', 'paid', 'rejected', 'expired']);
   const status = String(req.query.status || 'pending_review');
   if (!allowedStatuses.has(status)) return res.status(400).json({ message: 'Choose a valid order status.' });
 
@@ -2274,7 +2288,7 @@ app.post('/api/tickets/admin/orders/:id/resend', authMiddleware, adminOrExco, as
     if (updateError) throw updateError;
     if (emailStatus !== 'sent') {
       return res.status(503).json({
-        message: 'Ticket email is not configured. Add the SMTP settings before retrying.',
+        message: 'Ticket email is not configured. Add the Sendliberty or SMTP settings before retrying.',
         email_status: emailStatus
       });
     }
@@ -2293,7 +2307,7 @@ app.post('/api/tickets/admin/orders/:id/resend', authMiddleware, adminOrExco, as
     res.status(503).json({
       message: isTicketEmailConfigured()
         ? 'The ticket email could not be sent. Check the mail settings and try again.'
-        : 'Ticket email is not configured. Add the SMTP settings before retrying.'
+        : 'Ticket email is not configured. Add the Sendliberty or SMTP settings before retrying.'
     });
   }
 });
