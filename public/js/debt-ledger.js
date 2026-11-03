@@ -17,7 +17,7 @@
   const bankDetails = document.getElementById('ledger-bank-details');
   const bankUnavailable = document.getElementById('ledger-bank-unavailable');
   let entries = [];
-  let isFinanceUser = false;
+  let canManageLedger = false;
   let loading = false;
   let parsedImport = null;
   let importRoles = [];
@@ -69,7 +69,7 @@
       .sort((a, b) => new Date(b.paid_at).getTime() - new Date(a.paid_at).getTime())
       .map(payment => `<li>${money(payment.amount_ngn)} received${payment.paid_at ? ` on ${escapeHtml(new Date(payment.paid_at).toLocaleDateString())}` : ''}${payment.reference ? ` · Ref: ${escapeHtml(payment.reference)}` : ''}</li>`)
       .join('');
-    const paymentForm = isFinanceUser && totals.remainingCents > 0
+    const paymentForm = canManageLedger && totals.remainingCents > 0
       ? `<form data-ledger-action="add-payment" data-obligation-id="${escapeHtml(obligation.id)}">
           <div class="ticket-field-row">
             <label>Amount received (remaining ${money(fromCents(totals.remainingCents))})
@@ -128,7 +128,7 @@
           ${entry.review_status !== 'reviewed' ? '<p class="debt-ledger-note">These original figures have not yet been checked and are not included in the live balance below.</p>' : ''}
         </section>`
       : '';
-    const management = isFinanceUser
+    const management = canManageLedger
       ? `<div class="ledger-management-controls">
           <form data-ledger-action="save-entry" data-entry-id="${escapeHtml(entry.id)}">
             <div class="ticket-field-row">
@@ -218,7 +218,7 @@
       ? filtered.map(renderEntry).join('')
       : `<p class="ledger-empty">${entries.length
         ? 'No member names matched that search.'
-        : 'The choir ledger has not been populated yet. The Finance Secretary can import the source list.'}</p>`;
+        : 'No records are available for this search. Contact a choir administrator if you think a record is missing.'}</p>`;
   }
 
   async function loadLedger(quiet = false) {
@@ -545,9 +545,10 @@
   refreshButton.addEventListener('click', () => loadLedger());
 
   api.get('/auth/me').then(user => {
-    isFinanceUser = ['admin', 'exco'].includes(user?.role);
-    managementPanel.hidden = !isFinanceUser;
-    ledgerAdminNav.classList.toggle('ledger-admin-only', !isFinanceUser);
+    const isAdmin = user?.role === 'admin';
+    canManageLedger = isAdmin && new URLSearchParams(window.location.search).get('mode') === 'admin';
+    managementPanel.hidden = !canManageLedger;
+    ledgerAdminNav.classList.toggle('ledger-admin-only', !isAdmin);
     loadLedger();
   }).catch(error => {
     showAlert(error.message || 'Please sign in again to view the choir ledger.', 'error');

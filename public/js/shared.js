@@ -649,10 +649,18 @@ function renderPortalHeader(activePage = '') {
 }
 
 function renderPortalBottomNav(activePage = '') {
+  const items = [
+    { id: 'home', href: 'member-home.html', icon: 'home', label: 'Home' },
+    { id: 'cecilia-ai', href: 'cecilia-ai.html', icon: 'psychology', label: 'Cecilia AI' },
+    { id: 'scores', href: 'scores.html', icon: 'library_music', label: 'Scores' },
+    { id: 'directory', href: 'members-directory.html', icon: 'groups', label: 'Members' },
+    { id: 'profile', href: 'profile.html', icon: 'person', label: 'Profile' }
+  ];
+
   return `
-    <nav class="bottom-nav">
-      ${PORTAL_NAV_ITEMS.map(item => `
-        <a href="${item.href}" class="bottom-nav-item ${activePage === item.id ? 'active' : ''}">
+    <nav class="portal-bottom-nav" aria-label="Member navigation">
+      ${items.map(item => `
+        <a href="${item.href}" class="portal-bottom-link ${activePage === item.id ? 'active' : ''}" ${activePage === item.id ? 'aria-current="page"' : ''}>
           <span class="material-symbols-outlined">${item.icon}</span>
           <span>${item.label}</span>
         </a>
@@ -663,7 +671,7 @@ function renderPortalBottomNav(activePage = '') {
 
 function mountPortalNav(activePage = '') {
   // Remove any existing navs
-  document.querySelectorAll('.app-header, .bottom-nav, .site-header, .mobile-header').forEach(el => el.remove());
+  document.querySelectorAll('.app-header, .portal-header, .bottom-nav, .portal-bottom-nav, .site-header, .mobile-header').forEach(el => el.remove());
   
   // Inject new ones
   document.body.insertAdjacentHTML('afterbegin', renderPortalHeader(activePage));
@@ -921,7 +929,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const isExpressServer = window.location.port === '5000' || window.location.port === '';
   if ('serviceWorker' in navigator && isExpressServer) {
     window.addEventListener('load', async () => {
-      navigator.serviceWorker.register('/service-worker.js')
+      navigator.serviceWorker.register('/service-worker.js', { updateViaCache: 'none' })
         .then((reg) => {
           console.log('ServiceWorker registered:', reg.scope);
         })

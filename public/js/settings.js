@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
           }
 
-          await navigator.serviceWorker.register('/service-worker.js');
+          await navigator.serviceWorker.register('/service-worker.js', { updateViaCache: 'none' });
           await savePushSubscription();
           const saved = await saveSettings({ push_notifications: true });
           const user = getCurrentUser();

@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const currentUser = getCurrentUser();
   const currentUserId = currentUser?.id || null;
+  const canDeleteSharedNotifications = ['admin', 'exco'].includes(currentUser?.role);
 
   async function loadFeed() {
     try {
@@ -47,7 +48,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           timestamp: n.created_at,
           read: n.read || false,
           link: '#',
-          deletable: !n.user_id || n.user_id === currentUserId
+          deletable: n.user_id === currentUserId || (n.user_id === null && canDeleteSharedNotifications)
         });
       });
 
@@ -61,7 +62,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           timestamp: ann.created_at,
           read: true,
           link: '#',
-          deletable: true
+          deletable: false
         });
       });
 
@@ -217,12 +218,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const deleteAllBtn = document.getElementById('delete-all-btn');
     if (deleteAllBtn) {
       deleteAllBtn.addEventListener('click', async () => {
-        if (!confirm('Delete ALL notifications? This cannot be undone.')) return;
+        if (!confirm('Delete all notifications sent directly to your account? Shared choir announcements and other members’ notifications will not be deleted.')) return;
         try {
-          const notifications = await api.get('/notifications');
-          const ids = asArray(notifications).map(n => n.id);
-          await Promise.all(ids.map(id => api.delete('/notifications/' + id)));
-          Toast.success('All notifications deleted');
+          const result = await api.delete('/notifications/mine');
+          Toast.success(result.message || 'Your personal notifications were deleted.');
           await loadFeed();
         } catch (error) {
           Toast.error('Failed to delete all: ' + error.message);

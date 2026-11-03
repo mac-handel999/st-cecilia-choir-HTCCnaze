@@ -334,12 +334,50 @@ function authMiddleware(req, res, next) {
   }
 }
 
-// Admin/Exco middleware
-function adminOrExco(req, res, next) {
-  if (!req.user || (req.user.role !== 'admin' && req.user.role !== 'exco')) {
-    return res.status(403).json({ message: 'Forbidden' });
+async function getCurrentAccount(userId) {
+  const { data, error } = await supabaseAdmin
+    .from('users')
+    .select('id, role, full_name, username')
+    .eq('id', userId)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+// Check privileged roles against the current database value, not a possibly stale JWT claim.
+async function adminOrExco(req, res, next) {
+  try {
+    const account = await getCurrentAccount(req.user?.id);
+    if (!account || !['admin', 'exco'].includes(account.role)) {
+      return res.status(403).json({ message: 'Only choir administrators can use this feature.' });
+    }
+    req.currentAccount = account;
+    req.user.role = account.role;
+    next();
+  } catch (error) {
+    console.error('[Access] Could not verify administrator role:', error.message);
+    res.status(503).json({ message: 'Your access could not be verified right now. Please try again.' });
   }
-  next();
+}
+
+async function adminOnly(req, res, next) {
+  try {
+    const account = await getCurrentAccount(req.user?.id);
+    if (!account || account.role !== 'admin') {
+      return res.status(403).json({ message: 'Only a current administrator can perform this action.' });
+    }
+    req.currentAccount = account;
+    req.user.role = account.role;
+    next();
+  } catch (error) {
+    console.error('[Access] Could not verify administrator role:', error.message);
+    res.status(503).json({ message: 'Your access could not be verified right now. Please try again.' });
+  }
+}
+
+function selfOrAdminOrExco(req, res, next) {
+  if (req.params.id === req.user?.id) return next();
+  return adminOrExco(req, res, next);
 }
 
 async function getUserName(userId) {
@@ -562,7 +600,25 @@ app.post('/api/auth/update-password', authMiddleware, async (req, res) => {
 
 app.get('/api/users', authMiddleware, async (req, res) => {
   try {
-    const { data, error } = await buildQuery('users', req, 'id, email, username, full_name, phone_number, address, choir_part, executive_position, role, avatar_url, created_at');
+    const account = await getCurrentAccount(req.user.id);
+    if (!account) return res.status(401).json({ message: 'Your member account could not be found. Please sign in again.' });
+
+    const allowedFields = new Set([
+      'id', 'email', 'username', 'full_name', 'phone_number', 'address',
+      'date_of_birth', 'marital_status', 'choir_part', 'executive_position',
+      'tenure', 'pledge_accepted', 'role', 'avatar_url', 'created_at', 'updated_at'
+    ]);
+    const defaultFields = 'id, email, username, full_name, phone_number, address, date_of_birth, marital_status, choir_part, executive_position, tenure, pledge_accepted, role, avatar_url, created_at, updated_at';
+    const requestedFields = typeof req.query.select === 'string'
+      ? req.query.select.split(',').map(field => field.trim())
+      : defaultFields.split(', ');
+    if (!requestedFields.length || requestedFields.some(field => !allowedFields.has(field))) {
+      return res.status(400).json({ message: 'The requested member information is not available.' });
+    }
+
+    const { data, error } = await buildQuery('users', {
+      query: { ...req.query, select: requestedFields.join(',') }
+    }, defaultFields);
 
     if (error) throw error;
     res.json(data || []);
@@ -574,6 +630,9 @@ app.get('/api/users', authMiddleware, async (req, res) => {
 
 app.get('/api/users/:id', authMiddleware, async (req, res) => {
   try {
+    const account = await getCurrentAccount(req.user.id);
+    if (!account) return res.status(401).json({ message: 'Your member account could not be found. Please sign in again.' });
+
     const { data, error } = await supabaseAdmin
       .from('users')
       .select('id, email, username, full_name, phone_number, address, date_of_birth, marital_status, choir_part, executive_position, tenure, pledge_accepted, role, avatar_url, created_at, updated_at')
@@ -588,7 +647,7 @@ app.get('/api/users/:id', authMiddleware, async (req, res) => {
   }
 });
 
-app.put('/api/users/:id', authMiddleware, async (req, res) => {
+app.put('/api/users/:id', authMiddleware, selfOrAdminOrExco, async (req, res) => {
   try {
     const allowed = ['full_name', 'phone_number', 'address', 'date_of_birth', 'marital_status', 'choir_part', 'executive_position', 'tenure', 'username'];
     const updates = {};
@@ -612,13 +671,8 @@ app.put('/api/users/:id', authMiddleware, async (req, res) => {
   }
 });
 
-app.delete('/api/users/:id', authMiddleware, async (req, res) => {
+app.delete('/api/users/:id', authMiddleware, adminOnly, async (req, res) => {
   try {
-    const isAdmin = req.user.role === 'admin' || req.user.role === 'exco';
-    if (!isAdmin) {
-      return res.status(403).json({ message: 'Only admins can delete users' });
-    }
-
     const { error } = await supabaseAdmin
       .from('users')
       .delete()
@@ -1303,40 +1357,60 @@ function parseDebtLedgerImportUpload(req, res, next) {
     const tooLarge = error.code === 'LIMIT_FILE_SIZE';
     const message = tooLarge
       ? 'This file is larger than 8 MB. Please choose a smaller file.'
-      : error.message || 'The file could not be uploaded. Choose a CSV, PDF, Excel, TXT, or JSON file.';
+      : error.message || 'The file could not be uploaded. Choose a CSV, Excel, TXT, or JSON file.';
     return res.status(tooLarge ? 413 : 400).json({ message });
   });
 }
 
+const debtLedgerSelect = `
+  id, source_row_number, source_serial, source_member_name, source_other_name,
+  member_name, other_name, source_debt_2025, source_debt_2026, source_debt_amount,
+  source_year, source_month, source_category, source_file_name,
+  source_total, source_notes, review_status, created_at, updated_at,
+  obligations:debt_ledger_obligations(
+    id, title, category, amount_ngn, period_year, period_month, created_at,
+    payments:debt_ledger_payments(id, amount_ngn, reference, paid_at, created_at)
+  )
+`;
+
+function createDebtLedgerQuery() {
+  return supabaseAdmin
+    .from('debt_ledger_entries')
+    .select(debtLedgerSelect)
+    .order('member_name', { ascending: true })
+    .order('source_serial', { ascending: true, nullsFirst: false });
+}
+
 app.get('/api/debt-ledger', authMiddleware, async (req, res) => {
   try {
-    let query = supabaseAdmin
-      .from('debt_ledger_entries')
-      .select(`
-        id, source_row_number, source_serial, source_member_name, source_other_name,
-        member_name, other_name, source_debt_2025, source_debt_2026, source_debt_amount,
-        source_year, source_month, source_category, source_file_name,
-        source_total, source_notes, review_status, created_at, updated_at,
-        obligations:debt_ledger_obligations(
-          id, title, category, amount_ngn, period_year, period_month, created_at,
-          payments:debt_ledger_payments(id, amount_ngn, reference, paid_at, created_at)
-        )
-      `)
-      .order('member_name', { ascending: true })
-      .order('source_serial', { ascending: true, nullsFirst: false });
+    const account = await getCurrentAccount(req.user.id);
+    if (!account) return res.status(401).json({ message: 'Your member account could not be found. Please sign in again.' });
 
-    const search = String(req.query.q || '')
-      .replace(/[^\p{L}\p{N}\s'-]/gu, '')
-      .trim()
-      .slice(0, 80);
-    if (search) {
-      query = query.or(`member_name.ilike.%${search}%,other_name.ilike.%${search}%`);
+    let entries;
+    if (account.role === 'admin') {
+      const { data, error } = await createDebtLedgerQuery();
+      if (error) throw error;
+      entries = data || [];
+    } else {
+      const memberNames = [...new Set([account.full_name, account.username]
+        .filter(name => typeof name === 'string' && name.trim())
+        .map(name => name.trim()))];
+      const identityFields = ['member_name', 'other_name', 'source_member_name', 'source_other_name'];
+      const lookups = await Promise.all(memberNames.flatMap(name => identityFields.map(field => (
+        createDebtLedgerQuery().ilike(field, name.replace(/[\\%_]/g, '\\$&'))
+      ))));
+      const results = await Promise.all(lookups);
+      const matchingEntries = new Map();
+      for (const result of results) {
+        if (result.error) throw result.error;
+        for (const entry of result.data || []) matchingEntries.set(entry.id, entry);
+      }
+      entries = [...matchingEntries.values()]
+        .sort((a, b) => String(a.member_name).localeCompare(String(b.member_name)));
     }
 
-    const { data, error } = await query;
-    if (error) throw error;
     res.json({
-      entries: data || [],
+      entries,
       bank: {
         name: process.env.BANK_ACCOUNT_NAME || '',
         number: process.env.BANK_ACCOUNT_NUMBER || '',
@@ -1354,7 +1428,7 @@ app.get('/api/debt-ledger', authMiddleware, async (req, res) => {
 app.post(
   '/api/debt-ledger/parse-import',
   authMiddleware,
-  adminOrExco,
+  adminOnly,
   parseDebtLedgerImportUpload,
   async (req, res) => {
     if (!req.file) {
@@ -1372,7 +1446,7 @@ app.post(
   }
 );
 
-app.post('/api/debt-ledger/import-tabular', authMiddleware, adminOrExco, async (req, res) => {
+app.post('/api/debt-ledger/import-tabular', authMiddleware, adminOnly, async (req, res) => {
   const { fingerprint, rows } = req.body || {};
   if (typeof fingerprint !== 'string' || !/^[a-f0-9]{64}$/i.test(fingerprint)
       || !Array.isArray(rows) || rows.length < 1 || rows.length > 2000) {
@@ -1456,7 +1530,7 @@ app.post('/api/debt-ledger/import-tabular', authMiddleware, adminOrExco, async (
   }
 });
 
-app.post('/api/debt-ledger/import', authMiddleware, adminOrExco, async (req, res) => {
+app.post('/api/debt-ledger/import', authMiddleware, adminOnly, async (req, res) => {
   const rows = req.body?.rows;
   if (!Array.isArray(rows) || rows.length < 1 || rows.length > 2000) {
     return res.status(400).json({
@@ -1532,7 +1606,7 @@ app.post('/api/debt-ledger/import', authMiddleware, adminOrExco, async (req, res
   }
 });
 
-app.post('/api/debt-ledger/records', authMiddleware, adminOrExco, async (req, res) => {
+app.post('/api/debt-ledger/records', authMiddleware, adminOnly, async (req, res) => {
   const memberName = typeof req.body?.member_name === 'string' ? req.body.member_name : '';
   const otherName = req.body?.other_name ?? null;
   if (memberName.trim().length < 1 || memberName.length > 160 || !isOptionalLedgerText(otherName, 160)) {
@@ -1560,7 +1634,7 @@ app.post('/api/debt-ledger/records', authMiddleware, adminOrExco, async (req, re
   }
 });
 
-app.post('/api/debt-ledger/records/manual', authMiddleware, adminOrExco, async (req, res) => {
+app.post('/api/debt-ledger/records/manual', authMiddleware, adminOnly, async (req, res) => {
   const memberName = typeof req.body?.member_name === 'string' ? req.body.member_name.trim() : '';
   const otherName = req.body?.other_name === '' || req.body?.other_name === undefined
     ? null
@@ -1603,7 +1677,7 @@ app.post('/api/debt-ledger/records/manual', authMiddleware, adminOrExco, async (
   }
 });
 
-app.put('/api/debt-ledger/records/:id', authMiddleware, adminOrExco, async (req, res) => {
+app.put('/api/debt-ledger/records/:id', authMiddleware, adminOnly, async (req, res) => {
   if (!debtLedgerRecordIdPattern.test(req.params.id)) {
     return res.status(400).json({ message: 'That ledger record could not be found.' });
   }
@@ -1642,7 +1716,7 @@ app.put('/api/debt-ledger/records/:id', authMiddleware, adminOrExco, async (req,
   }
 });
 
-app.post('/api/debt-ledger/records/:id/obligations', authMiddleware, adminOrExco, async (req, res) => {
+app.post('/api/debt-ledger/records/:id/obligations', authMiddleware, adminOnly, async (req, res) => {
   const title = typeof req.body?.title === 'string' ? req.body.title : '';
   const amount = Number(req.body?.amount_ngn);
   const year = parseOptionalLedgerYear(req.body?.year);
@@ -1682,7 +1756,7 @@ app.post('/api/debt-ledger/records/:id/obligations', authMiddleware, adminOrExco
   }
 });
 
-app.post('/api/debt-ledger/obligations/:id/payments', authMiddleware, adminOrExco, async (req, res) => {
+app.post('/api/debt-ledger/obligations/:id/payments', authMiddleware, adminOnly, async (req, res) => {
   if (!debtLedgerRecordIdPattern.test(req.params.id)) {
     return res.status(400).json({ message: 'That debt entry could not be found.' });
   }
@@ -2729,12 +2803,15 @@ app.get('/api/notifications', authMiddleware, async (req, res) => {
   try {
     const { data, error } = await supabaseAdmin
       .from('notifications')
-      .select('id, title, message, icon, read, created_at')
+      .select('id, user_id, title, message, icon, read, created_at')
       .or(`user_id.eq.${req.user.id},user_id.is.null`)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    res.json(data || []);
+    res.json((data || []).map(notification => ({
+      ...notification,
+      read: notification.user_id === null ? true : notification.read
+    })));
   } catch (err) {
     console.error('Notifications list error:', err);
     res.status(500).json({ message: 'Failed to fetch notifications' });
@@ -2754,15 +2831,35 @@ app.post('/api/notifications', authMiddleware, adminOrExco, async (req, res) => 
 
 app.post('/api/notifications/mark-read', authMiddleware, async (req, res) => {
   try {
-    await supabaseAdmin
+    const { error } = await supabaseAdmin
       .from('notifications')
       .update({ read: true })
-      .or(`user_id.eq.${req.user.id},user_id.is.null`);
+      .eq('user_id', req.user.id);
 
+    if (error) throw error;
     res.json({ message: 'Notifications marked as read' });
   } catch (err) {
     console.error('Notification mark-read error:', err);
     res.status(500).json({ message: 'Failed to mark notifications as read' });
+  }
+});
+
+app.delete('/api/notifications/mine', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('notifications')
+      .delete()
+      .eq('user_id', req.user.id)
+      .select('id');
+
+    if (error) throw error;
+    res.json({
+      deleted: data?.length || 0,
+      message: 'Your personal notifications were deleted. Shared choir updates remain available.'
+    });
+  } catch (err) {
+    console.error('Personal notifications delete error:', err);
+    res.status(500).json({ message: 'Your notifications could not be deleted. Please try again.' });
   }
 });
 
@@ -2772,22 +2869,27 @@ app.delete('/api/notifications/:id', authMiddleware, async (req, res) => {
       .from('notifications')
       .select('user_id')
       .eq('id', req.params.id)
-      .single();
+      .maybeSingle();
 
     if (fetchError) throw fetchError;
+    if (!existing) return res.status(404).json({ message: 'That notification could not be found.' });
 
-    const isAdmin = req.user.role === 'admin' || req.user.role === 'exco';
-    const isOwner = existing && existing.user_id === req.user.id;
-    const isGlobal = existing && existing.user_id === null;
+    const isOwner = existing.user_id === req.user.id;
+    let canDeleteShared = false;
+    if (existing.user_id === null) {
+      const account = await getCurrentAccount(req.user.id);
+      canDeleteShared = Boolean(account && ['admin', 'exco'].includes(account.role));
+    }
 
-    if (!isAdmin && !isOwner && !isGlobal) {
+    if (!isOwner && !canDeleteShared) {
       return res.status(403).json({ message: 'Not authorized to delete this notification' });
     }
 
-    await supabaseAdmin
+    const { error: deleteError } = await supabaseAdmin
       .from('notifications')
       .delete()
       .eq('id', req.params.id);
+    if (deleteError) throw deleteError;
 
     res.json({ message: 'Notification deleted' });
   } catch (err) {
@@ -3140,7 +3242,7 @@ app.delete('/api/ai/history', authMiddleware, async (req, res) => {
 
 // ==================== DASHBOARD STATS ====================
 
-app.get('/api/dashboard/stats', authMiddleware, async (req, res) => {
+app.get('/api/dashboard/stats', authMiddleware, adminOrExco, async (req, res) => {
   try {
     const [usersResult, scoresResult, eventsResult, attendanceResult, pendingResult] = await Promise.all([
       supabaseAdmin.from('users').select('id', { count: 'exact', head: true }),

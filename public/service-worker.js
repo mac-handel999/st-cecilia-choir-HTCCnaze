@@ -1,4 +1,4 @@
-const CACHE_NAME = 'st-cecilia-choir-v17';
+const CACHE_NAME = 'st-cecilia-choir-v18';
 const STATIC_ASSETS = [
   '/',
   '/index.html',

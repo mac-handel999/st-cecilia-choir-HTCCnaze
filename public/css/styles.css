@@ -1220,16 +1220,14 @@ a:hover {
   padding: 1.25rem 1.5rem;
   border-top: 1px solid var(--color-border);
   background: var(--color-surface);
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 101;
+  position: relative;
+  flex-shrink: 0;
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
 }
 
 .chat-input {
   flex: 1;
+  min-width: 0;
   padding: 0.75rem 1rem;
   border: 2px solid var(--color-border);
   border-radius: var(--radius-lg);
@@ -3736,12 +3734,25 @@ a:hover {
   .hide-scrollbar::-webkit-scrollbar { display: none; }
   .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-  /* Cecilia AI: lift chat input above the mobile bottom nav */
   .chat-container {
+    top: 56px;
     bottom: calc(var(--bottom-nav-height) + var(--safe-area-bottom));
+    height: auto;
+    min-height: 0;
   }
   .chat-input-area {
-    padding-bottom: calc(1rem + var(--safe-area-bottom));
+    gap: 0.5rem;
+    padding: 0.75rem;
+  }
+  .chat-input-area .btn {
+    flex: 0 0 48px;
+    min-width: 48px;
+    min-height: 48px;
+    padding: 0;
+  }
+  .chat-messages {
+    padding: 1rem;
+    padding-bottom: 1rem;
   }
 }
 

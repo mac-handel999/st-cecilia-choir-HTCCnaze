@@ -128,7 +128,7 @@ The [By Law / Constitution page](./public/constitution.html) also includes a pra
 * **Recent Members & Scores:** Quick view of latest registrations and uploaded scores with links to full pages.
 * **Quick Actions:** Fast links to Create Event, Song List Builder, Attendance, Upload Score, Members Directory, Send Notice, Executives, and Image Gallery.
 * **Send Notice:** Broadcast announcements to all choir members with optional date, time, and links.
-* **All Users Management:** View and delete users from the database (admin/exco only).
+* **All Users Management:** View user information as an admin or exco; only admins can delete accounts. Admin/exco access is checked against the current database role.
 
 ---
 
@@ -234,10 +234,10 @@ st-cecilia-choir-HTCCnaze/
 | GET | `/api/auth/me` | Get current user |
 | POST | `/api/auth/reset-password` | Request password reset |
 | POST | `/api/auth/update-password` | Update password |
-| GET | `/api/users` | List all users (admin) |
-| GET | `/api/users/:id` | Get user by ID |
-| PUT | `/api/users/:id` | Update user |
-| DELETE | `/api/users/:id` | Delete user (admin/exco only) |
+| GET | `/api/users` | List approved member directory/profile fields (signed-in members); password and internal fields are excluded |
+| GET | `/api/users/:id` | Get approved member directory/profile fields (signed-in members); password and internal fields are excluded |
+| PUT | `/api/users/:id` | Update own profile or another member's profile (admin/exco only) |
+| DELETE | `/api/users/:id` | Delete user (admin only) |
 | GET | `/api/scores` | List all scores |
 | POST | `/api/scores` | Upload a new score |
 | DELETE | `/api/scores/:id` | Delete a score |
@@ -262,8 +262,9 @@ st-cecilia-choir-HTCCnaze/
 | POST | `/api/gallery/upload` | Upload gallery image |
 | GET | `/api/notifications` | List notifications |
 | POST | `/api/notifications` | Create notification (admin/exco only) |
-| POST | `/api/notifications/mark-read` | Mark all notifications as read |
-| DELETE | `/api/notifications/:id` | Delete notification |
+| POST | `/api/notifications/mark-read` | Mark personal notifications as read |
+| DELETE | `/api/notifications/mine` | Delete the signed-in user's personal notifications |
+| DELETE | `/api/notifications/:id` | Delete own notification, or shared notification (admin/exco only) |
 | GET | `/api/announcements` | List all announcements |
 | POST | `/api/announcements` | Create announcement (admin/exco only) |
 | PUT | `/api/announcements/:id` | Update announcement (admin/exco only) |
@@ -375,13 +376,13 @@ The ticket page and staff desk show an extracted preview image for the selected 
 
 ### Choir Debt Ledger
 
-The [Debt Ledger](./public/debt-ledger.html) is available to signed-in members for searching balances and payment history. Admin and exco accounts can manage entries (the current app does not have a separate Finance Secretary role). Every debt, levy, and payment change is checked by the server; a payment cannot exceed the remaining balance. Ledger API responses are private and are never cached by the service worker. The page refreshes its data every 20 seconds while open.
+The [Debt Ledger](./public/debt-ledger.html) is available to signed-in members, who can search and view only records matching their own account name. Admin accounts can view and manage the complete ledger from the Admin Dashboard; exco and regular member accounts cannot edit ledger data. The server verifies current database roles for privileged operations, and a payment cannot exceed the remaining balance. Ledger API responses are private and are never cached by the service worker. The page refreshes its data every 20 seconds while open.
 
 To set it up:
 
 1. Run [`supabase-debt-ledger.sql`](./supabase-debt-ledger.sql) in the Supabase SQL Editor. The tables are private to the server's service-role API.
-2. Sign in with an admin or exco account and open **Debt Ledger** from the member dashboard or Admin Dashboard.
-3. Admins and exco can import CSV, Excel `.xlsx`, TXT, or JSON debt lists. The app reads the file on the server, shows a preview, and asks the user to map each column before saving. Imports are idempotent and keep source amounts as text; they do not calculate expressions or change confirmed balances. The original numbered JSON list keeps its serial numbers, including duplicates. PDF imports are not supported; enter those records manually.
+2. Sign in with an admin account and open **Debt Ledger** from the Admin Dashboard to manage entries. Other signed-in members can search their own records from the member dashboard.
+3. Admins can import CSV, Excel `.xlsx`, TXT, or JSON debt lists. The app reads the file on the server, shows a preview, and asks the user to map each column before saving. Imports are idempotent and keep source amounts as text; they do not calculate expressions or change confirmed balances. The original numbered JSON list keeps its serial numbers, including duplicates. PDF imports are not supported; enter those records manually.
 4. To enter a new debt directly, use **Manually add a member and debt**. The member's name, description, type, and amount are required; year and month are optional. The member and confirmed debt are saved together as one database operation. Existing members can also have a confirmed debt added from their ledger entry.
 5. Review imported figures with the Finance Secretary. Confirm member names if needed, mark source figures checked, and add each verified amount as a dues or levy item. Record each payment as it is received; members then see the amount paid and balance remaining.
 

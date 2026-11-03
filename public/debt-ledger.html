@@ -34,8 +34,8 @@
     <section class="ticket-panel debt-ledger-intro">
       <p class="ticket-eyebrow">Members' finance information</p>
       <h1>Choir Debt Ledger</h1>
-      <p>Search your name to see recorded choir dues, levies, payments, and any balance still outstanding. This page is for logged-in members only.</p>
-      <p class="debt-ledger-note">Older figures and notes are shown exactly as supplied. They are not used to calculate a current balance until the Finance Secretary has checked them and added confirmed dues or levies.</p>
+      <p>Members can search their own name to see recorded choir dues, levies, payments, and any balance still outstanding. Administrators can manage records from the Admin Dashboard.</p>
+      <p class="debt-ledger-note">Older figures and notes are shown exactly as supplied. They are not used to calculate a current balance until an administrator has checked them and added confirmed dues or levies.</p>
     </section>
 
     <section class="ticket-panel ledger-bank-details" aria-labelledby="ledger-bank-heading">
@@ -46,14 +46,14 @@
         <div><dt>Account number</dt><dd id="ledger-bank-number" class="ledger-account-number"></dd></div>
         <div><dt>Bank</dt><dd id="ledger-bank"></dd></div>
       </dl>
-      <p id="ledger-bank-unavailable" class="debt-ledger-note" hidden>The choir's bank details are not configured yet. Please contact the Finance Secretary before making a payment.</p>
-      <p class="debt-ledger-note">Please confirm the payment description with the Finance Secretary and keep your receipt. A payment is marked here after it has been checked and recorded.</p>
+      <p id="ledger-bank-unavailable" class="debt-ledger-note" hidden>The choir's bank details are not configured yet. Please contact a choir administrator before making a payment.</p>
+      <p class="debt-ledger-note">Please confirm the payment description with a choir administrator and keep your receipt. A payment is marked here after it has been checked and recorded.</p>
     </section>
 
     <div id="ledger-alert" class="ticket-alert" role="status" aria-live="polite" hidden></div>
 
     <section id="ledger-management" class="ticket-panel ledger-management" aria-labelledby="ledger-management-heading" hidden>
-      <h2 id="ledger-management-heading">Finance Secretary tools</h2>
+      <h2 id="ledger-management-heading">Administrator finance tools</h2>
       <p>Source records are imported once. Re-importing the same file will not duplicate entries or overwrite finance updates.</p>
       <form id="ledger-import-form" class="ticket-form">
         <label>Choose a debt list file
