@@ -2281,7 +2281,7 @@ app.post('/api/tickets/admin/orders/:id/reject', authMiddleware, adminOrExco, as
   }
 });
 
-app.post('/api/tickets/admin/orders/:id/resend', authMiddleware, adminOrExco, async (req, res) => {
+app.post('/api/tickets/admin/orders/:id/send', authMiddleware, adminOrExco, async (req, res) => {
   let emailErrorMessage = null;
   try {
     const { data: order, error: orderError } = await supabaseAdmin
