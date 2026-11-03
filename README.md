@@ -305,24 +305,9 @@ st-cecilia-choir-HTCCnaze/
 
 3. **Configure environment variables:**
    Create a `.env` file in the root directory:
-   ```env
-   PORT=3000
-   NODE_ENV=development
-   JWT_SECRET=your_jwt_secret_here
-   SUPABASE_URL=your_supabase_url
-   SUPABASE_KEY=your_supabase_key
-   GOOGLE_DRIVE_CLIENT_ID=your_client_id
-   GOOGLE_DRIVE_CLIENT_SECRET=your_client_secret
-   GOOGLE_DRIVE_REFRESH_TOKEN=your_refresh_token
-   GROQ_API_KEY=your_groq_api_key
-   CLOUDINARY_CLOUD_NAME=your_cloud_name
-   CLOUDINARY_API_KEY=your_api_key
-   CLOUDINARY_API_SECRET=your_api_secret
-   VAPID_PUBLIC_KEY=your_vapid_public_key
-   VAPID_PRIVATE_KEY=your_vapid_private_key
-   VAPID_SUBJECT=mailto:your-contact@example.com
-   CRON_SECRET=your_private_cron_secret
-   ```
+   Copy [`.env.example`](./.env.example) to `.env`, then fill in the values locally. The server requires `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, and a strong `JWT_SECRET`. Never commit `.env` or expose the Supabase service-role key.
+
+   For ticket reservations and the payment details shown on the ticket and Debt Ledger pages, also set the verified `BANK_NAME`, `BANK_ACCOUNT_NAME`, and `BANK_ACCOUNT_NUMBER`. Online reservations stay disabled until all three are present.
 
 4. **Run the development server:**
    ```bash
@@ -376,17 +361,19 @@ The ticket page and staff desk show an extracted preview image for the selected 
 
 ### Choir Debt Ledger
 
-The [Debt Ledger](./public/debt-ledger.html) is available to signed-in members, who can search and view only records matching their own account name. Admin accounts can view and manage the complete ledger from the Admin Dashboard; exco and regular member accounts cannot edit ledger data. The server verifies current database roles for privileged operations, and a payment cannot exceed the remaining balance. Ledger API responses are private and are never cached by the service worker. The page refreshes its data every 20 seconds while open.
+The [Debt Ledger](./public/debt-ledger.html) is available to signed-in members, who can search and filter the choir-wide dues and levy records by name, year, month, payment type, and status. Members can view records and payment history but cannot make changes. Admin accounts can enter records, import old lists, record payments, and review all entries from the Admin Dashboard; exco and regular members cannot edit ledger data. A separately confirmed, admin-only action can permanently clear all ledger members, old imported figures, dues/levies, and payment history. The server verifies current database roles for privileged operations, and a payment cannot exceed the remaining balance. Ledger API responses are private and are never cached by the service worker. The page refreshes its data every 20 seconds while open.
 
 To set it up:
 
 1. Run [`supabase-debt-ledger.sql`](./supabase-debt-ledger.sql) in the Supabase SQL Editor. The tables are private to the server's service-role API.
-2. Sign in with an admin account and open **Debt Ledger** from the Admin Dashboard to manage entries. Other signed-in members can search their own records from the member dashboard.
+2. Sign in with an admin account and open **Debt Ledger** from the Admin Dashboard. The finance page starts with **Enter a record**; use **Import an old list** to preview a source file, or **View all records** to search and manage the whole ledger. Other signed-in members can search and view all choir records but cannot edit them.
 3. Admins can import CSV, Excel `.xlsx`, TXT, or JSON debt lists. The app reads the file on the server, shows a preview, and asks the user to map each column before saving. Imports are idempotent and keep source amounts as text; they do not calculate expressions or change confirmed balances. The original numbered JSON list keeps its serial numbers, including duplicates. PDF imports are not supported; enter those records manually.
-4. To enter a new debt directly, use **Manually add a member and debt**. The member's name, description, type, and amount are required; year and month are optional. The member and confirmed debt are saved together as one database operation. Existing members can also have a confirmed debt added from their ledger entry.
-5. Review imported figures with the Finance Secretary. Confirm member names if needed, mark source figures checked, and add each verified amount as a dues or levy item. Record each payment as it is received; members then see the amount paid and balance remaining.
+4. To enter a new payment due, use **Enter a record**. The member's name, description, type, and amount are required; year and month are optional. Types include monthly dues, burial, wedding, child dedication, and other choir payments. Record payments from the member's entry; members then see the amount paid and balance remaining.
+5. Review imported figures with the Finance Secretary. Confirm member names if needed, mark source figures checked, and add each verified amount as a dues or levy item. Historical figures remain separate from confirmed balances until entered as a confirmed payment due.
 
-Historical source values stay visible as provided but do not count toward the live balance until converted to a confirmed obligation. The account details shown to signed-in members come from the server-side `BANK_NAME`, `BANK_ACCOUNT_NAME`, and `BANK_ACCOUNT_NUMBER` variables shared with ticket sales. Verify those values against the supplied bank details before members transfer money.
+Historical source values stay visible as provided but do not count toward the live balance until confirmed. The account details shown to signed-in members and ticket buyers come from the server-side `BANK_NAME`, `BANK_ACCOUNT_NAME`, and `BANK_ACCOUNT_NUMBER` variables. Set all three in the hosting provider (including Vercel Production) and redeploy; ticket reservations remain unavailable until the account details are configured. Verify those values against the choir's bank details before accepting transfers.
+
+The global delete action requires both a confirmation dialog and typing **DELETE ALL FINANCIAL RECORDS**. It deletes every entry, imported source figure, due/levy and payment. To enable it in an existing Supabase project, rerun [`supabase-debt-ledger.sql`](./supabase-debt-ledger.sql) so the restricted `clear_debt_ledger_records` function and child-dedication levy type are installed.
 
 ---
 

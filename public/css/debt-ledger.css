@@ -69,6 +69,297 @@
   margin: 0;
 }
 
+.ledger-admin-intro {
+  max-width: 70ch;
+  line-height: 1.6;
+}
+
+.ledger-admin-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 1.25rem 0;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid #eadfd1;
+}
+
+.ledger-admin-tab {
+  min-height: 44px;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid #d5c9b9;
+  border-radius: 0.55rem;
+  background: #fff;
+  color: #57380e;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ledger-admin-tab.is-active {
+  border-color: var(--color-primary, #4a0000);
+  background: var(--color-primary, #4a0000);
+  color: #fff;
+}
+
+.ledger-admin-tab:focus-visible {
+  outline: 3px solid rgb(128 81 30 / 30%);
+  outline-offset: 2px;
+}
+
+.ledger-admin-view h3 {
+  margin: 0.5rem 0;
+}
+
+.ledger-admin-view > p {
+  max-width: 75ch;
+  color: #6b625b;
+  line-height: 1.6;
+}
+
+.ledger-add-member-task {
+  margin-top: 1.5rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid #eadfd1;
+  border-radius: 0.7rem;
+}
+
+.ledger-add-member-task > summary {
+  color: #57380e;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ledger-add-member-task form {
+  margin-bottom: 0.25rem;
+}
+
+.ledger-danger-zone {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border: 1px solid #efcaca;
+  border-radius: 0.7rem;
+  background: #fff8f8;
+}
+
+.ledger-danger-zone p {
+  margin: 0.35rem 0 0;
+  color: #6b625b;
+  line-height: 1.5;
+}
+
+.ledger-danger-zone button {
+  flex: 0 0 auto;
+}
+
+.ledger-filter-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.ledger-filter-row label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.ledger-filter-row select {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid #d5c9b9;
+  border-radius: 0.5rem;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+}
+
+.ledger-old-figures {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.6rem;
+  margin: 0.65rem 0;
+}
+
+.ledger-old-figures p {
+  display: grid;
+  gap: 0.2rem;
+  margin: 0;
+  padding: 0.7rem 0.8rem;
+  border-radius: 0.5rem;
+  background: #f7f1e8;
+}
+
+.ledger-old-figures span {
+  color: #6b625b;
+  font-size: 0.82rem;
+}
+
+.ledger-old-figures strong {
+  color: #281b1b;
+}
+
+.ledger-admin-task,
+.ledger-source-values,
+.ledger-management-controls,
+.ledger-record-payment {
+  border: 1px solid #eadfd1;
+  border-radius: 0.7rem;
+  background: #fffdf9;
+}
+
+.ledger-admin-task {
+  margin-top: 0.85rem;
+}
+
+.ledger-admin-task > summary,
+.ledger-source-values > summary,
+.ledger-management-controls > summary,
+.ledger-record-payment > summary {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 48px;
+  padding: 0.75rem 1rem;
+  color: #4a0000;
+  font-weight: 700;
+  cursor: pointer;
+  list-style-position: inside;
+}
+
+.ledger-admin-task > summary:focus-visible,
+.ledger-source-values > summary:focus-visible,
+.ledger-management-controls > summary:focus-visible,
+.ledger-record-payment > summary:focus-visible {
+  outline: 3px solid rgb(128 81 30 / 30%);
+  outline-offset: 2px;
+}
+
+.ledger-task-number {
+  display: inline-grid;
+  flex: 0 0 1.8rem;
+  width: 1.8rem;
+  height: 1.8rem;
+  place-items: center;
+  border-radius: 50%;
+  background: #f7f1e8;
+  color: #57380e;
+}
+
+.ledger-admin-task summary small {
+  display: block;
+  margin-top: 0.2rem;
+  color: #6b625b;
+  font-size: 0.85rem;
+  font-weight: 400;
+}
+
+.ledger-admin-task > :not(summary),
+.ledger-source-content,
+.ledger-management-controls > :not(summary),
+.ledger-record-payment > :not(summary) {
+  margin-right: 1rem;
+  margin-left: 1rem;
+}
+
+.ledger-admin-task > form,
+.ledger-record-payment form {
+  margin-top: 0.25rem;
+  margin-bottom: 1rem;
+}
+
+.ledger-record-payment {
+  margin-top: 0.75rem;
+  background: #fff;
+}
+
+.ledger-record-payment > summary {
+  min-height: 42px;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.9rem;
+}
+
+.ledger-record-payment > p {
+  margin-top: 0.5rem;
+  color: #6b625b;
+  font-size: 0.9rem;
+}
+
+.ledger-source-values {
+  margin-top: 0.8rem;
+}
+
+.ledger-source-values > summary {
+  min-height: 42px;
+  color: #57380e;
+  font-size: 0.9rem;
+}
+
+.ledger-source-content {
+  padding-bottom: 0.8rem;
+}
+
+.ledger-source-checked-note {
+  padding: 0.65rem 0.8rem;
+  border-radius: 0.45rem;
+  background: #e5f5e9;
+  color: #19592e;
+}
+
+.ledger-obligation-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.ledger-obligation .ledger-obligation-heading h4 {
+  display: block;
+  margin: 0 0 0.25rem;
+  color: #281b1b;
+  font-size: 1rem;
+}
+
+.ledger-obligation .ledger-obligation-heading p {
+  color: #6b625b;
+  font-size: 0.88rem;
+}
+
+.ledger-amount-remaining {
+  display: grid;
+  flex: 0 0 auto;
+  gap: 0.15rem;
+  text-align: right;
+}
+
+.ledger-amount-remaining span {
+  color: #6b625b;
+  font-size: 0.78rem;
+}
+
+.ledger-amount-remaining strong {
+  color: var(--color-primary, #4a0000);
+  font-size: 1.1rem;
+}
+
+.ledger-obligation .ledger-payment-status {
+  margin-top: 0.65rem;
+  color: #514840;
+  font-size: 0.9rem;
+}
+
+.ledger-total-remaining {
+  padding-top: 0.25rem;
+  color: var(--color-primary, #4a0000);
+}
+
 .ledger-import-preview {
   display: grid;
   gap: 0.75rem;
@@ -307,13 +598,21 @@
   display: grid;
   gap: 0.8rem;
   margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid #eadfd1;
+  padding: 0;
+  background: #fff;
 }
 
 .ledger-management-controls form {
   display: grid;
   gap: 0.7rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid #eee4d8;
+}
+
+.ledger-management-controls > p {
+  margin-top: 0;
+  color: #6b625b;
+  font-size: 0.9rem;
 }
 
 .ledger-management-controls label {
@@ -360,6 +659,12 @@
     flex-direction: column;
   }
 
+  @media (min-width: 601px) and (max-width: 850px) {
+    .ledger-filter-row {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
   .ledger-search-heading .btn {
     align-self: flex-start;
   }
@@ -368,11 +673,37 @@
     align-self: flex-start;
   }
 
+  .ledger-obligation-heading {
+    flex-direction: column;
+  }
+
+  .ledger-amount-remaining {
+    text-align: left;
+  }
+
   .ledger-import-preview {
     padding: 0.75rem;
   }
 
   .ledger-import-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .ledger-filter-row {
+    grid-template-columns: 1fr;
+  }
+
+  .ledger-danger-zone {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .ledger-danger-zone button {
+    align-self: flex-start;
+  }
+
+  .ledger-admin-tabs {
+    display: grid;
     grid-template-columns: 1fr;
   }
 }

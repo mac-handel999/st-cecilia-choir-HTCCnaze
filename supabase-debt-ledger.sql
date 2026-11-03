@@ -44,6 +44,11 @@ create table if not exists public.debt_ledger_obligations (
   check (length(trim(title)) between 1 and 160)
 );
 
+alter table public.debt_ledger_obligations
+  drop constraint if exists debt_ledger_obligations_category_check,
+  add constraint debt_ledger_obligations_category_check
+    check (category in ('choir_monthly_dues', 'burial_levy', 'wedding_levy', 'child_dedication_levy', 'other'));
+
 alter table public.debt_ledger_entries
   add column if not exists source_row_number integer check (source_row_number is null or source_row_number > 0),
   add column if not exists source_debt_amount text,
@@ -193,7 +198,7 @@ begin
   if p_member_name is null or length(trim(p_member_name)) not between 1 and 160
      or p_other_name is not null and length(p_other_name) > 160
      or p_title is null or length(trim(p_title)) not between 1 and 160
-     or p_category is null or p_category not in ('choir_monthly_dues', 'burial_levy', 'wedding_levy', 'other')
+     or p_category is null or p_category not in ('choir_monthly_dues', 'burial_levy', 'wedding_levy', 'child_dedication_levy', 'other')
      or p_amount_ngn is null or p_amount_ngn <= 0 or p_amount_ngn > 9999999999.99
      or p_period_year is not null and p_period_year not between 1900 and 2200
      or p_period_month is not null and p_period_month not between 1 and 12 then
@@ -241,6 +246,34 @@ begin
 end;
 $$;
 
+create or replace function public.clear_debt_ledger_records()
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  deleted_payments integer;
+  deleted_obligations integer;
+  deleted_entries integer;
+begin
+  delete from public.debt_ledger_payments;
+  get diagnostics deleted_payments = row_count;
+
+  delete from public.debt_ledger_obligations;
+  get diagnostics deleted_obligations = row_count;
+
+  delete from public.debt_ledger_entries;
+  get diagnostics deleted_entries = row_count;
+
+  return jsonb_build_object(
+    'payments', deleted_payments,
+    'dues_and_levies', deleted_obligations,
+    'member_records', deleted_entries
+  );
+end;
+$$;
+
 alter table public.debt_ledger_entries enable row level security;
 alter table public.debt_ledger_obligations enable row level security;
 alter table public.debt_ledger_payments enable row level security;
@@ -257,4 +290,8 @@ grant execute on function public.record_debt_ledger_payment(uuid, numeric, text,
 revoke all on function public.create_debt_ledger_record(text, text, text, text, numeric, smallint, smallint, uuid)
   from public, anon, authenticated;
 grant execute on function public.create_debt_ledger_record(text, text, text, text, numeric, smallint, smallint, uuid)
+  to service_role;
+revoke all on function public.clear_debt_ledger_records()
+  from public, anon, authenticated;
+grant execute on function public.clear_debt_ledger_records()
   to service_role;

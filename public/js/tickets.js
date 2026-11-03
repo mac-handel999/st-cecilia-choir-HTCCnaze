@@ -60,6 +60,15 @@
     try {
       const config = await api.get('/tickets/config');
       packages = config.packages || [];
+      const bankDetails = document.getElementById('ticket-bank-details');
+      if (config.bankConfigured && config.bank) {
+        document.getElementById('ticket-bank-name').textContent = config.bank.name;
+        document.getElementById('ticket-bank-number').textContent = config.bank.number;
+        document.getElementById('ticket-bank').textContent = config.bank.bank;
+        bankDetails.hidden = false;
+      } else {
+        bankDetails.hidden = true;
+      }
       const availablePackages = packages.filter(item => item.available === null || item.available > 0);
       packageSelect.innerHTML = '<option value="">Choose a package</option>' + packages.map(item => (
         `<option value="${escapeHtml(item.id)}"${item.available === 0 ? ' disabled' : ''}>${escapeHtml(item.name)} — ${formatMoney(item.price_ngn)} each${item.available !== null ? ` · ${escapeHtml(item.available)} available` : ''}${item.description ? ` (${escapeHtml(item.description)})` : ''}${item.available === 0 ? ' — sold out' : ''}</option>`
@@ -67,8 +76,14 @@
       updatePackagePreview();
       reservationEnabled = Boolean(config.bankConfigured && availablePackages.length);
       reserveButton.disabled = !reservationEnabled;
+      reserveButton.textContent = reservationEnabled ? 'Reserve tickets' : 'Reservations unavailable';
+      reserveButton.title = !config.bankConfigured
+        ? 'The choir payment account has not been set up on this website yet.'
+        : availablePackages.length === 0
+          ? 'All ticket packages are sold out.'
+          : '';
       if (!config.bankConfigured) {
-        showAlert('Online reservations are not open yet. The choir has not added its bank transfer details. Please contact the choir for ticket information.');
+        showAlert('Ticket packages are available, but online reservations cannot start until the choir payment account is added to the website. Please contact the choir for ticket information.');
       } else if (packages.length === 0) {
         showAlert('Ticket packages are temporarily unavailable. Please try again later.', 'error');
       } else if (availablePackages.length === 0) {
@@ -145,7 +160,7 @@
       showAlert(error.message || 'We could not reserve those tickets. Please check your details and try again.', 'error');
     } finally {
       reserveButton.disabled = !reservationEnabled;
-      reserveButton.textContent = 'Reserve tickets';
+      reserveButton.textContent = reservationEnabled ? 'Reserve tickets' : 'Reservations unavailable';
     }
   });
 

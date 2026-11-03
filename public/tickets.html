@@ -43,6 +43,15 @@
     <section class="ticket-panel" aria-labelledby="reserve-heading">
       <h2 id="reserve-heading">Reserve tickets</h2>
       <p>Choose your ticket package and enter your details. Your reservation is held for 24 hours while you make a bank transfer.</p>
+      <section id="ticket-bank-details" class="ticket-bank-details" aria-labelledby="ticket-bank-heading" hidden>
+        <h3 id="ticket-bank-heading">Choir payment account</h3>
+        <p>After reserving, transfer your ticket payment to this account and use your order code as the transfer narration.</p>
+        <dl>
+          <div><dt>Account name</dt><dd id="ticket-bank-name"></dd></div>
+          <div><dt>Account number</dt><dd id="ticket-bank-number"></dd></div>
+          <div><dt>Bank</dt><dd id="ticket-bank"></dd></div>
+        </dl>
+      </section>
       <div id="ticket-alert" class="ticket-alert" role="status" aria-live="polite" hidden></div>
       <form id="reserve-form" class="ticket-form">
         <label>Ticket package

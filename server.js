@@ -1188,6 +1188,7 @@ const debtLedgerCategories = new Set([
   'choir_monthly_dues',
   'burial_levy',
   'wedding_levy',
+  'child_dedication_levy',
   'other'
 ]);
 
@@ -1386,31 +1387,11 @@ app.get('/api/debt-ledger', authMiddleware, async (req, res) => {
     const account = await getCurrentAccount(req.user.id);
     if (!account) return res.status(401).json({ message: 'Your member account could not be found. Please sign in again.' });
 
-    let entries;
-    if (account.role === 'admin') {
-      const { data, error } = await createDebtLedgerQuery();
-      if (error) throw error;
-      entries = data || [];
-    } else {
-      const memberNames = [...new Set([account.full_name, account.username]
-        .filter(name => typeof name === 'string' && name.trim())
-        .map(name => name.trim()))];
-      const identityFields = ['member_name', 'other_name', 'source_member_name', 'source_other_name'];
-      const lookups = await Promise.all(memberNames.flatMap(name => identityFields.map(field => (
-        createDebtLedgerQuery().ilike(field, name.replace(/[\\%_]/g, '\\$&'))
-      ))));
-      const results = await Promise.all(lookups);
-      const matchingEntries = new Map();
-      for (const result of results) {
-        if (result.error) throw result.error;
-        for (const entry of result.data || []) matchingEntries.set(entry.id, entry);
-      }
-      entries = [...matchingEntries.values()]
-        .sort((a, b) => String(a.member_name).localeCompare(String(b.member_name)));
-    }
+    const { data, error } = await createDebtLedgerQuery();
+    if (error) throw error;
 
     res.json({
-      entries,
+      entries: data || [],
       bank: {
         name: process.env.BANK_ACCOUNT_NAME || '',
         number: process.env.BANK_ACCOUNT_NUMBER || '',
@@ -1673,6 +1654,28 @@ app.post('/api/debt-ledger/records/manual', authMiddleware, adminOnly, async (re
     console.error('[Debt Ledger] Could not add manual debt:', error.message);
     res.status(503).json({
       message: 'The member and debt could not be saved together. Please try again; no partial entry was added.'
+    });
+  }
+});
+
+app.delete('/api/debt-ledger/records', authMiddleware, adminOnly, async (req, res) => {
+  if (req.body?.confirmation !== 'DELETE ALL FINANCIAL RECORDS') {
+    return res.status(400).json({
+      message: 'Confirm the exact delete phrase before clearing all financial records.'
+    });
+  }
+
+  try {
+    const { data, error } = await supabaseAdmin.rpc('clear_debt_ledger_records');
+    if (error) throw error;
+    res.json({
+      deleted: data,
+      message: 'All financial records, including imported figures and payment history, have been deleted.'
+    });
+  } catch (error) {
+    console.error('[Debt Ledger] Could not clear all financial records:', error.message);
+    res.status(503).json({
+      message: 'The financial records could not be deleted. No records were cleared; please try again.'
     });
   }
 });

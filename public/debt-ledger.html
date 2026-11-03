@@ -33,112 +33,180 @@
   <main class="ticket-page debt-ledger-page">
     <section class="ticket-panel debt-ledger-intro">
       <p class="ticket-eyebrow">Members' finance information</p>
-      <h1>Choir Debt Ledger</h1>
-      <p>Members can search their own name to see recorded choir dues, levies, payments, and any balance still outstanding. Administrators can manage records from the Admin Dashboard.</p>
-      <p class="debt-ledger-note">Older figures and notes are shown exactly as supplied. They are not used to calculate a current balance until an administrator has checked them and added confirmed dues or levies.</p>
+      <h1>Choir Dues &amp; Levies</h1>
+      <p>Check the choir payments recorded for you, see what has been paid, and view any balance still left to pay. Finance officers can add and update payment records.</p>
     </section>
 
     <section class="ticket-panel ledger-bank-details" aria-labelledby="ledger-bank-heading">
-      <h2 id="ledger-bank-heading">Choir payment account</h2>
-      <p>Use these details when making an approved choir payment:</p>
+      <h2 id="ledger-bank-heading">Where to pay</h2>
+      <p>Use this choir account when a payment is due:</p>
       <dl id="ledger-bank-details" hidden>
         <div><dt>Account name</dt><dd id="ledger-bank-name"></dd></div>
         <div><dt>Account number</dt><dd id="ledger-bank-number" class="ledger-account-number"></dd></div>
         <div><dt>Bank</dt><dd id="ledger-bank"></dd></div>
       </dl>
       <p id="ledger-bank-unavailable" class="debt-ledger-note" hidden>The choir's bank details are not configured yet. Please contact a choir administrator before making a payment.</p>
-      <p class="debt-ledger-note">Please confirm the payment description with a choir administrator and keep your receipt. A payment is marked here after it has been checked and recorded.</p>
+      <p class="debt-ledger-note">After paying, keep your receipt and show it to the Finance Secretary. Your balance will change after the payment has been checked and recorded here.</p>
     </section>
 
     <div id="ledger-alert" class="ticket-alert" role="status" aria-live="polite" hidden></div>
 
     <section id="ledger-management" class="ticket-panel ledger-management" aria-labelledby="ledger-management-heading" hidden>
-      <h2 id="ledger-management-heading">Administrator finance tools</h2>
-      <p>Source records are imported once. Re-importing the same file will not duplicate entries or overwrite finance updates.</p>
-      <form id="ledger-import-form" class="ticket-form">
-        <label>Choose a debt list file
-          <input name="file" type="file" accept=".csv,.xlsx,.txt,.json,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/plain,application/json" required>
-        </label>
-        <small>Supported: CSV, Excel (.xlsx), TXT, or JSON. For PDF records, enter the details manually. Your file is processed by this app's server.</small>
-        <div id="ledger-import-preview" class="ledger-import-preview" hidden></div>
-        <button id="ledger-parse-file" class="btn btn-outline" type="submit">Read and preview file</button>
-        <button id="ledger-import-file" class="btn btn-primary" type="button" disabled>Import source rows for review</button>
-      </form>
-      <form id="ledger-add-member-form" class="ticket-form ledger-add-member-form">
-        <h3>Add a member without a debt amount</h3>
-        <div class="ticket-field-row">
-          <label>Member's name
-            <input name="member_name" type="text" maxlength="160" required>
+      <h2 id="ledger-management-heading">Finance Secretary tools</h2>
+      <p class="ledger-admin-intro">Choose a task below. You can enter a member’s dues or levy, bring in an old list, or review everyone’s records.</p>
+      <nav class="ledger-admin-tabs" aria-label="Finance ledger sections" role="tablist">
+        <button type="button" class="ledger-admin-tab is-active" role="tab" aria-selected="true" aria-controls="ledger-admin-manual" data-ledger-tab="manual">Enter a record</button>
+        <button type="button" class="ledger-admin-tab" role="tab" aria-selected="false" aria-controls="ledger-admin-import" data-ledger-tab="import">Import an old list</button>
+        <button type="button" class="ledger-admin-tab" role="tab" aria-selected="false" aria-controls="ledger-admin-all" data-ledger-tab="all">View all records</button>
+      </nav>
+
+      <section id="ledger-admin-manual" class="ledger-admin-view" role="tabpanel">
+        <h3>Enter a member’s payment record</h3>
+        <p>Use this for monthly dues, burial or wedding levies, child dedication, or another choir payment. Add the amount that was due; record payments received from the member’s record below.</p>
+        <form id="ledger-manual-debt-form" class="ticket-form ledger-add-member-form">
+          <label>Member's full name
+            <input name="member_name" type="text" maxlength="160" required autocomplete="name">
           </label>
           <label>Other name (optional)
             <input name="other_name" type="text" maxlength="160">
           </label>
+          <div class="ticket-field-row">
+            <label>Type of payment
+              <select name="category" required>
+                <option value="choir_monthly_dues">Choir monthly dues</option>
+                <option value="burial_levy">Burial levy</option>
+                <option value="wedding_levy">Wedding levy</option>
+                <option value="child_dedication_levy">Child dedication levy</option>
+                <option value="other">Other choir payment</option>
+              </select>
+            </label>
+            <label>Amount due (₦)
+              <input name="amount_ngn" type="number" min="0.01" step="0.01" required inputmode="decimal">
+            </label>
+          </div>
+          <label>Short description
+            <input name="title" type="text" maxlength="160" placeholder="For example: November 2026 dues" required>
+          </label>
+          <div class="ticket-field-row">
+            <label>Year (optional)
+              <input name="year" type="number" min="1900" max="2200" step="1" inputmode="numeric">
+            </label>
+            <label>Month (optional)
+              <select name="month">
+                <option value="">Not specified</option>
+                <option value="1">January</option>
+                <option value="2">February</option>
+                <option value="3">March</option>
+                <option value="4">April</option>
+                <option value="5">May</option>
+                <option value="6">June</option>
+                <option value="7">July</option>
+                <option value="8">August</option>
+                <option value="9">September</option>
+                <option value="10">October</option>
+                <option value="11">November</option>
+                <option value="12">December</option>
+              </select>
+            </label>
+          </div>
+          <button class="btn btn-primary" type="submit">Add payment due</button>
+        </form>
+
+        <details class="ledger-add-member-task">
+          <summary>Add a member without a payment record</summary>
+          <form id="ledger-add-member-form" class="ticket-form ledger-add-member-form">
+            <label>Member's full name
+              <input name="member_name" type="text" maxlength="160" required autocomplete="name">
+            </label>
+            <label>Other name (optional)
+              <input name="other_name" type="text" maxlength="160">
+            </label>
+            <button class="btn btn-outline" type="submit">Add member to the ledger</button>
+          </form>
+        </details>
+      </section>
+
+      <section id="ledger-admin-import" class="ledger-admin-view" role="tabpanel" hidden>
+        <h3>Import an old list</h3>
+        <p>Imported figures are kept as old information and do not change a member’s current balance until the Finance Secretary checks and confirms them.</p>
+        <form id="ledger-import-form" class="ticket-form">
+          <label>Choose a list file
+            <input name="file" type="file" accept=".csv,.xlsx,.txt,.json,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/plain,application/json" required>
+          </label>
+          <small>Supported: CSV, Excel (.xlsx), TXT, or JSON. PDF files are not supported; enter those details using “Add a payment due”.</small>
+          <div id="ledger-import-preview" class="ledger-import-preview" hidden></div>
+          <button id="ledger-parse-file" class="btn btn-outline" type="submit">Preview the file</button>
+          <button id="ledger-import-file" class="btn btn-primary" type="button" disabled>Import old list for review</button>
+        </form>
+      </section>
+
+      <section id="ledger-admin-all" class="ledger-admin-view" role="tabpanel" hidden>
+        <h3>All members’ records</h3>
+        <p>Search and review all current and imported entries. Use the record actions to update a name or record a payment.</p>
+        <div class="ledger-danger-zone">
+          <div>
+            <strong>Clear all financial records</strong>
+            <p>This permanently removes every ledger member, imported old figure, payment due, and payment history.</p>
+          </div>
+          <button id="ledger-delete-all" class="btn btn-danger" type="button">Delete all financial records</button>
         </div>
-        <button class="btn btn-primary" type="submit">Add member</button>
-      </form>
-      <form id="ledger-manual-debt-form" class="ticket-form ledger-add-member-form">
-        <h3>Manually add a member and debt</h3>
-        <div class="ticket-field-row">
-          <label>Member's name
-            <input name="member_name" type="text" maxlength="160" required>
-          </label>
-          <label>Other name (optional)
-            <input name="other_name" type="text" maxlength="160">
-          </label>
-        </div>
-        <label>Debt description
-          <input name="title" type="text" maxlength="160" placeholder="e.g. Choir monthly dues" required>
-        </label>
-        <div class="ticket-field-row">
-          <label>Debt type
-            <select name="category" required>
-              <option value="choir_monthly_dues">Choir monthly dues</option>
-              <option value="burial_levy">Burial levy</option>
-              <option value="wedding_levy">Wedding levy</option>
-              <option value="other">Other choir payment</option>
-            </select>
-          </label>
-          <label>Debt amount (₦)
-            <input name="amount_ngn" type="number" min="0.01" step="0.01" required>
-          </label>
-        </div>
-        <div class="ticket-field-row">
-          <label>Year (optional)
-            <input name="year" type="number" min="1900" max="2200" step="1" inputmode="numeric">
-          </label>
-          <label>Month (optional)
-            <select name="month">
-              <option value="">Not specified</option>
-              <option value="1">January</option>
-              <option value="2">February</option>
-              <option value="3">March</option>
-              <option value="4">April</option>
-              <option value="5">May</option>
-              <option value="6">June</option>
-              <option value="7">July</option>
-              <option value="8">August</option>
-              <option value="9">September</option>
-              <option value="10">October</option>
-              <option value="11">November</option>
-              <option value="12">December</option>
-            </select>
-          </label>
-        </div>
-        <button class="btn btn-primary" type="submit">Add member and debt</button>
-      </form>
+      </section>
     </section>
 
-    <section class="ticket-panel" aria-labelledby="ledger-search-heading">
+    <section class="ticket-panel" aria-labelledby="ledger-search-heading" id="ledger-search-panel">
       <div class="ledger-search-heading">
         <div>
-          <h2 id="ledger-search-heading">Find a member</h2>
-          <p>Search by name. Balances refresh automatically while this page is open.</p>
+          <h2 id="ledger-search-heading">Choir member payment records</h2>
+          <p id="ledger-search-help">Search a member’s name to see recorded dues, levies, payments, and old figures. Records refresh automatically.</p>
         </div>
-        <button id="ledger-refresh" class="btn btn-outline" type="button">Refresh</button>
+        <button id="ledger-refresh" class="btn btn-outline" type="button">Refresh records</button>
       </div>
-      <label class="ledger-search-field">Member's name
-        <input id="ledger-search" type="search" autocomplete="off" placeholder="Type a name to search">
+      <label class="ledger-search-field" id="ledger-search-label"><span id="ledger-search-caption">Search by member name</span>
+        <input id="ledger-search" type="search" autocomplete="off" placeholder="Type a member's name">
       </label>
+      <div class="ledger-filter-row">
+        <label>Year
+          <select id="ledger-year-filter">
+            <option value="">All years</option>
+          </select>
+        </label>
+        <label>Month
+          <select id="ledger-month-filter">
+            <option value="">All months</option>
+            <option value="1">January</option>
+            <option value="2">February</option>
+            <option value="3">March</option>
+            <option value="4">April</option>
+            <option value="5">May</option>
+            <option value="6">June</option>
+            <option value="7">July</option>
+            <option value="8">August</option>
+            <option value="9">September</option>
+            <option value="10">October</option>
+            <option value="11">November</option>
+            <option value="12">December</option>
+          </select>
+        </label>
+        <label>Payment type
+          <select id="ledger-category-filter">
+            <option value="">All payment types</option>
+            <option value="choir_monthly_dues">Choir monthly dues</option>
+            <option value="burial_levy">Burial levy</option>
+            <option value="wedding_levy">Wedding levy</option>
+            <option value="child_dedication_levy">Child dedication levy</option>
+            <option value="other">Other choir payment</option>
+            <option value="old_list">Old list figures</option>
+          </select>
+        </label>
+        <label>Payment status
+          <select id="ledger-status-filter">
+            <option value="">All records</option>
+            <option value="outstanding">Has an amount left to pay</option>
+            <option value="paid">Paid in full</option>
+            <option value="old">Old figures only</option>
+          </select>
+        </label>
+      </div>
       <div id="ledger-summary" class="ledger-summary" aria-live="polite"></div>
       <div id="ledger-records" class="ledger-records" aria-live="polite">
         <p>Loading the choir ledger…</p>

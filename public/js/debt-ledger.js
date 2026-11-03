@@ -7,6 +7,12 @@
   const recordsContainer = document.getElementById('ledger-records');
   const summaryContainer = document.getElementById('ledger-summary');
   const refreshButton = document.getElementById('ledger-refresh');
+  const searchPanel = document.getElementById('ledger-search-panel');
+  const yearFilter = document.getElementById('ledger-year-filter');
+  const monthFilter = document.getElementById('ledger-month-filter');
+  const categoryFilter = document.getElementById('ledger-category-filter');
+  const statusFilter = document.getElementById('ledger-status-filter');
+  const deleteAllButton = document.getElementById('ledger-delete-all');
   const importForm = document.getElementById('ledger-import-form');
   const addMemberForm = document.getElementById('ledger-add-member-form');
   const manualDebtForm = document.getElementById('ledger-manual-debt-form');
@@ -33,6 +39,7 @@
     choir_monthly_dues: 'Choir monthly dues',
     burial_levy: 'Burial levy',
     wedding_levy: 'Wedding levy',
+    child_dedication_levy: 'Child dedication levy',
     other: 'Other choir payment'
   }[category] || 'Choir payment');
   const monthName = month => month
@@ -70,23 +77,30 @@
       .map(payment => `<li>${money(payment.amount_ngn)} received${payment.paid_at ? ` on ${escapeHtml(new Date(payment.paid_at).toLocaleDateString())}` : ''}${payment.reference ? ` · Ref: ${escapeHtml(payment.reference)}` : ''}</li>`)
       .join('');
     const paymentForm = canManageLedger && totals.remainingCents > 0
-      ? `<form data-ledger-action="add-payment" data-obligation-id="${escapeHtml(obligation.id)}">
+      ? `<details class="ledger-record-payment">
+          <summary>Record a payment received</summary>
+          <p>Enter the amount shown on the member's receipt. You can record a part-payment.</p>
+          <form data-ledger-action="add-payment" data-obligation-id="${escapeHtml(obligation.id)}">
           <div class="ticket-field-row">
-            <label>Amount received (remaining ${money(fromCents(totals.remainingCents))})
+            <label>Amount received (up to ${money(fromCents(totals.remainingCents))})
               <input name="amount_ngn" type="number" min="0.01" max="${fromCents(totals.remainingCents)}" step="0.01" required>
             </label>
-            <label>Payment reference (optional)
+            <label>Receipt or payment reference (optional)
               <input name="reference" type="text" maxlength="120">
             </label>
           </div>
-          <button class="btn btn-outline" type="submit">Record payment</button>
-        </form>`
+          <button class="btn btn-primary" type="submit">Save payment received</button>
+          </form>
+        </details>`
       : '';
     const period = periodLabel(obligation.period_year, obligation.period_month);
 
     return `<article class="ledger-obligation">
-      <h4><span>${escapeHtml(obligation.title)} <small>· ${escapeHtml(labelCategory(obligation.category))}</small></span><strong>${money(fromCents(totals.remainingCents))} left</strong></h4>
-      <p>Amount due: ${money(obligation.amount_ngn)} · Paid: ${money(fromCents(totals.paidCents))} · ${paymentStatus} · ${escapeHtml(period)}</p>
+      <div class="ledger-obligation-heading">
+        <div><h4>${escapeHtml(obligation.title)}</h4><p>${escapeHtml(labelCategory(obligation.category))} · ${escapeHtml(period)}</p></div>
+        <div class="ledger-amount-remaining"><span>Still to pay</span><strong>${money(fromCents(totals.remainingCents))}</strong></div>
+      </div>
+      <p class="ledger-payment-status">${paymentStatus}: ${money(fromCents(totals.paidCents))} paid out of ${money(obligation.amount_ngn)}.</p>
       ${paymentHistory ? `<ul class="ledger-payment-history">${paymentHistory}</ul>` : '<p class="ledger-no-obligations">No payments have been recorded yet.</p>'}
       ${paymentForm}
     </article>`;
@@ -105,8 +119,8 @@
       ? `<p>Other name: ${escapeHtml(entry.other_name)}</p>`
       : '';
     const reviewStatus = entry.review_status === 'reviewed'
-      ? '<span class="ledger-review-status is-reviewed">Source checked</span>'
-      : '<span class="ledger-review-status">Needs finance review</span>';
+      ? '<span class="ledger-review-status is-reviewed">Old list checked</span>'
+      : '<span class="ledger-review-status">Old list not checked</span>';
     const sourceValues = entry.source_serial !== null || entry.source_debt_2025 !== null
       || entry.source_debt_2026 !== null || entry.source_debt_amount !== null
       || entry.source_year !== null || entry.source_month !== null
@@ -115,51 +129,57 @@
     const hasLegacySourceAmounts = entry.source_debt_2025 !== null
       || entry.source_debt_2026 !== null || entry.source_total !== null;
     const sourcePanel = sourceValues
-      ? `<section class="ledger-source-values">
-          <h4>Original figures and notes${entry.source_serial !== null ? ` · source no. ${escapeHtml(entry.source_serial)}` : ''}${entry.source_row_number !== null ? ` · source list row ${escapeHtml(entry.source_row_number)}` : ''}</h4>
+      ? `<section class="ledger-source-values" aria-label="Old list information, not included in balance">
+          <h4>Old list figures${entry.source_serial !== null ? ` · S/N ${escapeHtml(entry.source_serial)}` : ''}</h4>
           ${sourceName}${sourceOtherName}
-          ${hasLegacySourceAmounts ? `<p>2025: ${escapeHtml(entry.source_debt_2025 ?? 'Not listed')} · 2026: ${escapeHtml(entry.source_debt_2026 ?? 'Not listed')}</p>` : ''}
-          ${entry.source_debt_amount !== null ? `<p>Amount as listed: ${escapeHtml(entry.source_debt_amount)}</p>` : ''}
-          ${entry.source_year || entry.source_month ? `<p>Listed period: ${escapeHtml(periodLabel(entry.source_year, entry.source_month))}</p>` : ''}
-          ${entry.source_category ? `<p>Listed type: ${escapeHtml(entry.source_category)}</p>` : ''}
-          ${entry.source_file_name ? `<p>Imported from: ${escapeHtml(entry.source_file_name)}</p>` : ''}
-          ${entry.source_total !== null ? `<p>Original total: ${escapeHtml(entry.source_total)}</p>` : ''}
+          ${hasLegacySourceAmounts ? `<div class="ledger-old-figures">
+            ${entry.source_debt_2025 !== null ? `<p><span>2025 debt</span><strong>${escapeHtml(entry.source_debt_2025)}</strong></p>` : ''}
+            ${entry.source_debt_2026 !== null ? `<p><span>2026 debt</span><strong>${escapeHtml(entry.source_debt_2026)}</strong></p>` : ''}
+          </div>` : ''}
+          ${entry.source_debt_amount !== null ? `<p>Amount in old list: <strong>${escapeHtml(entry.source_debt_amount)}</strong></p>` : ''}
+          ${entry.source_year || entry.source_month ? `<p>Period in old list: ${escapeHtml(periodLabel(entry.source_year, entry.source_month))}</p>` : ''}
+          ${entry.source_category ? `<p>Payment type in old list: ${escapeHtml(entry.source_category)}</p>` : ''}
+          ${entry.source_total !== null ? `<p>Total / note from old list: <strong>${escapeHtml(entry.source_total)}</strong></p>` : ''}
           ${entry.source_notes ? `<p>Note: ${escapeHtml(entry.source_notes)}</p>` : ''}
-          ${entry.review_status !== 'reviewed' ? '<p class="debt-ledger-note">These original figures have not yet been checked and are not included in the live balance below.</p>' : ''}
+          ${entry.source_file_name ? `<p>Imported from: ${escapeHtml(entry.source_file_name)}</p>` : ''}
+          ${entry.review_status !== 'reviewed' ? '<p class="debt-ledger-note">These old figures are shown as supplied. They do not change the current balance until a Finance Secretary checks and confirms them.</p>' : '<p class="ledger-source-checked-note">These figures were checked. They remain separate from the current balance.</p>'}
         </section>`
       : '';
     const management = canManageLedger
-      ? `<div class="ledger-management-controls">
+      ? `<details class="ledger-management-controls">
+          <summary>Finance Secretary: manage this member's record</summary>
+          <p>Use these options to correct the name, check an old list entry, or add a new amount due.</p>
           <form data-ledger-action="save-entry" data-entry-id="${escapeHtml(entry.id)}">
             <div class="ticket-field-row">
-              <label>Displayed member name
+              <label>Member's full name
                 <input name="member_name" type="text" maxlength="160" value="${escapeHtml(entry.member_name)}" required>
               </label>
-              <label>Other name
+              <label>Other name (optional)
                 <input name="other_name" type="text" maxlength="160" value="${escapeHtml(entry.other_name || '')}">
               </label>
             </div>
-            <button class="btn btn-outline" type="submit">Save name changes</button>
+            <button class="btn btn-outline" type="submit">Save name</button>
           </form>
-          ${entry.review_status !== 'reviewed' ? `<button class="btn btn-outline" type="button" data-ledger-review="${escapeHtml(entry.id)}">Mark source figures checked</button>` : ''}
+          ${entry.review_status !== 'reviewed' ? `<button class="btn btn-outline" type="button" data-ledger-review="${escapeHtml(entry.id)}">Mark old list as checked</button>` : ''}
           <form data-ledger-action="add-obligation" data-entry-id="${escapeHtml(entry.id)}">
-            <h4>Add confirmed dues or levy</h4>
-            <label>Description
-              <input name="title" type="text" maxlength="160" placeholder="e.g. Choir monthly dues — 2026" required>
-            </label>
+            <h4>Add a payment due</h4>
             <div class="ticket-field-row">
-              <label>Type
+              <label>Type of payment
                 <select name="category" required>
                   <option value="choir_monthly_dues">Choir monthly dues</option>
                   <option value="burial_levy">Burial levy</option>
                   <option value="wedding_levy">Wedding levy</option>
+                  <option value="child_dedication_levy">Child dedication levy</option>
                   <option value="other">Other choir payment</option>
                 </select>
               </label>
-              <label>Amount due (₦)
+              <label>Amount (₦)
                 <input name="amount_ngn" type="number" min="0.01" step="0.01" required>
               </label>
             </div>
+            <label>Short description
+              <input name="title" type="text" maxlength="160" placeholder="For example: November 2026 dues" required>
+            </label>
             <div class="ticket-field-row">
               <label>Year (optional)
                 <input name="year" type="number" min="1900" max="2200" step="1" inputmode="numeric">
@@ -176,9 +196,9 @@
                 </select>
               </label>
             </div>
-            <button class="btn btn-primary" type="submit">Add confirmed amount</button>
+            <button class="btn btn-primary" type="submit">Add payment due</button>
           </form>
-        </div>`
+        </details>`
       : '';
 
     return `<article class="ledger-record">
@@ -193,8 +213,8 @@
       <section class="ledger-obligations" aria-label="Confirmed debts and payments">
         ${obligations.length
           ? obligations.map(renderObligation).join('')
-          : '<p class="ledger-no-obligations">No confirmed balance has been added to this record.</p>'}
-        ${obligations.length ? `<p><strong>Total confirmed balance remaining: ${money(fromCents(outstandingCents))}</strong></p>` : ''}
+          : '<p class="ledger-no-obligations">No payment due has been recorded for this member yet.</p>'}
+        ${obligations.length ? `<p class="ledger-total-remaining"><strong>Total still to pay: ${money(fromCents(outstandingCents))}</strong></p>` : ''}
       </section>
       ${management}
     </article>`;
@@ -202,23 +222,73 @@
 
   function renderLedger() {
     const search = searchInput.value.trim().toLocaleLowerCase();
-    const filtered = entries.filter(entry => [
+    const selectedYear = yearFilter.value;
+    const selectedMonth = monthFilter.value;
+    const selectedCategory = categoryFilter.value;
+    const selectedStatus = statusFilter.value;
+    const filtered = entries.filter(entry => {
+      const obligations = entry.obligations || [];
+      const matchesName = [
       entry.member_name,
       entry.other_name,
       entry.source_member_name,
       entry.source_other_name
-    ].some(value => String(value || '').toLocaleLowerCase().includes(search)));
+      ].some(value => String(value || '').toLocaleLowerCase().includes(search));
+      const textMatches = !search || matchesName
+        || String(entry.source_debt_2025 || '').toLocaleLowerCase().includes(search)
+        || String(entry.source_debt_2026 || '').toLocaleLowerCase().includes(search)
+        || String(entry.source_total || '').toLocaleLowerCase().includes(search)
+        || String(entry.source_notes || '').toLocaleLowerCase().includes(search)
+        || obligations.some(item => `${item.title} ${labelCategory(item.category)}`.toLocaleLowerCase().includes(search));
+      const yearMatches = !selectedYear
+        || (selectedYear === '2025' && entry.source_debt_2025 !== null)
+        || (selectedYear === '2026' && entry.source_debt_2026 !== null)
+        || obligations.some(item => String(item.period_year || '') === selectedYear);
+      const monthMatches = !selectedMonth
+        || String(entry.source_month || '') === selectedMonth
+        || obligations.some(item => String(item.period_month || '') === selectedMonth);
+      const categoryMatches = !selectedCategory
+        || (selectedCategory === 'old_list' && (
+          entry.source_debt_2025 !== null || entry.source_debt_2026 !== null
+          || entry.source_debt_amount !== null || entry.source_total !== null
+        ))
+        || obligations.some(item => item.category === selectedCategory);
+      const remainingCents = obligations.reduce((sum, item) => sum + paymentTotals(item).remainingCents, 0);
+      const hasLegacy = entry.source_debt_2025 !== null || entry.source_debt_2026 !== null
+        || entry.source_debt_amount !== null || entry.source_total !== null;
+      const statusMatches = !selectedStatus
+        || (selectedStatus === 'outstanding' && remainingCents > 0)
+        || (selectedStatus === 'paid' && obligations.length > 0 && remainingCents === 0)
+        || (selectedStatus === 'old' && hasLegacy && obligations.length === 0);
+      return textMatches && yearMatches && monthMatches && categoryMatches && statusMatches;
+    });
     const outstandingCents = filtered.reduce((sum, entry) => sum + (entry.obligations || [])
       .reduce((entrySum, obligation) => entrySum + paymentTotals(obligation).remainingCents, 0), 0);
     const needsReviewCount = filtered.filter(entry => entry.review_status !== 'reviewed').length;
-    summaryContainer.innerHTML = `<span>${filtered.length} ${filtered.length === 1 ? 'record' : 'records'}</span>
-      <span>${money(fromCents(outstandingCents))} confirmed balance remaining in these results</span>
-      <span>${needsReviewCount} source ${needsReviewCount === 1 ? 'record needs' : 'records need'} checking</span>`;
+    summaryContainer.innerHTML = `<span><strong>${filtered.length}</strong> ${filtered.length === 1 ? 'member record' : 'member records'}</span>
+      <span><strong>${money(fromCents(outstandingCents))}</strong> confirmed balance still to pay</span>
+      ${canManageLedger && needsReviewCount ? `<span><strong>${needsReviewCount}</strong> old ${needsReviewCount === 1 ? 'list entry needs' : 'list entries need'} checking</span>` : ''}`;
     recordsContainer.innerHTML = filtered.length
       ? filtered.map(renderEntry).join('')
       : `<p class="ledger-empty">${entries.length
         ? 'No member names matched that search.'
         : 'No records are available for this search. Contact a choir administrator if you think a record is missing.'}</p>`;
+  }
+
+  function updateYearOptions() {
+    const selected = yearFilter.value;
+    const years = new Set(['2025', '2026']);
+    entries.forEach(entry => {
+      if (entry.source_year) years.add(String(entry.source_year));
+      (entry.obligations || []).forEach(obligation => {
+        if (obligation.period_year) years.add(String(obligation.period_year));
+      });
+    });
+    yearFilter.innerHTML = '<option value="">All years</option>' + [...years]
+      .sort((a, b) => Number(b) - Number(a))
+      .map(year => `<option value="${escapeHtml(year)}">${escapeHtml(year)}</option>`)
+      .join('');
+    if (years.has(selected)) yearFilter.value = selected;
   }
 
   async function loadLedger(quiet = false) {
@@ -228,6 +298,7 @@
     try {
       const result = await api.get('/debt-ledger');
       entries = result.entries || [];
+      updateYearOptions();
       const bank = result.bank || {};
       if (bank.name && bank.number && bank.bank) {
         document.getElementById('ledger-bank-name').textContent = bank.name;
@@ -542,13 +613,63 @@
   });
 
   searchInput.addEventListener('input', renderLedger);
+  yearFilter.addEventListener('change', renderLedger);
+  monthFilter.addEventListener('change', renderLedger);
+  categoryFilter.addEventListener('change', renderLedger);
+  statusFilter.addEventListener('change', renderLedger);
   refreshButton.addEventListener('click', () => loadLedger());
+
+  document.querySelectorAll('[data-ledger-tab]').forEach(button => {
+    button.addEventListener('click', () => {
+      const selectedTab = button.dataset.ledgerTab;
+      document.querySelectorAll('[data-ledger-tab]').forEach(tab => {
+        const selected = tab === button;
+        tab.classList.toggle('is-active', selected);
+        tab.setAttribute('aria-selected', String(selected));
+      });
+      document.querySelectorAll('.ledger-admin-view').forEach(view => {
+        view.hidden = view.id !== `ledger-admin-${selectedTab}`;
+      });
+      searchPanel.hidden = selectedTab !== 'all';
+      if (selectedTab === 'all') renderLedger();
+    });
+  });
+
+  deleteAllButton.addEventListener('click', async () => {
+    const confirmed = window.confirm(
+      'This will permanently delete every member record, old imported figure, payment due, and payment history from the choir ledger. This cannot be undone. Continue?'
+    );
+    if (!confirmed) return;
+
+    const phrase = window.prompt('To confirm, type DELETE ALL FINANCIAL RECORDS exactly:');
+    if (phrase !== 'DELETE ALL FINANCIAL RECORDS') {
+      showAlert('Nothing was deleted. The confirmation phrase did not match.', 'info');
+      return;
+    }
+
+    deleteAllButton.disabled = true;
+    try {
+      const result = await api.delete('/debt-ledger/records', {
+        confirmation: 'DELETE ALL FINANCIAL RECORDS'
+      });
+      entries = [];
+      renderLedger();
+      showAlert(result.message || 'All financial records were deleted.', 'success');
+    } catch (error) {
+      showAlert(error.message || 'The records could not be deleted. No changes were made.', 'error');
+    } finally {
+      deleteAllButton.disabled = false;
+    }
+  });
 
   api.get('/auth/me').then(user => {
     const isAdmin = user?.role === 'admin';
     canManageLedger = isAdmin && new URLSearchParams(window.location.search).get('mode') === 'admin';
     managementPanel.hidden = !canManageLedger;
     ledgerAdminNav.classList.toggle('ledger-admin-only', !isAdmin);
+    if (canManageLedger) {
+      searchPanel.hidden = true;
+    }
     loadLedger();
   }).catch(error => {
     showAlert(error.message || 'Please sign in again to view the choir ledger.', 'error');

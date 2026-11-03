@@ -60,6 +60,49 @@
   box-shadow: 0 8px 26px rgb(52 25 12 / 5%);
 }
 
+.ticket-bank-details {
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid #eadfd1;
+  border-radius: 0.75rem;
+  background: #fffdf9;
+}
+
+.ticket-bank-details h3 {
+  margin: 0 0 0.35rem;
+}
+
+.ticket-bank-details > p {
+  margin: 0 0 0.75rem;
+  color: #6b625b;
+  line-height: 1.5;
+}
+
+.ticket-bank-details dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.65rem;
+  margin: 0;
+}
+
+.ticket-bank-details dl > div {
+  padding: 0.7rem 0.8rem;
+  border-radius: 0.5rem;
+  background: #fff;
+}
+
+.ticket-bank-details dt {
+  color: #6b625b;
+  font-size: 0.82rem;
+}
+
+.ticket-bank-details dd {
+  margin: 0.2rem 0 0;
+  color: #281b1b;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
 .ticket-panel h2 {
   margin: 0 0 0.5rem;
 }
