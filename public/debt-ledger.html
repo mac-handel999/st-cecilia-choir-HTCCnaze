@@ -57,9 +57,9 @@
       <p>Source records are imported once. Re-importing the same file will not duplicate entries or overwrite finance updates.</p>
       <form id="ledger-import-form" class="ticket-form">
         <label>Choose a debt list file
-          <input name="file" type="file" accept=".csv,.pdf,.xlsx,.txt,.json,text/csv,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/plain,application/json" required>
+          <input name="file" type="file" accept=".csv,.xlsx,.txt,.json,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/plain,application/json" required>
         </label>
-        <small>Supported: CSV, text-based PDF, Excel (.xlsx), TXT, or JSON. Scanned/image-only PDFs need to be entered manually. Your file is processed by this app's server.</small>
+        <small>Supported: CSV, Excel (.xlsx), TXT, or JSON. For PDF records, enter the details manually. Your file is processed by this app's server.</small>
         <div id="ledger-import-preview" class="ledger-import-preview" hidden></div>
         <button id="ledger-parse-file" class="btn btn-outline" type="submit">Read and preview file</button>
         <button id="ledger-import-file" class="btn btn-primary" type="button" disabled>Import source rows for review</button>

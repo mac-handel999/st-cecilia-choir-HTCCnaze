@@ -2803,6 +2803,7 @@ a:hover {
 }
 
 .quick-action {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2837,10 +2838,51 @@ a:hover {
   color: var(--color-primary);
 }
 
-.quick-action span:last-child {
+.quick-action > span:last-child {
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--color-primary);
+}
+
+.quick-action-badge {
+  display: inline-block;
+  margin-left: 0.25rem;
+  padding: 0.12rem 0.35rem;
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: #3b2600;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  vertical-align: 0.08em;
+}
+
+.quick-action[data-tooltip]::after {
+  position: absolute;
+  z-index: 20;
+  right: 0;
+  bottom: calc(100% + 0.4rem);
+  left: 0;
+  padding: 0.55rem 0.7rem;
+  border-radius: var(--radius-md);
+  background: #241719;
+  color: #fff;
+  content: attr(data-tooltip);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.4;
+  text-align: left;
+  box-shadow: var(--shadow-md);
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  transition: opacity 0.15s ease, visibility 0.15s ease;
+}
+
+.quick-action[data-tooltip]:hover::after,
+.quick-action[data-tooltip]:focus-visible::after {
+  opacity: 1;
+  visibility: visible;
 }
 
 .quick-action-admin {
@@ -2853,8 +2895,12 @@ a:hover {
   color: #FFFFFF;
 }
 
-.quick-action-admin span:last-child {
+.quick-action-admin > span:last-child {
   color: #FFFFFF;
+}
+
+.quick-action-admin .quick-action-badge {
+  color: #3b2600;
 }
 
 .quick-action-admin:hover {

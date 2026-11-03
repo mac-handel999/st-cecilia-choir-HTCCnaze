@@ -16,9 +16,9 @@ The goal of this website is to bridge the gap between traditional liturgical mus
 
 * **🎼 Musical Scores & Scripts Library:** A searchable database of PDF scores, Tonic Sol-fa sheets, and MIDI/MP3 rehearsal files categorized by Liturgical Season (Advent, Lent, Ordinary Time, etc.). Features Google Drive integration for score storage and retrieval.
 * **📖 Member Hymn Library:** Logged-in members can search the Catholic, Assumpta, and Legion of Mary collections by hymn number or title. Authorized hymn data is cached on the device after first access for offline reading.
-* **📅 Choir Events Page:** A public event page for rehearsal schedules, Feast Day celebrations, and Archdiocesan competitions. Featured November and December 2026 events include flyers and automatically updating days-left countdowns.
+* **📅 Choir Events Page:** A public event page for current choir events and a restored archive of earlier celebrations. Featured November and December 2026 events include flyers; Music Boom has a live days, hours, minutes, and seconds countdown.
 * **🤖 Cecilia AI Chat Assistant:** An AI-powered liturgical music assistant powered by Groq, capable of answering questions about music, liturgy, choir policies, and more.
-* **👥 Member Portal:** A personalized dashboard for choristers with a Next Rehearsal countdown, quick-access cards, and dynamic time-based greetings.
+* **👥 Member Portal:** A personalized dashboard for choristers with Next Rehearsal and event countdowns, quick-access cards with helpful hover/focus tips, and “NEW” markers for recently added features.
 * **📸 Media Gallery:** A responsive carousel and grid view showcasing photographs and videos from various performances and church functions.
 * **🏛️ Executives Page:** A dedicated page highlighting the current choir executive committee members and their roles.
 * **📊 Attendance Tracking:** Record and track attendance for rehearsals and events. Members can mark their own attendance; admins can manage all records.
@@ -49,7 +49,8 @@ The goal of this website is to bridge the gap between traditional liturgical mus
 * **Sunday Mass Countdown:** Countdown timer for the next scheduled Sunday Mass.
 * **Sunday Mass Times:** First Mass at 5:30 AM and second Mass at 10:00 AM.
 * **Daily Rehearsals:** The dashboard highlights ongoing rehearsals preparing for St. Cecilia’s Feast, Music Boom, and the 2026 Christmas and New Year celebrations.
-* **Quick-Access Cards:** Bento-style grid for Scores, Attendance, Cecilia AI, Events, Order of Mass, and more.
+* **Quick-Access Cards:** Bento-style grid for Scores, Attendance, Cecilia AI, Events, Order of Mass, and more. Each action has a hover or keyboard-focus tooltip; recently added features are marked “NEW.”
+* **Upcoming Event Countdown:** Music Boom’s featured card counts down live in days, hours, minutes, and seconds. Past event cards remain in the public archive alongside current listings.
 * **Personalized Dashboard:** Tailored home screen for logged-in members.
 * **Mixed Updates Feed:** Announcements, new scores, and new events displayed together in the Announcements section with type icons and colors.
 * **Admin Floating Button:** Quick access to Announcement Box for admins and executives.
@@ -74,12 +75,16 @@ The goal of this website is to bridge the gap between traditional liturgical mus
       "title": "Hymn title",
       "category": "Opening",
       "verses": [
-        { "label": "Stanza 1", "lines": ["First line", "Second line"] }
+        { "label": "VERSE 1", "lines": ["First line", "Second line"] }
       ],
       "chorus": { "label": "Chorus", "lines": ["Chorus line"] }
     }
   ]
   ```
+
+### Member portal guide
+
+The [By Law / Constitution page](./public/constitution.html) also includes a practical member portal guide. It explains how to find events and their archive, use hymn and Mass resources, review ledger balances, reserve Music Boom tickets, and enable browser notifications. This guide is separate from the official constitution text.
 
 ### Cecilia AI
 * **Source-grounded references:** Exact hymn, Order of Mass, and available constitution questions are answered from the local data, with a source label. If the requested text is missing or the constitution does not contain numbered sections, Cecilia says so rather than guessing.
@@ -376,7 +381,7 @@ To set it up:
 
 1. Run [`supabase-debt-ledger.sql`](./supabase-debt-ledger.sql) in the Supabase SQL Editor. The tables are private to the server's service-role API.
 2. Sign in with an admin or exco account and open **Debt Ledger** from the member dashboard or Admin Dashboard.
-3. Admins and exco can import CSV, text-based PDF, Excel `.xlsx`, TXT, or JSON debt lists. The app reads the file on the server, shows a preview, and asks the user to map each column before saving. Imports are idempotent and keep source amounts as text; they do not calculate expressions or change confirmed balances. The original numbered JSON list keeps its serial numbers, including duplicates. Scanned/image-only PDFs cannot be read automatically and should be entered manually.
+3. Admins and exco can import CSV, Excel `.xlsx`, TXT, or JSON debt lists. The app reads the file on the server, shows a preview, and asks the user to map each column before saving. Imports are idempotent and keep source amounts as text; they do not calculate expressions or change confirmed balances. The original numbered JSON list keeps its serial numbers, including duplicates. PDF imports are not supported; enter those records manually.
 4. To enter a new debt directly, use **Manually add a member and debt**. The member's name, description, type, and amount are required; year and month are optional. The member and confirmed debt are saved together as one database operation. Existing members can also have a confirmed debt added from their ledger entry.
 5. Review imported figures with the Finance Secretary. Confirm member names if needed, mark source figures checked, and add each verified amount as a dues or levy item. Record each payment as it is received; members then see the amount paid and balance remaining.
 

@@ -66,7 +66,7 @@ window.renderFeaturedEventCard = function renderFeaturedEventCard(event, options
         <h3>${escapeHtml(event.title)}</h3>
         <div class="featured-event-details">${details}</div>
         ${content}
-        <p class="featured-event-countdown" data-event-countdown="${escapeHtml(event.id)}" data-target="${escapeHtml(event.target)}" aria-live="polite"></p>
+        <div class="featured-event-countdown countdown-wrap" data-event-countdown="${escapeHtml(event.id)}" data-target="${escapeHtml(event.target)}" role="timer" aria-label="Time remaining until ${escapeHtml(event.title)}"></div>
         ${ticketLink}
         ${compact ? '' : '<a class="btn btn-outline btn-sm" href="events.html">View all events</a>'}
       </div>
@@ -75,6 +75,13 @@ window.renderFeaturedEventCard = function renderFeaturedEventCard(event, options
 };
 
 window.updateFeaturedEventCountdowns = function updateFeaturedEventCountdowns() {
+  const units = [
+    { label: 'Days', divisor: 86400000 },
+    { label: 'Hours', divisor: 3600000 },
+    { label: 'Minutes', divisor: 60000 },
+    { label: 'Seconds', divisor: 1000 }
+  ];
+
   document.querySelectorAll('[data-event-countdown][data-target]').forEach(element => {
     const target = new Date(element.dataset.target);
     if (Number.isNaN(target.getTime())) {
@@ -88,8 +95,19 @@ window.updateFeaturedEventCountdowns = function updateFeaturedEventCountdowns() 
       return;
     }
 
-    const daysLeft = Math.ceil(remaining / 86400000);
-    element.textContent = `${daysLeft} ${daysLeft === 1 ? 'day' : 'days'} left until D-Day`;
+    if (element.querySelectorAll('.countdown-value').length !== units.length) {
+      element.innerHTML = units.map(unit => (
+        `<span class="countdown-block"><span class="countdown-value"></span><span class="countdown-label">${unit.label}</span></span>`
+      )).join('');
+    }
+
+    const values = element.querySelectorAll('.countdown-value');
+    let remainingUnits = remaining;
+    units.forEach((unit, index) => {
+      const value = Math.floor(remainingUnits / unit.divisor);
+      remainingUnits %= unit.divisor;
+      values[index].textContent = String(value);
+    });
   });
 };
 
@@ -109,5 +127,5 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   window.updateFeaturedEventCountdowns();
-  window.setInterval(window.updateFeaturedEventCountdowns, 60000);
+  window.setInterval(window.updateFeaturedEventCountdowns, 1000);
 });

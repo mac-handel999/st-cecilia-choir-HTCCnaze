@@ -7,7 +7,6 @@ const { createClient } = require('@supabase/supabase-js');
 const Groq = require('groq-sdk');
 const multer = require('multer');
 const readXlsxFile = require('read-excel-file/node');
-const pdfParse = require('pdf-parse');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
@@ -184,8 +183,8 @@ const debtLedgerImportUpload = multer({
   limits: { fileSize: 8 * 1024 * 1024, files: 1 },
   fileFilter(req, file, callback) {
     const extension = path.extname(file.originalname || '').toLowerCase();
-    if (!['.csv', '.pdf', '.xlsx', '.txt', '.json'].includes(extension)) {
-      return callback(new Error('Please choose a CSV, PDF, Excel, TXT, or JSON file.'));
+    if (!['.csv', '.xlsx', '.txt', '.json'].includes(extension)) {
+      return callback(new Error('Please choose a CSV, Excel, TXT, or JSON file.'));
     }
     callback(null, true);
   }
@@ -1219,10 +1218,6 @@ function tableToImportRows(rows, headers = null) {
 
 async function parseDebtLedgerFile(file) {
   const extension = path.extname(file.originalname || '').toLowerCase();
-  if (extension === '.pdf' && file.buffer.subarray(0, 5).toString() !== '%PDF-') {
-    throw new Error('This file does not appear to be a valid PDF.');
-  }
-
   let parsed;
   let legacyRecords = null;
   if (extension === '.xlsx') {
@@ -1264,35 +1259,8 @@ async function parseDebtLedgerFile(file) {
     }
     const headers = [...new Set(rows.flatMap(row => Object.keys(row)))].slice(0, 60);
     parsed = tableToImportRows(rows.map(row => headers.map(header => row[header])), headers);
-  } else if (extension === '.pdf') {
-    try {
-      const textResult = await pdfParse(file.buffer);
-      const text = String(textResult.text || '').trim();
-      if (!text) {
-        throw new Error('No selectable text or table could be read from this PDF. It may be a scanned image; try a text-based PDF or enter the records manually.');
-      }
-      const lines = text.split(/\r?\n/)
-        .map(line => line.trim())
-        .filter(line => line);
-      const delimitedRows = lines.map(line => {
-        if (line.includes('|')) return line.split('|').map(cell => cell.trim());
-        if (line.includes('\t')) return line.split(/\t+/).map(cell => cell.trim());
-        return line.split(/\s{2,}/).map(cell => cell.trim());
-      });
-      if (delimitedRows.length > 1 && delimitedRows.every(row => row.length === 1)) {
-        throw new Error('This PDF contains readable text, but its columns could not be separated. Use a table-based PDF, CSV, Excel file, or enter the rows manually.');
-      }
-      parsed = tableToImportRows(delimitedRows);
-    } catch (error) {
-      if (error.message.startsWith('No selectable text')
-          || error.message.startsWith('This PDF contains readable text')
-          || error.message.startsWith('This file has more than 2,000 rows')) {
-        throw error;
-      }
-      throw new Error('This PDF could not be opened. Use an unlocked PDF with selectable text and try again.');
-    }
   } else {
-    throw new Error('Please choose a CSV, PDF, Excel, TXT, or JSON file.');
+    throw new Error('Please choose a CSV, Excel, TXT, or JSON file. PDF uploads are not supported; enter those records manually.');
   }
 
   return {

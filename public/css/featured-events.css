@@ -94,6 +94,25 @@
   font-weight: 800;
 }
 
+.featured-event-countdown.countdown-wrap {
+  gap: 0.35rem;
+  justify-content: flex-start;
+}
+
+.featured-event-countdown .countdown-block {
+  min-width: 46px;
+  padding: 0.35rem 0.45rem;
+  flex: 1 1 46px;
+}
+
+.featured-event-countdown .countdown-value {
+  font-size: 1.1rem;
+}
+
+.featured-event-countdown .countdown-label {
+  font-size: 0.6rem;
+}
+
 .featured-event-card-compact .featured-event-flyer {
   max-height: 360px;
 }

@@ -7,11 +7,99 @@ document.addEventListener('DOMContentLoaded', async () => {
   const filterBtns = document.querySelectorAll('[data-event-filter]');
   if (!container) return;
 
-  let eventsData = [...(window.FEATURED_CHOIR_EVENTS || [])];
+  const historicalEvents = [
+    {
+      id: 'history-music-boom-season-2',
+      title: 'THE MUSIC BOOM SEASON 2',
+      description: 'A night of classical and native carols and orchestral performances celebrating the birth of Christ.',
+      event_date: '2025-12-20',
+      event_time: '6:00 PM',
+      location: 'Parish House',
+      type: 'Concert',
+      image_url: 'IMAGES/choir.jpg'
+    },
+    {
+      id: 'history-st-cecilia-feast-2025',
+      title: "ST. CECILIA'S FEAST DAY",
+      description: 'Our patronal feast day celebration featuring a grand high Mass and choral banquet.',
+      event_date: '2025-11-22',
+      event_time: '10:00 AM',
+      location: 'Holy Trinity Catholic Church',
+      type: 'Mass',
+      image_url: 'IMAGES/HTCC.png'
+    },
+    {
+      id: 'history-old-schools-day-2025',
+      title: 'CHOIR OLD SCHOOLS DAY',
+      description: 'A day to embrace our rich cultural and African musical heritage and celebrate the legacy of St. Cecilia.',
+      event_date: '2025-10-15',
+      event_time: '12:00 PM',
+      location: 'Parish House',
+      type: 'Social',
+      image_url: 'IMAGES/singers1.png'
+    },
+    {
+      id: 'history-music-boom-season-1',
+      title: 'THE MUSIC BOOM SEASON 1',
+      description: 'A night of classical and native carols and orchestral performances celebrating the birth of Christ.',
+      event_date: '2024-12-20',
+      event_time: '6:00 PM',
+      location: 'Parish House',
+      type: 'Concert',
+      image_url: 'IMAGES/choir.jpg'
+    },
+    {
+      id: 'history-st-cecilia-feast-2024',
+      title: "ST. CECILIA'S FEAST DAY 2024",
+      description: 'Our patronal feast day celebration featuring a grand high Mass and choral banquet.',
+      event_date: '2024-11-22',
+      event_time: '10:00 AM',
+      location: 'Holy Trinity Catholic Church',
+      type: 'Mass',
+      image_url: 'IMAGES/logo-2.jpg'
+    },
+    {
+      id: 'history-old-schools-day-2024',
+      title: 'CHOIR OLD SCHOOLS DAY 2024',
+      description: 'A day to embrace our rich cultural and African musical heritage and celebrate the legacy of St. Cecilia.',
+      event_date: '2024-10-15',
+      event_time: '12:00 PM',
+      location: 'Parish House',
+      type: 'Social',
+      image_url: 'IMAGES/singers2.jpg'
+    }
+  ];
+
+  const featuredEvents = window.FEATURED_CHOIR_EVENTS || [];
+  let eventsData = [...featuredEvents, ...historicalEvents].sort(sortEvents);
   let activeFilter = 'all';
 
   function isFeaturedEvent(event) {
-    return String(event.id || '').startsWith('st-cecilia-') || String(event.id || '').startsWith('music-boom-');
+    return featuredEvents.some(featured => eventKey(featured) === eventKey(event));
+  }
+
+  function eventKey(event) {
+    return `${String(event.event_date || '').slice(0, 10)}|${String(event.title || '').trim().toLocaleLowerCase()}`;
+  }
+
+  function eventTimestamp(event) {
+    const date = String(event.event_date || '').slice(0, 10);
+    const time = String(event.event_time || '').match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?/i);
+    if (!time) return new Date(`${date}T23:59:00`).getTime();
+    let hours = Number(time[1]);
+    if (time[3]?.toUpperCase() === 'PM' && hours < 12) hours += 12;
+    if (time[3]?.toUpperCase() === 'AM' && hours === 12) hours = 0;
+    return new Date(`${date}T${String(hours).padStart(2, '0')}:${time[2]}:00`).getTime();
+  }
+
+  function sortEvents(a, b) {
+    const now = Date.now();
+    const aTime = eventTimestamp(a);
+    const bTime = eventTimestamp(b);
+    const aUpcoming = aTime >= now;
+    const bUpcoming = bTime >= now;
+    if (aUpcoming !== bUpcoming) return aUpcoming ? -1 : 1;
+    return aUpcoming ? aTime - bTime : bTime - aTime;
   }
 
   function renderEvent(event, canDelete) {
@@ -102,15 +190,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     const response = await api.get('/events?select=*&order=event_date&ascending=true');
     const existingEvents = asArray(response);
-    const featuredIds = new Set(eventsData.map(event => event.id));
-    const featuredTitles = new Set(eventsData.map(event => String(event.title).toLocaleLowerCase()));
+    const eventKeys = new Set(eventsData.map(eventKey));
     eventsData = [
       ...eventsData,
-      ...existingEvents.filter(event =>
-        !featuredIds.has(event.id)
-        && !featuredTitles.has(String(event.title || '').toLocaleLowerCase())
-      )
-    ].sort((a, b) => new Date(a.event_date) - new Date(b.event_date));
+      ...existingEvents.filter(event => {
+        const key = eventKey(event);
+        if (eventKeys.has(key)) return false;
+        eventKeys.add(key);
+        return true;
+      })
+    ].sort(sortEvents);
   } catch (error) {
     console.error('[Events] Could not load saved events:', error);
     Toast.error('Some older event listings could not be loaded. The featured events are still shown.');
