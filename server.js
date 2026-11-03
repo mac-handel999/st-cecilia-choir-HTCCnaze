@@ -307,6 +307,28 @@ function escapeEmailHtml(value) {
   })[character]);
 }
 
+function ticketEmailFailureMessage(error) {
+  if (error?.status === 401 || error?.status === 403) {
+    return 'Sendliberty did not accept the API key or connected sender. Check the key and sender address in the server settings.';
+  }
+  if (error?.status === 400) {
+    return 'Sendliberty rejected the email details. Check the template slug and its required variables.';
+  }
+  if (error?.status === 413) {
+    return 'The ticket email is too large for Sendliberty. Reduce the number of tickets sent in one email.';
+  }
+  if (error?.status === 429) {
+    return 'Sendliberty is temporarily limiting email requests. Wait briefly, then retry.';
+  }
+  if (error?.status >= 500) {
+    return 'Sendliberty is temporarily unavailable. Please retry the ticket email shortly.';
+  }
+  if (error?.name === 'AbortError') {
+    return 'Sendliberty took too long to respond. Please retry the ticket email.';
+  }
+  return 'Ticket email could not be sent. Check the server logs and Sendliberty delivery log, then retry.';
+}
+
 async function deliverTicketEmail(order, tickets, packageName) {
   if (!order.email) return 'failed';
 
@@ -356,7 +378,7 @@ async function deliverTicketEmail(order, tickets, packageName) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': process.env.SENDLIBERTY_API_KEY
+          Authorization: `Bearer ${process.env.SENDLIBERTY_API_KEY}`
         },
         body: JSON.stringify({
           from: `"Holy Trinity Choir" <${process.env.SENDLIBERTY_FROM_EMAIL}>`,
@@ -376,19 +398,12 @@ async function deliverTicketEmail(order, tickets, packageName) {
         signal: controller.signal
       });
       if (!response.ok) {
-        const responseBody = await response.text();
-        let providerMessage = '';
-        try {
-          const errorBody = JSON.parse(responseBody);
-          providerMessage = String(errorBody.message || errorBody.error || '').slice(0, 300);
-        } catch {
-          providerMessage = '';
-        }
         console.error('[Tickets] Sendliberty rejected ticket email:', {
-          status: response.status,
-          message: providerMessage || 'Provider returned an error response.'
+          status: response.status
         });
-        throw new Error(`Sendliberty email request failed with status ${response.status}.`);
+        const error = new Error(`Sendliberty email request failed with status ${response.status}.`);
+        error.status = response.status;
+        throw error;
       }
     } finally {
       clearTimeout(timeout);
@@ -2213,17 +2228,22 @@ app.post('/api/tickets/admin/orders/:id/approve', authMiddleware, adminOrExco, a
     if (packageError) console.error('[Tickets] Approved package name lookup failed:', packageError.message);
 
     let emailStatus;
+    let emailErrorMessage = null;
     try {
       emailStatus = await deliverTicketEmail(order, tickets, ticketPackage?.name || 'Choir event');
     } catch (emailError) {
       emailStatus = 'failed';
-      console.error('[Tickets] Confirmed tickets could not be emailed:', emailError.message);
+      emailErrorMessage = ticketEmailFailureMessage(emailError);
+      console.error('[Tickets] Confirmed tickets could not be emailed:', {
+        status: emailError.status || null,
+        message: emailError.message
+      });
     }
     const { error: updateEmailError } = await supabaseAdmin
       .from('ticket_orders')
       .update({
         email_status: emailStatus,
-        email_error: emailStatus === 'failed' ? 'Email delivery failed. Retry after checking SMTP settings.' : null
+        email_error: emailStatus === 'failed' ? emailErrorMessage : null
       })
       .eq('id', order.id)
       .eq('status', 'paid');
@@ -2232,7 +2252,7 @@ app.post('/api/tickets/admin/orders/:id/approve', authMiddleware, adminOrExco, a
     res.json({
       message: emailStatus === 'sent'
         ? 'Payment confirmed and tickets emailed to the buyer.'
-        : 'Payment confirmed and tickets created. Email delivery needs attention in settings.',
+        : `Payment confirmed and tickets created, but the email was not sent. ${emailErrorMessage || 'Check the email settings and retry.'}`,
       email_status: emailStatus,
       ticket_count: tickets.length
     });
@@ -2262,6 +2282,7 @@ app.post('/api/tickets/admin/orders/:id/reject', authMiddleware, adminOrExco, as
 });
 
 app.post('/api/tickets/admin/orders/:id/resend', authMiddleware, adminOrExco, async (req, res) => {
+  let emailErrorMessage = null;
   try {
     const { data: order, error: orderError } = await supabaseAdmin
       .from('ticket_orders')
@@ -2294,19 +2315,23 @@ app.post('/api/tickets/admin/orders/:id/resend', authMiddleware, adminOrExco, as
     }
     res.json({ message: 'Tickets have been emailed to the buyer.', email_status: 'sent' });
   } catch (error) {
-    console.error('[Tickets] Ticket email retry failed:', error.message);
+    emailErrorMessage = ticketEmailFailureMessage(error);
+    console.error('[Tickets] Ticket email retry failed:', {
+      status: error.status || null,
+      message: error.message
+    });
     const { error: updateError } = await supabaseAdmin
       .from('ticket_orders')
       .update({
         email_status: isTicketEmailConfigured() ? 'failed' : 'not_configured',
-        email_error: 'Email delivery failed. Check the email settings and try again.'
+        email_error: emailErrorMessage
       })
       .eq('id', req.params.id)
       .eq('status', 'paid');
     if (updateError) console.error('[Tickets] Could not update failed email status:', updateError.message);
     res.status(503).json({
       message: isTicketEmailConfigured()
-        ? 'The ticket email could not be sent. Check the mail settings and try again.'
+        ? emailErrorMessage
         : 'Ticket email is not configured. Add the Sendliberty or SMTP settings before retrying.'
     });
   }
@@ -2365,6 +2390,7 @@ app.post('/api/tickets/admin/physical-sales', authMiddleware, adminOrExco, async
     }
 
     let emailStatus = 'not_sent';
+    let emailErrorMessage = null;
     if (email) {
       try {
         const { data: ticketPackage } = await supabaseAdmin
@@ -2372,13 +2398,17 @@ app.post('/api/tickets/admin/physical-sales', authMiddleware, adminOrExco, async
         emailStatus = await deliverTicketEmail(data.order, data.tickets || [], ticketPackage?.name || 'Choir event');
       } catch (emailError) {
         emailStatus = 'failed';
-        console.error('[Tickets] Physical ticket email failed:', emailError.message);
+        emailErrorMessage = ticketEmailFailureMessage(emailError);
+        console.error('[Tickets] Physical ticket email failed:', {
+          status: emailError.status || null,
+          message: emailError.message
+        });
       }
       const { error: updateEmailError } = await supabaseAdmin
         .from('ticket_orders')
         .update({
           email_status: emailStatus,
-          email_error: emailStatus === 'failed' ? 'Email delivery failed. Retry after checking SMTP settings.' : null
+          email_error: emailStatus === 'failed' ? emailErrorMessage : null
         })
         .eq('id', data.order.id)
         .eq('status', 'paid');
@@ -2388,7 +2418,7 @@ app.post('/api/tickets/admin/physical-sales', authMiddleware, adminOrExco, async
     res.status(201).json({
       message: emailStatus === 'sent'
         ? 'Physical sale recorded and tickets emailed.'
-        : 'Physical sale recorded. Give the printed tickets to the buyer.',
+        : `Physical sale recorded. ${email ? `${emailErrorMessage || 'The email was not sent; retry it from the ticket desk.'}` : 'Give the printed tickets to the buyer.'}`,
       order: data.order,
       tickets: data.tickets || [],
       email_status: emailStatus
