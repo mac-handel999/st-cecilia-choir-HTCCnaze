@@ -3383,10 +3383,14 @@ async function sendRehearsalReminders() {
   }
 }
 
-sendRehearsalReminders();
-setInterval(sendRehearsalReminders, 1000 * 60 * 60);
+module.exports = app;
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-});
+if (!process.env.VERCEL) {
+  sendRehearsalReminders();
+  setInterval(sendRehearsalReminders, 1000 * 60 * 60);
+
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  });
+}
