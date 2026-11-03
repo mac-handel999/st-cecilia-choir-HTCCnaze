@@ -1,10 +1,11 @@
-const CACHE_NAME = 'st-cecilia-choir-v13';
+const CACHE_NAME = 'st-cecilia-choir-v15';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/events.html',
   '/tickets.html',
   '/ticket-admin.html',
+  '/debt-ledger.html',
   '/hymn-books.html',
   '/hymn-book.html',
   '/css/design-system.css',
@@ -13,6 +14,7 @@ const STATIC_ASSETS = [
   '/css/hymn-book.css',
   '/css/featured-events.css',
   '/css/tickets.css',
+  '/css/debt-ledger.css',
   '/css/order-of-mass.css',
   '/css/announcement-box.css',
   '/manifest.json',
@@ -24,6 +26,7 @@ const JS_FILES = [
   '/js/featured-events.js',
   '/js/tickets.js',
   '/js/ticket-admin.js',
+  '/js/debt-ledger.js',
   '/js/events.js',
   '/js/hymn-books.js',
   '/js/hymn-book.js',
@@ -45,7 +48,10 @@ const JS_FILES = [
 const IMAGE_ASSETS = [
   '/IMAGES/choir-logo.jpg',
   '/IMAGES/music-boom-2026.jpg',
-  '/IMAGES/november-choir-month-2026.png'
+  '/IMAGES/november-choir-month-2026.png',
+  '/IMAGES/music-boom-ticket-regular.jpg',
+  '/IMAGES/music-boom-ticket-vip.jpg',
+  '/IMAGES/music-boom-ticket-family.jpg'
 ];
 
 // Install event - cache static assets
@@ -89,10 +95,12 @@ self.addEventListener('fetch', (event) => {
 
   // For API requests: network first, cache fallback
   if (url.pathname.includes('/api/')) {
-    if (url.pathname.startsWith('/api/tickets/')) {
+    if (url.pathname.startsWith('/api/tickets/') || url.pathname.startsWith('/api/debt-ledger')) {
       event.respondWith(
         fetch(event.request).catch(() => new Response(JSON.stringify({
-          message: 'Ticket services need an internet connection. Please reconnect and try again.'
+          message: url.pathname.startsWith('/api/debt-ledger')
+            ? 'The choir ledger needs an internet connection. Please reconnect and try again.'
+            : 'Ticket services need an internet connection. Please reconnect and try again.'
         }), {
           status: 503,
           headers: { 'Content-Type': 'application/json' }

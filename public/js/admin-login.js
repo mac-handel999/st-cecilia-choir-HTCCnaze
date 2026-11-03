@@ -1,4 +1,8 @@
 document.addEventListener('DOMContentLoaded', function() {
+  const requestedDestination = new URLSearchParams(window.location.search).get('next');
+  const destination = requestedDestination === 'ticket-admin.html'
+    ? 'ticket-admin.html'
+    : 'admin-dashboard.html';
   const loginForm = document.getElementById('loginForm');
   const loginError = document.getElementById('loginError');
   const submitBtn = document.getElementById('submitBtn');
@@ -93,7 +97,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       submitBtnText.textContent = 'Welcome, ' + (user.full_name || user.username);
-      setTimeout(() => { window.location.href = 'admin-dashboard.html'; }, 1000);
+      setTimeout(() => { window.location.href = destination; }, 1000);
     } catch (error) {
       showLoginError(error.message || 'Login failed. Please check your credentials.');
       submitBtn.disabled = false;

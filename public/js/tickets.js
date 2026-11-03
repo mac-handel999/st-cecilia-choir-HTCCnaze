@@ -9,6 +9,14 @@
   const lookupForm = document.getElementById('lookup-form');
   const orderResult = document.getElementById('order-result');
   const proofForm = document.getElementById('proof-form');
+  const packagePreview = document.getElementById('ticket-package-preview');
+  const packageImage = document.getElementById('ticket-package-image');
+  const packageCaption = document.getElementById('ticket-package-caption');
+  const packageArtwork = {
+    regular: 'IMAGES/music-boom-ticket-regular.jpg',
+    vip: 'IMAGES/music-boom-ticket-vip.jpg',
+    family: 'IMAGES/music-boom-ticket-family.jpg'
+  };
   let packages = [];
   let reservationEnabled = false;
 
@@ -27,6 +35,19 @@
     cancelled: 'Cancelled'
   }[status] || status);
 
+  function updatePackagePreview() {
+    const selected = packages.find(item => String(item.id) === packageSelect.value);
+    const imagePath = selected && packageArtwork[selected.slug];
+    if (!selected || !imagePath) {
+      packagePreview.hidden = true;
+      return;
+    }
+    packageImage.src = imagePath;
+    packageImage.alt = `${selected.name} Music Boom ticket`;
+    packageCaption.textContent = `${selected.name} ticket · ${formatMoney(selected.price_ngn)}`;
+    packagePreview.hidden = false;
+  }
+
   function updateTotal() {
     const selected = packages.find(item => String(item.id) === packageSelect.value);
     const quantity = Number(quantityInput.value);
@@ -43,6 +64,7 @@
       packageSelect.innerHTML = '<option value="">Choose a package</option>' + packages.map(item => (
         `<option value="${escapeHtml(item.id)}"${item.available === 0 ? ' disabled' : ''}>${escapeHtml(item.name)} — ${formatMoney(item.price_ngn)} each${item.available !== null ? ` · ${escapeHtml(item.available)} available` : ''}${item.description ? ` (${escapeHtml(item.description)})` : ''}${item.available === 0 ? ' — sold out' : ''}</option>`
       )).join('');
+      updatePackagePreview();
       reservationEnabled = Boolean(config.bankConfigured && availablePackages.length);
       reserveButton.disabled = !reservationEnabled;
       if (!config.bankConfigured) {
@@ -89,6 +111,7 @@
   }
 
   packageSelect.addEventListener('change', updateTotal);
+  packageSelect.addEventListener('change', updatePackagePreview);
   quantityInput.addEventListener('input', updateTotal);
 
   reserveForm.addEventListener('submit', async event => {

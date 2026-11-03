@@ -6,6 +6,8 @@ const jwt = require('jsonwebtoken');
 const { createClient } = require('@supabase/supabase-js');
 const Groq = require('groq-sdk');
 const multer = require('multer');
+const readXlsxFile = require('read-excel-file/node');
+const { PDFParse } = require('pdf-parse');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
@@ -18,7 +20,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 app.get('/', (req, res) => {
@@ -176,6 +178,17 @@ const upload = multer({ storage: multer.memoryStorage() });
 const ticketProofUpload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 4 * 1024 * 1024, files: 1 }
+});
+const debtLedgerImportUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 8 * 1024 * 1024, files: 1 },
+  fileFilter(req, file, callback) {
+    const extension = path.extname(file.originalname || '').toLowerCase();
+    if (!['.csv', '.pdf', '.xlsx', '.txt', '.json'].includes(extension)) {
+      return callback(new Error('Please choose a CSV, PDF, Excel, TXT, or JSON file.'));
+    }
+    callback(null, true);
+  }
 });
 
 const ticketRateLimits = new Map();
@@ -1110,6 +1123,655 @@ app.delete('/api/attendance/event/:eventDate', authMiddleware, adminOrExco, asyn
 
 // ==================== EVENTS ROUTES ====================
 
+// ==================== CHOIR DEBT LEDGER ====================
+
+app.use('/api/debt-ledger', (req, res, next) => {
+  res.set('Cache-Control', 'no-store');
+  next();
+});
+
+const debtLedgerRecordIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const debtLedgerCategories = new Set([
+  'choir_monthly_dues',
+  'burial_levy',
+  'wedding_levy',
+  'other'
+]);
+
+function isOptionalLedgerText(value, maxLength) {
+  return value === null || (typeof value === 'string' && value.length <= maxLength);
+}
+
+function parseDelimitedText(text, delimiter) {
+  const rows = [];
+  let row = [];
+  let cell = '';
+  let inQuotes = false;
+
+  for (let index = 0; index < text.length; index += 1) {
+    const character = text[index];
+    if (character === '"' && inQuotes && text[index + 1] === '"') {
+      cell += '"';
+      index += 1;
+    } else if (character === '"') {
+      inQuotes = !inQuotes;
+    } else if (character === delimiter && !inQuotes) {
+      row.push(cell.trim());
+      cell = '';
+    } else if ((character === '\n' || character === '\r') && !inQuotes) {
+      if (character === '\r' && text[index + 1] === '\n') index += 1;
+      row.push(cell.trim());
+      if (row.some(value => value !== '')) rows.push(row);
+      row = [];
+      cell = '';
+    } else {
+      cell += character;
+    }
+  }
+
+  if (inQuotes) throw new Error('The file has an unfinished quoted field.');
+  row.push(cell.trim());
+  if (row.some(value => value !== '')) rows.push(row);
+  return rows;
+}
+
+function chooseDelimitedRows(text, extension) {
+  const firstLine = text.split(/\r?\n/, 1)[0] || '';
+  const candidates = extension === '.txt' ? ['\t', ',', '|', ';'] : [',', '\t', ';', '|'];
+  const delimiter = candidates
+    .map(candidate => ({
+      candidate,
+      count: (firstLine.match(new RegExp(candidate === '|' ? '\\|' : candidate === '\t' ? '\\t' : candidate, 'g')) || []).length
+    }))
+    .sort((left, right) => right.count - left.count)[0];
+  if (!delimiter || delimiter.count === 0) {
+    return text.split(/\r?\n/).map(line => [line.trim()]).filter(row => row[0]);
+  }
+  return parseDelimitedText(text, delimiter.candidate);
+}
+
+function cleanImportCell(value) {
+  if (value === null || value === undefined) return '';
+  if (value instanceof Date) return value.toISOString().slice(0, 10);
+  if (typeof value === 'object' && 'text' in value) return String(value.text || '').trim();
+  if (Array.isArray(value)) return value.map(cleanImportCell).filter(Boolean).join(', ');
+  return String(value).trim();
+}
+
+function tableToImportRows(rows, headers = null) {
+  const cleanedRows = rows.map(row => row.map(cleanImportCell));
+  const firstRow = headers || cleanedRows[0];
+  if (!firstRow?.length) throw new Error('No rows could be read from this file.');
+  const columnCount = Math.min(60, cleanedRows.reduce((max, row) => Math.max(max, row.length), firstRow.length));
+  const columnHeaders = Array.from({ length: columnCount }, (_, index) => firstRow[index] || `Column ${index + 1}`);
+  const dataRows = (headers ? cleanedRows : cleanedRows.slice(1))
+    .filter(row => row.some(value => value !== ''))
+    .map(row => [...row.slice(0, 60), ...Array(Math.max(0, columnHeaders.length - row.length)).fill('')].slice(0, columnHeaders.length));
+  if (dataRows.length > 2000) throw new Error('This file has more than 2,000 rows. Split it into smaller files and try again.');
+  return {
+    headers: columnHeaders,
+    rows: dataRows,
+    rawRows: cleanedRows
+      .filter(row => row.some(value => value !== ''))
+      .map(row => [...row.slice(0, 60), ...Array(Math.max(0, columnHeaders.length - row.length)).fill('')].slice(0, columnHeaders.length))
+  };
+}
+
+function parsePdfTableRows(tables) {
+  const rows = [];
+  for (const table of tables || []) {
+    for (const row of table || []) {
+      if (Array.isArray(row)) rows.push(row);
+    }
+  }
+  return rows;
+}
+
+async function parseDebtLedgerFile(file) {
+  const extension = path.extname(file.originalname || '').toLowerCase();
+  if (extension === '.pdf' && file.buffer.subarray(0, 5).toString() !== '%PDF-') {
+    throw new Error('This file does not appear to be a valid PDF.');
+  }
+
+  let parsed;
+  let legacyRecords = null;
+  if (extension === '.xlsx') {
+    if (file.buffer.subarray(0, 2).toString() !== 'PK') {
+      throw new Error('This file does not appear to be a valid Excel workbook.');
+    }
+    try {
+      const sheets = await readXlsxFile(file.buffer);
+      const firstSheet = sheets.find(sheet => Array.isArray(sheet.data));
+      if (!firstSheet) throw new Error('No worksheet was found.');
+      parsed = tableToImportRows(firstSheet.data);
+    } catch (error) {
+      if (error.message.startsWith('This file has more than 2,000 rows')) throw error;
+      throw new Error('This Excel file could not be opened. Check that it is a valid .xlsx workbook and try again.');
+    }
+  } else if (extension === '.csv' || extension === '.txt') {
+    const text = file.buffer.toString('utf8').replace(/^\uFEFF/, '');
+    parsed = tableToImportRows(chooseDelimitedRows(text, extension));
+  } else if (extension === '.json') {
+    let rows;
+    try {
+      rows = JSON.parse(file.buffer.toString('utf8'));
+    } catch {
+      throw new Error('This JSON file could not be read. Please check the file contents and try again.');
+    }
+    if (!Array.isArray(rows) || !rows.length || rows.some(row => !row || typeof row !== 'object' || Array.isArray(row))) {
+      throw new Error('The JSON file must contain a list of debt records.');
+    }
+    if (rows.every(row => Number.isInteger(row.sn) && row.sn > 0 && typeof row.name === 'string')) {
+      legacyRecords = rows.map(row => ({
+        sn: row.sn,
+        name: row.name,
+        other_name: row.other_name ?? null,
+        debt_2025: row.debt_2025 ?? null,
+        debt_2026: row.debt_2026 ?? null,
+        total: row.total ?? null,
+        notes: row.notes ?? null
+      }));
+    }
+    const headers = [...new Set(rows.flatMap(row => Object.keys(row)))].slice(0, 60);
+    parsed = tableToImportRows(rows.map(row => headers.map(header => row[header])), headers);
+  } else if (extension === '.pdf') {
+    const parser = new PDFParse({ data: file.buffer });
+    try {
+      const tableResult = await parser.getTable();
+      const tableRows = parsePdfTableRows((tableResult.pages || []).flatMap(page => page.tables || []));
+      if (tableRows.length > 1) {
+        parsed = tableToImportRows(tableRows);
+      } else {
+        const textResult = await parser.getText();
+        const text = String(textResult.text || '').trim();
+        if (!text) {
+          throw new Error('No selectable text or table could be read from this PDF. It may be a scanned image; try a text-based PDF or enter the records manually.');
+        }
+        const lines = text.split(/\r?\n/)
+          .map(line => line.trim())
+          .filter(line => line && !/^--\s+\d+\s+of\s+\d+\s+--$/.test(line));
+        const delimitedRows = lines.map(line => {
+          if (line.includes('|')) return line.split('|').map(cell => cell.trim());
+          if (line.includes('\t')) return line.split(/\t+/).map(cell => cell.trim());
+          return line.split(/\s{2,}/).map(cell => cell.trim());
+        });
+        if (delimitedRows.length > 1 && delimitedRows.every(row => row.length === 1)) {
+          throw new Error('This PDF contains readable text, but its columns could not be separated. Use a table-based PDF, CSV, Excel file, or enter the rows manually.');
+        }
+        parsed = tableToImportRows(delimitedRows);
+      }
+    } catch (error) {
+      if (error.message.startsWith('No selectable text')
+          || error.message.startsWith('This PDF contains readable text')
+          || error.message.startsWith('This file has more than 2,000 rows')) {
+        throw error;
+      }
+      throw new Error('This PDF could not be opened. Use an unlocked PDF with selectable text and try again.');
+    } finally {
+      await parser.destroy();
+    }
+  } else {
+    throw new Error('Please choose a CSV, PDF, Excel, TXT, or JSON file.');
+  }
+
+  return {
+    ...parsed,
+    ...(legacyRecords ? { legacyRecords } : {}),
+    hasHeader: extension !== '.json',
+    fingerprint: crypto.createHash('sha256').update(file.buffer).digest('hex'),
+    fileName: path.basename(file.originalname).slice(0, 180),
+    fileType: extension.slice(1).toUpperCase()
+  };
+}
+
+function parseOptionalLedgerYear(value) {
+  if (value === null || value === undefined || String(value).trim() === '') return null;
+  const year = Number(String(value).trim());
+  return Number.isInteger(year) && year >= 1900 && year <= 2200 ? year : undefined;
+}
+
+function parseOptionalLedgerMonth(value) {
+  if (value === null || value === undefined || String(value).trim() === '') return null;
+  const normalized = String(value).trim().toLocaleLowerCase();
+  const monthNames = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+  const numericMonth = Number(normalized);
+  if (Number.isInteger(numericMonth) && numericMonth >= 1 && numericMonth <= 12) return numericMonth;
+  const matchingMonth = monthNames.findIndex(name => name === normalized || name.startsWith(normalized));
+  return matchingMonth === -1 || normalized.length < 3 ? undefined : matchingMonth + 1;
+}
+
+function parseOptionalLedgerAmount(value) {
+  if (value === null || value === undefined || String(value).trim() === '') return null;
+  const normalized = String(value).trim().replace(/[₦,\s]/g, '');
+  if (!/^\d+(?:\.\d{1,2})?$/.test(normalized)) return undefined;
+  const amount = Number(normalized);
+  return Number.isFinite(amount) && amount > 0 && amount <= 9999999999.99 ? amount : undefined;
+}
+
+function parseDebtLedgerImportUpload(req, res, next) {
+  debtLedgerImportUpload.single('file')(req, res, error => {
+    if (!error) return next();
+    const tooLarge = error.code === 'LIMIT_FILE_SIZE';
+    const message = tooLarge
+      ? 'This file is larger than 8 MB. Please choose a smaller file.'
+      : error.message || 'The file could not be uploaded. Choose a CSV, PDF, Excel, TXT, or JSON file.';
+    return res.status(tooLarge ? 413 : 400).json({ message });
+  });
+}
+
+app.get('/api/debt-ledger', authMiddleware, async (req, res) => {
+  try {
+    let query = supabaseAdmin
+      .from('debt_ledger_entries')
+      .select(`
+        id, source_row_number, source_serial, source_member_name, source_other_name,
+        member_name, other_name, source_debt_2025, source_debt_2026, source_debt_amount,
+        source_year, source_month, source_category, source_file_name,
+        source_total, source_notes, review_status, created_at, updated_at,
+        obligations:debt_ledger_obligations(
+          id, title, category, amount_ngn, period_year, period_month, created_at,
+          payments:debt_ledger_payments(id, amount_ngn, reference, paid_at, created_at)
+        )
+      `)
+      .order('member_name', { ascending: true })
+      .order('source_serial', { ascending: true, nullsFirst: false });
+
+    const search = String(req.query.q || '')
+      .replace(/[^\p{L}\p{N}\s'-]/gu, '')
+      .trim()
+      .slice(0, 80);
+    if (search) {
+      query = query.or(`member_name.ilike.%${search}%,other_name.ilike.%${search}%`);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    res.json({
+      entries: data || [],
+      bank: {
+        name: process.env.BANK_ACCOUNT_NAME || '',
+        number: process.env.BANK_ACCOUNT_NUMBER || '',
+        bank: process.env.BANK_NAME || ''
+      }
+    });
+  } catch (error) {
+    console.error('[Debt Ledger] Could not load ledger entries:', error.message);
+    res.status(503).json({
+      message: 'We could not open the payment ledger right now. Please try again in a moment.'
+    });
+  }
+});
+
+app.post(
+  '/api/debt-ledger/parse-import',
+  authMiddleware,
+  adminOrExco,
+  parseDebtLedgerImportUpload,
+  async (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ message: 'Choose a file before starting the import.' });
+    }
+
+    try {
+      res.json(await parseDebtLedgerFile(req.file));
+    } catch (error) {
+      console.error('[Debt Ledger] Could not read source file:', error.message);
+      res.status(400).json({
+        message: error.message || 'This file could not be read. Check the file format and try again.'
+      });
+    }
+  }
+);
+
+app.post('/api/debt-ledger/import-tabular', authMiddleware, adminOrExco, async (req, res) => {
+  const { fingerprint, rows } = req.body || {};
+  if (typeof fingerprint !== 'string' || !/^[a-f0-9]{64}$/i.test(fingerprint)
+      || !Array.isArray(rows) || rows.length < 1 || rows.length > 2000) {
+    return res.status(400).json({
+      message: 'The import preview is no longer valid. Choose the file again and review its columns.'
+    });
+  }
+
+  const normalizedRows = rows.map((row, index) => {
+    if (!row || typeof row !== 'object' || Array.isArray(row)) return null;
+    const memberName = typeof row.name === 'string' ? row.name.trim() : '';
+    const otherName = row.other_name === '' || row.other_name === undefined ? null : row.other_name;
+    const rawAmount = row.amount === '' || row.amount === null || row.amount === undefined ? null : row.amount;
+    const rawNotes = row.notes === '' || row.notes === null || row.notes === undefined ? null : row.notes;
+    const rawCategory = row.category === '' || row.category === null || row.category === undefined ? null : row.category;
+    const rawFileName = typeof row.file_name === 'string' ? row.file_name : '';
+    const year = parseOptionalLedgerYear(row.year);
+    const month = parseOptionalLedgerMonth(row.month);
+    if (!Number.isInteger(row.row_number) || row.row_number < 1
+        || !memberName || memberName.length > 160
+        || !isOptionalLedgerText(otherName, 160)
+        || !isOptionalLedgerText(rawAmount, 1200)
+        || !isOptionalLedgerText(rawNotes, 1200)
+        || !isOptionalLedgerText(rawCategory, 120)
+        || !rawFileName || rawFileName.length > 180
+        || year === undefined || month === undefined) {
+      return null;
+    }
+    return {
+      source_import_key: `tabular-${crypto.createHash('sha256')
+        .update(JSON.stringify([fingerprint, row.row_number, memberName, otherName, rawAmount, row.year, row.month, rawCategory, rawNotes]))
+        .digest('hex')}`,
+      source_row_number: row.row_number,
+      source_member_name: memberName,
+      source_other_name: otherName,
+      member_name: memberName,
+      other_name: otherName,
+      source_debt_amount: rawAmount,
+      source_year: year,
+      source_month: month,
+      source_category: rawCategory,
+      source_file_name: rawFileName,
+      source_notes: rawNotes,
+      review_status: 'needs_review',
+      created_by: req.user.id
+    };
+  });
+
+  if (normalizedRows.some(row => row === null)) {
+    return res.status(400).json({
+      message: 'Check the preview: every imported row needs a name, and any year or month must be valid.'
+    });
+  }
+
+  try {
+    let imported = 0;
+    for (let index = 0; index < normalizedRows.length; index += 100) {
+      const { data, error } = await supabaseAdmin
+        .from('debt_ledger_entries')
+        .upsert(normalizedRows.slice(index, index + 100), {
+          onConflict: 'source_import_key',
+          ignoreDuplicates: true
+        })
+        .select('id');
+      if (error) throw error;
+      imported += data?.length || 0;
+    }
+
+    res.status(201).json({
+      imported,
+      alreadyPresent: normalizedRows.length - imported,
+      message: imported
+        ? `${imported} source rows were added for finance review. Confirmed balances have not been changed.`
+        : 'These source rows have already been imported. No information was changed.'
+    });
+  } catch (error) {
+    console.error('[Debt Ledger] Tabular import failed:', error.message);
+    res.status(503).json({
+      message: 'The source rows could not be saved. Please try again; previously imported rows will not be duplicated.'
+    });
+  }
+});
+
+app.post('/api/debt-ledger/import', authMiddleware, adminOrExco, async (req, res) => {
+  const rows = req.body?.rows;
+  if (!Array.isArray(rows) || rows.length < 1 || rows.length > 2000) {
+    return res.status(400).json({
+      message: 'Choose a JSON file containing the choir debt list, then try importing it again.'
+    });
+  }
+
+  const sourceFields = ['debt_2025', 'debt_2026', 'total', 'notes'];
+  const validRows = rows.every(row => row && typeof row === 'object'
+    && !Array.isArray(row)
+    && Number.isInteger(row.sn)
+    && row.sn > 0
+    && typeof row.name === 'string'
+    && row.name.trim().length > 0
+    && row.name.length <= 160
+    && isOptionalLedgerText(row.other_name, 160)
+    && (row.row_number === undefined
+      || (Number.isInteger(row.row_number) && row.row_number >= 1 && row.row_number <= 2000))
+    && sourceFields.every(field => isOptionalLedgerText(row[field], 1200)));
+  const rowNumbers = rows.map((row, index) => row?.row_number ?? index + 1);
+
+  if (!validRows || new Set(rowNumbers).size !== rowNumbers.length) {
+    return res.status(400).json({
+      message: 'Some rows in this file are missing a name or contain values in an unexpected format. The file was not imported.'
+    });
+  }
+
+  const entries = rows.map((row, index) => {
+    const rowNumber = row.row_number ?? index + 1;
+    return {
+      source_import_key: `legacy-debt-list-v1-${String(rowNumber).padStart(4, '0')}`,
+      source_row_number: rowNumber,
+      source_serial: row.sn,
+      source_member_name: row.name,
+      source_other_name: row.other_name,
+      member_name: row.name,
+      other_name: row.other_name,
+      source_debt_2025: row.debt_2025,
+      source_debt_2026: row.debt_2026,
+      source_total: row.total,
+      source_notes: row.notes,
+      review_status: 'needs_review',
+      created_by: req.user.id
+    };
+  });
+
+  try {
+    let imported = 0;
+    for (let index = 0; index < entries.length; index += 100) {
+      const { data, error } = await supabaseAdmin
+        .from('debt_ledger_entries')
+        .upsert(entries.slice(index, index + 100), {
+          onConflict: 'source_import_key',
+          ignoreDuplicates: true
+        })
+        .select('id');
+      if (error) throw error;
+      imported += data?.length || 0;
+    }
+
+    res.status(201).json({
+      imported,
+      alreadyPresent: entries.length - imported,
+      message: imported
+        ? `${imported} source records were added. Existing records and finance updates were left unchanged.`
+        : 'These source records have already been imported. No information was changed.'
+    });
+  } catch (error) {
+    console.error('[Debt Ledger] Source import failed:', error.message);
+    res.status(503).json({
+      message: 'The source list could not be saved. Please try again; records already imported will not be duplicated.'
+    });
+  }
+});
+
+app.post('/api/debt-ledger/records', authMiddleware, adminOrExco, async (req, res) => {
+  const memberName = typeof req.body?.member_name === 'string' ? req.body.member_name : '';
+  const otherName = req.body?.other_name ?? null;
+  if (memberName.trim().length < 1 || memberName.length > 160 || !isOptionalLedgerText(otherName, 160)) {
+    return res.status(400).json({ message: 'Enter the member’s name and check the optional name field.' });
+  }
+
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('debt_ledger_entries')
+      .insert([{
+        source_member_name: memberName,
+        source_other_name: otherName,
+        member_name: memberName,
+        other_name: otherName,
+        review_status: 'reviewed',
+        created_by: req.user.id
+      }])
+      .select('id')
+      .single();
+    if (error) throw error;
+    res.status(201).json({ id: data.id, message: 'Member added to the ledger.' });
+  } catch (error) {
+    console.error('[Debt Ledger] Could not add member:', error.message);
+    res.status(503).json({ message: 'The member could not be added. Please try again.' });
+  }
+});
+
+app.post('/api/debt-ledger/records/manual', authMiddleware, adminOrExco, async (req, res) => {
+  const memberName = typeof req.body?.member_name === 'string' ? req.body.member_name.trim() : '';
+  const otherName = req.body?.other_name === '' || req.body?.other_name === undefined
+    ? null
+    : req.body.other_name;
+  const title = typeof req.body?.title === 'string' ? req.body.title.trim() : '';
+  const amount = parseOptionalLedgerAmount(req.body?.amount_ngn);
+  const year = parseOptionalLedgerYear(req.body?.year);
+  const month = parseOptionalLedgerMonth(req.body?.month);
+  const category = req.body?.category;
+
+  if (!memberName || memberName.length > 160
+      || !isOptionalLedgerText(otherName, 160)
+      || !title || title.length > 160
+      || amount === null || amount === undefined
+      || year === undefined || month === undefined
+      || !debtLedgerCategories.has(category)) {
+    return res.status(400).json({
+      message: 'Enter the member name, debt description, a valid amount, and a valid debt type, year, or month.'
+    });
+  }
+
+  try {
+    const { data, error } = await supabaseAdmin.rpc('create_debt_ledger_record', {
+      p_member_name: memberName,
+      p_other_name: otherName,
+      p_title: title,
+      p_category: category,
+      p_amount_ngn: amount,
+      p_period_year: year,
+      p_period_month: month,
+      p_created_by: req.user.id
+    });
+    if (error) throw error;
+    res.status(201).json({ id: data, message: 'Member and confirmed debt added to the ledger.' });
+  } catch (error) {
+    console.error('[Debt Ledger] Could not add manual debt:', error.message);
+    res.status(503).json({
+      message: 'The member and debt could not be saved together. Please try again; no partial entry was added.'
+    });
+  }
+});
+
+app.put('/api/debt-ledger/records/:id', authMiddleware, adminOrExco, async (req, res) => {
+  if (!debtLedgerRecordIdPattern.test(req.params.id)) {
+    return res.status(400).json({ message: 'That ledger record could not be found.' });
+  }
+
+  const updates = {};
+  if (req.body?.review_status === 'reviewed') updates.review_status = 'reviewed';
+  if (typeof req.body?.member_name === 'string') {
+    if (!req.body.member_name.trim() || req.body.member_name.length > 160) {
+      return res.status(400).json({ message: 'Enter a member name up to 160 characters long.' });
+    }
+    updates.member_name = req.body.member_name;
+  }
+  if (Object.prototype.hasOwnProperty.call(req.body || {}, 'other_name')) {
+    if (!isOptionalLedgerText(req.body.other_name, 160)) {
+      return res.status(400).json({ message: 'The optional name must be 160 characters or fewer.' });
+    }
+    updates.other_name = req.body.other_name;
+  }
+  if (!Object.keys(updates).length) {
+    return res.status(400).json({ message: 'Choose a valid ledger update and try again.' });
+  }
+
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('debt_ledger_entries')
+      .update(updates)
+      .eq('id', req.params.id)
+      .select('id')
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) return res.status(404).json({ message: 'That ledger record could not be found.' });
+    res.json({ message: 'Ledger record updated.' });
+  } catch (error) {
+    console.error('[Debt Ledger] Could not update record:', error.message);
+    res.status(503).json({ message: 'The ledger record could not be updated. Please try again.' });
+  }
+});
+
+app.post('/api/debt-ledger/records/:id/obligations', authMiddleware, adminOrExco, async (req, res) => {
+  const title = typeof req.body?.title === 'string' ? req.body.title : '';
+  const amount = Number(req.body?.amount_ngn);
+  const year = parseOptionalLedgerYear(req.body?.year);
+  const month = parseOptionalLedgerMonth(req.body?.month);
+  const category = req.body?.category;
+  if (!debtLedgerRecordIdPattern.test(req.params.id)
+      || title.trim().length < 1 || title.length > 160
+      || !Number.isFinite(amount) || amount <= 0 || amount > 9999999999.99
+      || !debtLedgerCategories.has(category)
+      || year === undefined || month === undefined) {
+    return res.status(400).json({
+      message: 'Check the debt description, type, amount, year, and month. The amount must be greater than zero.'
+    });
+  }
+
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('debt_ledger_obligations')
+      .insert([{
+        entry_id: req.params.id,
+        title,
+        category,
+        amount_ngn: amount,
+        period_year: year,
+        period_month: month,
+        created_by: req.user.id
+      }])
+      .select('id')
+      .single();
+    if (error) throw error;
+    res.status(201).json({ id: data.id, message: 'The debt or levy was added.' });
+  } catch (error) {
+    console.error('[Debt Ledger] Could not add obligation:', error.message);
+    res.status(503).json({
+      message: 'The debt or levy could not be added. Check that the member is still on the ledger and try again.'
+    });
+  }
+});
+
+app.post('/api/debt-ledger/obligations/:id/payments', authMiddleware, adminOrExco, async (req, res) => {
+  if (!debtLedgerRecordIdPattern.test(req.params.id)) {
+    return res.status(400).json({ message: 'That debt entry could not be found.' });
+  }
+
+  const amount = Number(req.body?.amount_ngn);
+  const reference = req.body?.reference === '' ? null : req.body?.reference ?? null;
+  if (!Number.isFinite(amount) || amount <= 0 || amount > 9999999999.99
+      || !isOptionalLedgerText(reference, 120)) {
+    return res.status(400).json({
+      message: 'Enter a payment amount greater than zero and a payment reference no longer than 120 characters.'
+    });
+  }
+
+  try {
+    const { data, error } = await supabaseAdmin.rpc('record_debt_ledger_payment', {
+      p_obligation_id: req.params.id,
+      p_amount_ngn: amount,
+      p_reference: reference,
+      p_recorded_by: req.user.id
+    });
+    if (error) {
+      if (error.message.includes('payment exceeds outstanding balance')) {
+        return res.status(409).json({
+          message: 'That amount is more than the remaining balance. Refresh the ledger and enter the amount actually received.'
+        });
+      }
+      if (error.message.includes('obligation not found')) {
+        return res.status(404).json({ message: 'That debt entry could not be found.' });
+      }
+      throw error;
+    }
+    res.status(201).json({ payment: data, message: 'Payment recorded and the remaining balance updated.' });
+  } catch (error) {
+    console.error('[Debt Ledger] Could not record payment:', error.message);
+    res.status(503).json({ message: 'The payment could not be recorded. No payment was added; please try again.' });
+  }
+});
+
 // ==================== MUSIC BOOM TICKETS ====================
 
 app.use('/api/tickets', (req, res, next) => {
@@ -1503,12 +2165,14 @@ app.post('/api/tickets/admin/physical-sales', authMiddleware, adminOrExco, async
   const buyerName = String(req.body.buyer_name || '').trim();
   const email = String(req.body.email || '').trim().toLowerCase();
   const phone = normalizeTicketPhone(req.body.phone);
+  const requestedSellerName = String(req.body.seller_name || '').trim();
   const serials = Array.isArray(req.body.serials)
     ? req.body.serials.map(serial => String(serial).trim().toUpperCase())
     : String(req.body.serials || '').split(/[\s,]+/).filter(Boolean).map(serial => serial.toUpperCase());
-  const sellerId = String(req.body.seller_id || req.user.id);
+  const sellerId = req.body.seller_id ? String(req.body.seller_id) : null;
   if (!Number.isInteger(packageId) || !Number.isInteger(quantity) || quantity < 1 || quantity > 20
       || buyerName.length < 2 || buyerName.length > 120
+      || requestedSellerName.length < 2 || requestedSellerName.length > 120
       || (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
       || !/^\+?\d{10,15}$/.test(phone)
       || serials.length !== quantity
@@ -1517,9 +2181,16 @@ app.post('/api/tickets/admin/physical-sales', authMiddleware, adminOrExco, async
     return res.status(400).json({ message: 'Check the buyer details, quantity, and provide one unique printed serial number per ticket.' });
   }
   try {
-    const { data: seller, error: sellerError } = await supabaseAdmin
-      .from('users').select('id').eq('id', sellerId).single();
-    if (sellerError || !seller) return res.status(400).json({ message: 'Choose a valid choir member as the ticket seller.' });
+    let sellerName = requestedSellerName;
+    if (sellerId) {
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(sellerId)) {
+        return res.status(400).json({ message: 'Choose a listed choir member or enter a seller name.' });
+      }
+      const { data: seller, error: sellerError } = await supabaseAdmin
+        .from('users').select('id, full_name, username').eq('id', sellerId).single();
+      if (sellerError || !seller) return res.status(400).json({ message: 'Choose a listed choir member or enter a seller name.' });
+      sellerName = seller.full_name || seller.username || requestedSellerName;
+    }
 
     const codes = ticketCodes(quantity);
     const { data, error } = await supabaseAdmin.rpc('record_physical_ticket_sale', {
@@ -1529,6 +2200,8 @@ app.post('/api/tickets/admin/physical-sales', authMiddleware, adminOrExco, async
       p_email: email || null,
       p_phone: phone,
       p_seller_id: sellerId,
+      p_seller_name: sellerName,
+      p_actor: req.user.id,
       p_order_code: createTicketCode(12),
       p_ticket_codes: codes,
       p_serials: serials

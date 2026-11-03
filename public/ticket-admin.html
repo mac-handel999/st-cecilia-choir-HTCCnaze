@@ -65,12 +65,18 @@
         <label>Ticket package
           <select name="package_id" required><option value="">Loading…</option></select>
         </label>
+        <figure id="ticket-package-preview" class="ticket-package-preview" hidden>
+          <img id="ticket-package-image" src="" alt="">
+          <figcaption id="ticket-package-caption"></figcaption>
+        </figure>
         <div class="ticket-field-row">
           <label>Quantity
             <input name="quantity" type="number" min="1" max="20" value="1" required>
           </label>
-          <label>Seller
-            <select name="seller_id" required><option value="">Loading choir members…</option></select>
+          <label>Seller name
+            <input name="seller_name" type="text" list="ticket-seller-options" maxlength="120" autocomplete="off" placeholder="Choose a member or type a name" required>
+            <datalist id="ticket-seller-options"></datalist>
+            <small>Select a choir member or enter a name, such as a cadet choir seller.</small>
           </label>
         </div>
         <label>Buyer name

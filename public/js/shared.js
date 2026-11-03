@@ -29,7 +29,7 @@ const api = {
 
     if (res.status === 401) {
       const path = window.location.pathname;
-      const publicPages = ['/', '/index.html', '/About.html', '/privacy.html', '/terms.html', '/members.html', '/login.html', '/register.html', '/admin-login.html'];
+      const publicPages = ['/', '/index.html', '/About.html', '/privacy.html', '/terms.html', '/members.html', '/login.html', '/register.html', '/admin-login.html', '/ticket-admin.html'];
       if (token && !publicPages.includes(path)) {
         clearCurrentUser();
         window.location.href = 'members.html';
@@ -1094,7 +1094,7 @@ function updateNotificationBadge(count) {
 }
 
 async function loadNotificationBadge() {
-  const publicPages = ['/', '/index.html', '/About.html', '/privacy.html', '/terms.html', '/members.html', '/login.html', '/register.html', '/admin-login.html'];
+  const publicPages = ['/', '/index.html', '/About.html', '/privacy.html', '/terms.html', '/members.html', '/login.html', '/register.html', '/admin-login.html', '/ticket-admin.html'];
   if (!Auth.isLoggedIn() || publicPages.includes(window.location.pathname)) return;
 
   try {

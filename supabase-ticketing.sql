@@ -32,6 +32,7 @@ create table if not exists public.ticket_orders (
   email text,
   phone text not null,
   seller_id uuid references public.users(id) on delete set null,
+  seller_name text,
   status text not null default 'reserved'
     check (status in ('reserved', 'pending_review', 'paid', 'rejected', 'expired', 'cancelled')),
   payment_reference text,
@@ -45,6 +46,9 @@ create table if not exists public.ticket_orders (
     check (email_status in ('not_sent', 'sent', 'not_configured', 'failed')),
   email_error text
 );
+
+alter table public.ticket_orders
+  add column if not exists seller_name text;
 
 create unique index if not exists ticket_orders_payment_reference_unique
   on public.ticket_orders (lower(payment_reference))
@@ -133,10 +137,10 @@ language plpgsql
 as $$
 begin
   if (new.code, new.channel, new.package_id, new.quantity, new.amount_ngn,
-      new.buyer_name, new.email, new.phone, new.seller_id, new.created_at)
+      new.buyer_name, new.email, new.phone, new.seller_id, new.seller_name, new.created_at)
      is distinct from
      (old.code, old.channel, old.package_id, old.quantity, old.amount_ngn,
-      old.buyer_name, old.email, old.phone, old.seller_id, old.created_at) then
+      old.buyer_name, old.email, old.phone, old.seller_id, old.seller_name, old.created_at) then
     raise exception 'Ticket order details are locked after reservation';
   end if;
 
@@ -428,6 +432,8 @@ begin
 end;
 $$;
 
+drop function if exists public.record_physical_ticket_sale(integer, integer, text, text, text, uuid, text, text[], text[]);
+
 create or replace function public.record_physical_ticket_sale(
   p_package_id integer,
   p_quantity integer,
@@ -435,6 +441,8 @@ create or replace function public.record_physical_ticket_sale(
   p_email text,
   p_phone text,
   p_seller_id uuid,
+  p_seller_name text,
+  p_actor uuid,
   p_order_code text,
   p_ticket_codes text[],
   p_serials text[]
@@ -451,6 +459,10 @@ declare
   ticket_rows jsonb;
 begin
   if p_quantity < 1 or p_quantity > 20 then raise exception 'Choose between 1 and 20 tickets'; end if;
+  if nullif(trim(p_seller_name), '') is null then raise exception 'Enter the ticket seller name'; end if;
+  if p_seller_id is not null and not exists (
+    select 1 from public.users where id = p_seller_id
+  ) then raise exception 'Choose a valid choir member as the ticket seller'; end if;
   if array_length(p_ticket_codes, 1) is distinct from p_quantity
      or array_length(p_serials, 1) is distinct from p_quantity then
     raise exception 'Each physical ticket needs one code and printed serial number';
@@ -474,12 +486,13 @@ begin
 
   insert into public.ticket_orders (
     code, channel, package_id, quantity, amount_ngn,
-    buyer_name, email, phone, seller_id, status, paid_at, approved_by
+    buyer_name, email, phone, seller_id, seller_name, status, paid_at, approved_by
   )
   values (
     p_order_code, 'physical', p_package_id, p_quantity,
     selected_package.price_ngn * p_quantity,
-    p_buyer_name, nullif(trim(p_email), ''), p_phone, p_seller_id, 'paid', now(), p_seller_id
+    p_buyer_name, nullif(trim(p_email), ''), p_phone, p_seller_id,
+    trim(p_seller_name), 'paid', now(), p_actor
   )
   returning * into new_order;
 
@@ -496,8 +509,14 @@ begin
 
   insert into public.ticket_audit_log (actor, action, entity, entity_id, details)
   values (
-    p_seller_id, 'physical_sale_recorded', 'order', new_order.id::text,
-    jsonb_build_object('code', new_order.code, 'amount_ngn', new_order.amount_ngn, 'ticket_count', new_order.quantity, 'serials', p_serials)
+    p_actor, 'physical_sale_recorded', 'order', new_order.id::text,
+    jsonb_build_object(
+      'code', new_order.code,
+      'amount_ngn', new_order.amount_ngn,
+      'ticket_count', new_order.quantity,
+      'seller_name', new_order.seller_name,
+      'serials', p_serials
+    )
   );
 
   return jsonb_build_object('order', to_jsonb(new_order), 'tickets', ticket_rows);
@@ -597,7 +616,7 @@ revoke all on function public.expire_ticket_reservations() from public, anon, au
 revoke all on function public.submit_ticket_payment_proof(text, text, text, text) from public, anon, authenticated;
 revoke all on function public.approve_ticket_order(uuid, uuid, text[]) from public, anon, authenticated;
 revoke all on function public.reject_ticket_order(uuid, uuid, text) from public, anon, authenticated;
-revoke all on function public.record_physical_ticket_sale(integer, integer, text, text, text, uuid, text, text[], text[]) from public, anon, authenticated;
+revoke all on function public.record_physical_ticket_sale(integer, integer, text, text, text, uuid, text, uuid, text, text[], text[]) from public, anon, authenticated;
 revoke all on function public.check_in_ticket(text, uuid) from public, anon, authenticated;
 
 grant select on public.ticket_sales_summary to service_role;
@@ -606,7 +625,7 @@ grant execute on function public.expire_ticket_reservations() to service_role;
 grant execute on function public.submit_ticket_payment_proof(text, text, text, text) to service_role;
 grant execute on function public.approve_ticket_order(uuid, uuid, text[]) to service_role;
 grant execute on function public.reject_ticket_order(uuid, uuid, text) to service_role;
-grant execute on function public.record_physical_ticket_sale(integer, integer, text, text, text, uuid, text, text[], text[]) to service_role;
+grant execute on function public.record_physical_ticket_sale(integer, integer, text, text, text, uuid, text, uuid, text, text[], text[]) to service_role;
 grant execute on function public.check_in_ticket(text, uuid) to service_role;
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)

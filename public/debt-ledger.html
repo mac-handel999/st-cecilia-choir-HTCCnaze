@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#4A0000">
+  <title>Choir Debt Ledger - St. Cecilia Choir</title>
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/tickets.css">
+  <link rel="stylesheet" href="css/debt-ledger.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@400&display=swap" rel="stylesheet">
+</head>
+<body class="portal-page ticket-site-page">
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="member-home.html" class="header-logo">
+        <img src="IMAGES/choir-logo.jpg" alt="" class="header-logo-img">
+        <span class="header-logo-text">St. Cecilia Choir</span>
+      </a>
+      <nav class="header-nav" aria-label="Main navigation">
+        <a href="member-home.html">Member home</a>
+        <a href="admin-dashboard.html" id="ledger-admin-nav" class="ledger-admin-only">Admin dashboard</a>
+        <a href="events.html">Events</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="ticket-page debt-ledger-page">
+    <section class="ticket-panel debt-ledger-intro">
+      <p class="ticket-eyebrow">Members' finance information</p>
+      <h1>Choir Debt Ledger</h1>
+      <p>Search your name to see recorded choir dues, levies, payments, and any balance still outstanding. This page is for logged-in members only.</p>
+      <p class="debt-ledger-note">Older figures and notes are shown exactly as supplied. They are not used to calculate a current balance until the Finance Secretary has checked them and added confirmed dues or levies.</p>
+    </section>
+
+    <section class="ticket-panel ledger-bank-details" aria-labelledby="ledger-bank-heading">
+      <h2 id="ledger-bank-heading">Choir payment account</h2>
+      <p>Use these details when making an approved choir payment:</p>
+      <dl id="ledger-bank-details" hidden>
+        <div><dt>Account name</dt><dd id="ledger-bank-name"></dd></div>
+        <div><dt>Account number</dt><dd id="ledger-bank-number" class="ledger-account-number"></dd></div>
+        <div><dt>Bank</dt><dd id="ledger-bank"></dd></div>
+      </dl>
+      <p id="ledger-bank-unavailable" class="debt-ledger-note" hidden>The choir's bank details are not configured yet. Please contact the Finance Secretary before making a payment.</p>
+      <p class="debt-ledger-note">Please confirm the payment description with the Finance Secretary and keep your receipt. A payment is marked here after it has been checked and recorded.</p>
+    </section>
+
+    <div id="ledger-alert" class="ticket-alert" role="status" aria-live="polite" hidden></div>
+
+    <section id="ledger-management" class="ticket-panel ledger-management" aria-labelledby="ledger-management-heading" hidden>
+      <h2 id="ledger-management-heading">Finance Secretary tools</h2>
+      <p>Source records are imported once. Re-importing the same file will not duplicate entries or overwrite finance updates.</p>
+      <form id="ledger-import-form" class="ticket-form">
+        <label>Choose a debt list file
+          <input name="file" type="file" accept=".csv,.pdf,.xlsx,.txt,.json,text/csv,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/plain,application/json" required>
+        </label>
+        <small>Supported: CSV, text-based PDF, Excel (.xlsx), TXT, or JSON. Scanned/image-only PDFs need to be entered manually. Your file is processed by this app's server.</small>
+        <div id="ledger-import-preview" class="ledger-import-preview" hidden></div>
+        <button id="ledger-parse-file" class="btn btn-outline" type="submit">Read and preview file</button>
+        <button id="ledger-import-file" class="btn btn-primary" type="button" disabled>Import source rows for review</button>
+      </form>
+      <form id="ledger-add-member-form" class="ticket-form ledger-add-member-form">
+        <h3>Add a member without a debt amount</h3>
+        <div class="ticket-field-row">
+          <label>Member's name
+            <input name="member_name" type="text" maxlength="160" required>
+          </label>
+          <label>Other name (optional)
+            <input name="other_name" type="text" maxlength="160">
+          </label>
+        </div>
+        <button class="btn btn-primary" type="submit">Add member</button>
+      </form>
+      <form id="ledger-manual-debt-form" class="ticket-form ledger-add-member-form">
+        <h3>Manually add a member and debt</h3>
+        <div class="ticket-field-row">
+          <label>Member's name
+            <input name="member_name" type="text" maxlength="160" required>
+          </label>
+          <label>Other name (optional)
+            <input name="other_name" type="text" maxlength="160">
+          </label>
+        </div>
+        <label>Debt description
+          <input name="title" type="text" maxlength="160" placeholder="e.g. Choir monthly dues" required>
+        </label>
+        <div class="ticket-field-row">
+          <label>Debt type
+            <select name="category" required>
+              <option value="choir_monthly_dues">Choir monthly dues</option>
+              <option value="burial_levy">Burial levy</option>
+              <option value="wedding_levy">Wedding levy</option>
+              <option value="other">Other choir payment</option>
+            </select>
+          </label>
+          <label>Debt amount (₦)
+            <input name="amount_ngn" type="number" min="0.01" step="0.01" required>
+          </label>
+        </div>
+        <div class="ticket-field-row">
+          <label>Year (optional)
+            <input name="year" type="number" min="1900" max="2200" step="1" inputmode="numeric">
+          </label>
+          <label>Month (optional)
+            <select name="month">
+              <option value="">Not specified</option>
+              <option value="1">January</option>
+              <option value="2">February</option>
+              <option value="3">March</option>
+              <option value="4">April</option>
+              <option value="5">May</option>
+              <option value="6">June</option>
+              <option value="7">July</option>
+              <option value="8">August</option>
+              <option value="9">September</option>
+              <option value="10">October</option>
+              <option value="11">November</option>
+              <option value="12">December</option>
+            </select>
+          </label>
+        </div>
+        <button class="btn btn-primary" type="submit">Add member and debt</button>
+      </form>
+    </section>
+
+    <section class="ticket-panel" aria-labelledby="ledger-search-heading">
+      <div class="ledger-search-heading">
+        <div>
+          <h2 id="ledger-search-heading">Find a member</h2>
+          <p>Search by name. Balances refresh automatically while this page is open.</p>
+        </div>
+        <button id="ledger-refresh" class="btn btn-outline" type="button">Refresh</button>
+      </div>
+      <label class="ledger-search-field">Member's name
+        <input id="ledger-search" type="search" autocomplete="off" placeholder="Type a name to search">
+      </label>
+      <div id="ledger-summary" class="ledger-summary" aria-live="polite"></div>
+      <div id="ledger-records" class="ledger-records" aria-live="polite">
+        <p>Loading the choir ledger…</p>
+      </div>
+    </section>
+  </main>
+  <script src="js/shared.js"></script>
+  <script src="js/debt-ledger.js"></script>
+</body>
+</html>

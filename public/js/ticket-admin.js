@@ -1,19 +1,13 @@
 (() => {
-  if (!requireAuth()) return;
-
-  const user = getCurrentUser();
-  const alertBox = document.getElementById('ticket-admin-alert');
-  if (!user || !['admin', 'exco'].includes(user.role)) {
-    document.querySelector('.ticket-admin-page').innerHTML = `
-      <section class="ticket-panel">
-        <h1>Staff access only</h1>
-        <p>This ticket desk is available to choir administrators and executives.</p>
-        <a class="btn btn-outline" href="member-home.html">Return to member home</a>
-      </section>
-    `;
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  if (!token) {
+    window.location.replace('admin-login.html?next=ticket-admin.html');
     return;
   }
 
+  const loginUrl = 'admin-login.html?next=ticket-admin.html';
+  let user;
+  const alertBox = document.getElementById('ticket-admin-alert');
   const statusFilter = document.getElementById('order-status-filter');
   const orderContainer = document.getElementById('ticket-orders');
   const summaryContainer = document.getElementById('ticket-sales-summary');
@@ -23,6 +17,16 @@
   const checkinForm = document.getElementById('checkin-form');
   const checkinResult = document.getElementById('checkin-result');
   const refreshButton = document.getElementById('refresh-ticket-data');
+  const packagePreview = document.getElementById('ticket-package-preview');
+  const packageImage = document.getElementById('ticket-package-image');
+  const packageCaption = document.getElementById('ticket-package-caption');
+  const packageArtwork = {
+    regular: 'IMAGES/music-boom-ticket-regular.jpg',
+    vip: 'IMAGES/music-boom-ticket-vip.jpg',
+    family: 'IMAGES/music-boom-ticket-family.jpg'
+  };
+  let packages = [];
+  let sellers = [];
   const money = value => `₦${new Intl.NumberFormat('en-NG').format(Number(value) || 0)}`;
   const showAlert = (message, kind = 'info') => {
     alertBox.textContent = message;
@@ -30,6 +34,21 @@
     alertBox.hidden = false;
   };
   const formatDate = value => value ? new Date(value).toLocaleString() : '—';
+
+  function updatePackagePreview() {
+    const select = physicalForm.elements.package_id;
+    const selected = [...select.options].find(option => option.value === select.value);
+    const packageData = packages.find(item => String(item.id) === select.value);
+    const imagePath = packageData && packageArtwork[packageData.slug];
+    if (!selected || !imagePath) {
+      packagePreview.hidden = true;
+      return;
+    }
+    packageImage.src = imagePath;
+    packageImage.alt = `${selected.textContent.split(' — ')[0]} Music Boom ticket`;
+    packageCaption.textContent = selected.textContent.split(' · ')[0];
+    packagePreview.hidden = false;
+  }
 
   async function loadSummary() {
     const data = await api.get('/tickets/admin/summary');
@@ -104,6 +123,9 @@
       const emailStatus = order.email_status && order.email_status !== 'not_sent'
         ? `<p>Ticket email: <strong>${escapeHtml(order.email_status.replaceAll('_', ' '))}</strong>${order.email_error ? ` · ${escapeHtml(order.email_error)}` : ''}</p>`
         : '';
+      const seller = order.channel === 'physical' && order.seller_name
+        ? `<p>Seller: <strong>${escapeHtml(order.seller_name)}</strong></p>`
+        : '';
       const canReview = order.status === 'pending_review';
       const canResend = order.status === 'paid' && order.email && order.email_status !== 'sent';
       return `
@@ -112,7 +134,7 @@
           <p><strong>${escapeHtml(order.buyer_name)}</strong> · ${escapeHtml(order.phone)}${order.email ? ` · ${escapeHtml(order.email)}` : ''}</p>
           <p>Quantity: ${escapeHtml(order.quantity)} · Amount: <strong>${money(order.amount_ngn)}</strong> · Channel: ${escapeHtml(order.channel)}</p>
           <p>Created: ${escapeHtml(formatDate(order.created_at))} · Status: <span class="ticket-status ticket-status-${escapeHtml(order.status)}">${escapeHtml(order.status.replaceAll('_', ' '))}</span></p>
-          ${reference}${proof}${emailStatus}${tickets}
+          ${reference}${proof}${emailStatus}${seller}${tickets}
           ${canReview ? `<div class="ticket-review-actions">
             <button type="button" class="btn btn-primary" data-order-action="approve" data-order-id="${escapeHtml(order.id)}" data-quantity="${escapeHtml(order.quantity)}">Confirm payment and issue tickets</button>
             <button type="button" class="btn btn-outline" data-order-action="reject" data-order-id="${escapeHtml(order.id)}">Reject payment</button>
@@ -128,14 +150,22 @@
       api.get('/tickets/config'),
       api.get('/tickets/admin/sellers')
     ]);
+    sellers = sellerData.sellers || [];
     const packageSelect = physicalForm.elements.package_id;
-    packageSelect.innerHTML = '<option value="">Choose a package</option>' + (config.packages || []).map(item => (
+    packages = config.packages || [];
+    packageSelect.innerHTML = '<option value="">Choose a package</option>' + packages.map(item => (
       `<option value="${escapeHtml(item.id)}"${item.available === 0 ? ' disabled' : ''}>${escapeHtml(item.name)} — ${money(item.price_ngn)}${item.available !== null ? ` · ${escapeHtml(item.available)} available` : ''}${item.available === 0 ? ' — sold out' : ''}</option>`
     )).join('');
-    physicalForm.elements.seller_id.innerHTML = '<option value="">Choose seller</option>' + (sellerData.sellers || []).map(seller => (
-      `<option value="${escapeHtml(seller.id)}">${escapeHtml(seller.full_name || seller.username || seller.id)}</option>`
-    )).join('');
-    if (user.id) physicalForm.elements.seller_id.value = user.id;
+    updatePackagePreview();
+    document.getElementById('ticket-seller-options').innerHTML = sellers
+      .map(seller => seller.full_name || seller.username || '')
+      .filter(Boolean)
+      .filter((name, index, names) => names.indexOf(name) === index)
+      .map(name => `<option value="${escapeHtml(name)}"></option>`)
+      .join('');
+    if (!physicalForm.elements.seller_name.value && user.full_name) {
+      physicalForm.elements.seller_name.value = user.full_name;
+    }
   }
 
   async function refreshAll() {
@@ -192,10 +222,16 @@
     const button = physicalForm.querySelector('button[type="submit"]');
     button.disabled = true;
     const values = new FormData(physicalForm);
+    const sellerName = String(values.get('seller_name') || '').trim();
+    const matchedSeller = sellers.find(seller =>
+      [seller.full_name, seller.username]
+        .some(name => name && name.trim().toLocaleLowerCase() === sellerName.toLocaleLowerCase())
+    );
     const payload = {
       package_id: Number(values.get('package_id')),
       quantity: Number(values.get('quantity')),
-      seller_id: values.get('seller_id'),
+      seller_id: matchedSeller?.id || null,
+      seller_name: sellerName,
       buyer_name: values.get('buyer_name'),
       phone: values.get('phone'),
       email: values.get('email'),
@@ -210,7 +246,9 @@
       </div>`;
       showAlert('Physical sale recorded.', 'success');
       physicalForm.reset();
-      if (user.id) physicalForm.elements.seller_id.value = user.id;
+      updatePackagePreview();
+      if (user.full_name) physicalForm.elements.seller_name.value = user.full_name;
+      physicalForm.elements.seller_name.focus();
       await Promise.all([loadSummary(), loadOrders()]);
     } catch (error) {
       showAlert(error.message || 'The physical sale could not be recorded. Check the details and serial numbers.', 'error');
@@ -243,6 +281,17 @@
   });
 
   statusFilter.addEventListener('change', () => loadOrders().catch(error => showAlert(error.message, 'error')));
+  physicalForm.elements.package_id.addEventListener('change', updatePackagePreview);
   refreshButton.addEventListener('click', refreshAll);
-  refreshAll();
+  api.get('/auth/me').then(currentUser => {
+    if (!currentUser || !['admin', 'exco'].includes(currentUser.role)) {
+      window.location.replace(loginUrl);
+      return;
+    }
+    user = currentUser;
+    refreshAll();
+  }).catch(() => {
+    clearCurrentUser();
+    window.location.replace(loginUrl);
+  });
 })();

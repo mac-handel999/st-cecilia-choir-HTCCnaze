@@ -351,7 +351,7 @@ Do not commit the generated VAPID private key or `CRON_SECRET`. Push delivery wi
 
 ### Music Boom ticket sales
 
-The public [Music Boom ticket page](./public/tickets.html) supports ticket reservations, bank-transfer references or receipt uploads, and order status checks. Payment is **not automatic**: an admin or exco member must compare the submitted details with the bank account before confirming an order. Confirmed tickets receive unique QR codes; email delivery is recorded separately so an SMTP outage does not undo a confirmed payment. The staff desk at `ticket-admin.html` supports online-order review, physical sales, QR/manual serial check-in, and recent audit history.
+The public [Music Boom ticket page](./public/tickets.html) supports ticket reservations, bank-transfer references or receipt uploads, and order status checks. Payment is **not automatic**: an admin or exco member must compare the submitted details with the bank account before confirming an order. Confirmed tickets receive unique QR codes; email delivery is recorded separately so an SMTP outage does not undo a confirmed payment. The staff desk at `ticket-admin.html` supports online-order review, physical sales, QR/manual serial check-in, and recent audit history. Access requires a valid admin/exco login; opening the desk without one redirects to the Admin Portal. Physical sellers can be chosen from the member suggestions or entered manually (for example, a cadet choir seller); the selected name and staff operator are recorded separately.
 
 Before opening ticket sales:
 
@@ -365,6 +365,22 @@ Before opening ticket sales:
 4. Test the complete reservation, proof review, ticket email, physical-sale, and check-in flows using a test Supabase project before opening sales. Keep the receipt bucket private and never share the service-role key or SMTP password.
 
 Admin and exco accounts can review or reject online orders, record physical sales, and check tickets in. Receipt preview links expire after five minutes. Ticket APIs are network-only and are not cached by the service worker. The audit log is append-only for application operations and hash-chained to make changes detectable; it is not protection against a project owner who can alter the database schema.
+
+The ticket page and staff desk show an extracted preview image for the selected Regular, VIP, or Family package. The supplied photo contains overlapping tickets, so the previews are best-effort crops; the printed ticket name and price remain available as text.
+
+### Choir Debt Ledger
+
+The [Debt Ledger](./public/debt-ledger.html) is available to signed-in members for searching balances and payment history. Admin and exco accounts can manage entries (the current app does not have a separate Finance Secretary role). Every debt, levy, and payment change is checked by the server; a payment cannot exceed the remaining balance. Ledger API responses are private and are never cached by the service worker. The page refreshes its data every 20 seconds while open.
+
+To set it up:
+
+1. Run [`supabase-debt-ledger.sql`](./supabase-debt-ledger.sql) in the Supabase SQL Editor. The tables are private to the server's service-role API.
+2. Sign in with an admin or exco account and open **Debt Ledger** from the member dashboard or Admin Dashboard.
+3. Admins and exco can import CSV, text-based PDF, Excel `.xlsx`, TXT, or JSON debt lists. The app reads the file on the server, shows a preview, and asks the user to map each column before saving. Imports are idempotent and keep source amounts as text; they do not calculate expressions or change confirmed balances. The original numbered JSON list keeps its serial numbers, including duplicates. Scanned/image-only PDFs cannot be read automatically and should be entered manually.
+4. To enter a new debt directly, use **Manually add a member and debt**. The member's name, description, type, and amount are required; year and month are optional. The member and confirmed debt are saved together as one database operation. Existing members can also have a confirmed debt added from their ledger entry.
+5. Review imported figures with the Finance Secretary. Confirm member names if needed, mark source figures checked, and add each verified amount as a dues or levy item. Record each payment as it is received; members then see the amount paid and balance remaining.
+
+Historical source values stay visible as provided but do not count toward the live balance until converted to a confirmed obligation. The account details shown to signed-in members come from the server-side `BANK_NAME`, `BANK_ACCOUNT_NAME`, and `BANK_ACCOUNT_NUMBER` variables shared with ticket sales. Verify those values against the supplied bank details before members transfer money.
 
 ---
 
