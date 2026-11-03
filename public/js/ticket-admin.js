@@ -27,6 +27,9 @@
   };
   let packages = [];
   let sellers = [];
+  let ticketAlertCursor = new Date(Date.now() - 15000).toISOString();
+  let ticketAlertPollInProgress = false;
+  const seenTicketAlerts = new Set();
   const money = value => `₦${new Intl.NumberFormat('en-NG').format(Number(value) || 0)}`;
   const showAlert = (message, kind = 'info') => {
     alertBox.textContent = message;
@@ -184,6 +187,35 @@
     }
   }
 
+  async function checkForTicketAlerts() {
+    if (!user || ticketAlertPollInProgress) return;
+    ticketAlertPollInProgress = true;
+    try {
+      const data = await api.get(`/tickets/admin/notifications?since=${encodeURIComponent(ticketAlertCursor)}`);
+      const notifications = data.notifications || [];
+      const newAlerts = notifications.filter(notification => !seenTicketAlerts.has(notification.id));
+      notifications.forEach(notification => seenTicketAlerts.add(notification.id));
+      if (notifications.length) {
+        ticketAlertCursor = notifications.reduce((latest, notification) => (
+          notification.created_at > latest ? notification.created_at : latest
+        ), ticketAlertCursor);
+      }
+
+      if (seenTicketAlerts.size > 100) {
+        const oldestIds = [...seenTicketAlerts].slice(0, seenTicketAlerts.size - 100);
+        oldestIds.forEach(id => seenTicketAlerts.delete(id));
+      }
+      if (newAlerts.length) {
+        newAlerts.forEach(notification => Toast.info(`${notification.title}: ${notification.message}`));
+        await Promise.all([loadOrders(), loadSummary()]);
+      }
+    } catch (error) {
+      console.error('Ticket alerts could not be checked:', error.message);
+    } finally {
+      ticketAlertPollInProgress = false;
+    }
+  }
+
   orderContainer.addEventListener('click', async event => {
     const button = event.target.closest('[data-order-action]');
     if (!button) return;
@@ -290,6 +322,11 @@
     }
     user = currentUser;
     refreshAll();
+    checkForTicketAlerts();
+    window.setInterval(checkForTicketAlerts, 10000);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') checkForTicketAlerts();
+    });
   }).catch(() => {
     clearCurrentUser();
     window.location.replace(loginUrl);

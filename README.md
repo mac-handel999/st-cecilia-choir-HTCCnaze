@@ -355,7 +355,7 @@ Before opening ticket sales:
    - Optionally set `TICKET_PROOF_BUCKET` if the private bucket uses a different name from `ticket-payment-proofs`.
 4. Test the complete reservation, proof review, ticket email, physical-sale, and check-in flows using a test Supabase project before opening sales. Keep the receipt bucket private and never share the service-role key or SMTP password.
 
-Admin and exco accounts can review or reject online orders, record physical sales, and check tickets in. Receipt preview links expire after five minutes. Ticket APIs are network-only and are not cached by the service worker. The audit log is append-only for application operations and hash-chained to make changes detectable; it is not protection against a project owner who can alter the database schema.
+Admin and exco accounts can review or reject online orders, record physical sales, and check tickets in. New reservations and submitted payment details create private staff alerts; the ticket desk checks for them every 10 seconds and refreshes its orders and sales summary. Push alerts are also sent when the recipient has enabled browser push. Receipt preview links expire after five minutes. Ticket APIs are network-only and are not cached by the service worker. The audit log is append-only for application operations and hash-chained to make changes detectable; it is not protection against a project owner who can alter the database schema.
 
 The ticket page and staff desk show an extracted preview image for the selected Regular, VIP, or Family package. The supplied photo contains overlapping tickets, so the previews are best-effort crops; the printed ticket name and price remain available as text.
 

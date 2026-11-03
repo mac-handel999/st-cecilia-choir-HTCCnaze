@@ -1,4 +1,4 @@
-const CACHE_NAME = 'st-cecilia-choir-v18';
+const CACHE_NAME = 'st-cecilia-choir-v19';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -136,49 +136,33 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // For JS files: network first, cache fallback
-  if (url.pathname.endsWith('.js')) {
-    event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          if (response.ok) {
-            const responseClone = response.clone();
-            caches.open(CACHE_NAME)
-              .then((cache) => cache.put(event.request, responseClone));
-          }
-          return response;
-        })
-        .catch(() => {
-          return caches.match(event.request)
-            .then(cached => cached || new Response('// Offline - JS not cached', { status: 503, headers: { 'Content-Type': 'application/javascript' } }));
-        })
-    );
+  // Authenticated hymn data must never be shared through the service-worker cache.
+  if (url.pathname.startsWith('/data/')) {
+    event.respondWith(fetch(event.request));
     return;
   }
 
-  // For static assets: stale-while-revalidate
+  // Prefer deployed assets, retaining only the last successful response as an outage fallback.
   event.respondWith(
-    caches.match(event.request)
-      .then((cachedResponse) => {
-        const networkFetch = fetch(event.request)
-          .then((networkResponse) => {
-            if (networkResponse && networkResponse.ok) {
-              const responseClone = networkResponse.clone();
-              caches.open(CACHE_NAME)
-                .then((cache) => cache.put(event.request, responseClone));
-            }
-            return networkResponse;
-          })
-          .catch(() => cachedResponse);
-
-        return cachedResponse || networkFetch;
-      })
-      .catch(() => {
-        if (event.request.headers.get('accept') && event.request.headers.get('accept').includes('text/html')) {
-          return caches.match('/index.html');
+    (async () => {
+      try {
+        const response = await fetch(event.request);
+        const cached = response.ok ? null : await caches.match(event.request);
+        if (response.ok) {
+          const cache = await caches.open(CACHE_NAME);
+          await cache.put(event.request, response.clone());
+        }
+        return response.status >= 500 && cached ? cached : response;
+      } catch {
+        const cached = await caches.match(event.request);
+        if (cached) return cached;
+        if (event.request.headers.get('accept')?.includes('text/html')) {
+          const offlinePage = await caches.match('/index.html');
+          if (offlinePage) return offlinePage;
         }
         return new Response('Offline - content not cached', { status: 503 });
-      })
+      }
+    })()
   );
 });
 

@@ -23,6 +23,7 @@ app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 app.get('/', (req, res) => {
+  res.set('Cache-Control', 'no-store, max-age=0, must-revalidate');
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
@@ -52,8 +53,12 @@ app.get('/api/hymns', authMiddleware, async (req, res) => {
   }
 });
 
-// Serve static files from public directory
-app.use(express.static(path.join(__dirname, 'public')));
+// Keep browser and CDN caches from pinning old assets after a deployment.
+app.use(express.static(path.join(__dirname, 'public'), {
+  setHeaders(res) {
+    res.setHeader('Cache-Control', 'no-store, max-age=0, must-revalidate');
+  }
+}));
 
 // Supabase clients
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
@@ -132,6 +137,37 @@ async function createNotification(notification) {
   if (error) throw error;
   if (data) await sendPushToUsers(data);
   return data;
+}
+
+async function notifyTicketManagers(title, message) {
+  try {
+    const { data: managers, error: managersError } = await supabaseAdmin
+      .from('users')
+      .select('id')
+      .in('role', ['admin', 'exco']);
+    if (managersError) throw managersError;
+
+    const recipients = [...new Set((managers || []).map(manager => manager.id).filter(Boolean))];
+    if (!recipients.length) {
+      console.warn('[Tickets] No admin or Exco accounts found for ticket alerts.');
+      return;
+    }
+
+    const { data: notifications, error: notificationError } = await supabaseAdmin
+      .from('notifications')
+      .insert(recipients.map(userId => ({
+        user_id: userId,
+        title,
+        message,
+        icon: 'confirmation_number'
+      })))
+      .select();
+    if (notificationError) throw notificationError;
+
+    await Promise.all((notifications || []).map(notification => sendPushToUsers(notification)));
+  } catch (error) {
+    console.error('[Tickets] Staff alert could not be delivered:', error.message);
+  }
 }
 
 function isAllowedPushEndpoint(endpoint) {
@@ -1890,6 +1926,10 @@ app.post('/api/tickets/orders', ticketSubmissionLimit, async (req, res) => {
       });
     }
 
+    await notifyTicketManagers(
+      'New ticket reservation',
+      'A new Music Boom ticket reservation is waiting for payment review.'
+    );
     res.status(201).json({
       order: {
         code: data.code,
@@ -1987,6 +2027,10 @@ app.post('/api/tickets/orders/:code/proof', ticketSubmissionLimit, ticketProofUp
       if (proofPath) await supabaseAdmin.storage.from(ticketProofBucket).remove([proofPath]);
       return res.status(409).json({ message: 'This reservation has expired. Please start a new order.' });
     }
+    await notifyTicketManagers(
+      'Ticket payment submitted',
+      'A Music Boom buyer has sent payment details for review.'
+    );
     res.json({ message: 'Payment details received. The choir team will review them and email you when your payment is confirmed.', status: data.status });
   } catch (error) {
     console.error('[Tickets] Payment proof submission failed:', error.message);
@@ -2046,6 +2090,31 @@ app.get('/api/tickets/admin/orders', authMiddleware, adminOrExco, async (req, re
   } catch (error) {
     console.error('[Tickets] Could not load ticket orders:', error.message);
     res.status(500).json({ message: 'Ticket orders could not be loaded.' });
+  }
+});
+
+app.get('/api/tickets/admin/notifications', authMiddleware, adminOrExco, async (req, res) => {
+  const since = String(req.query.since || '');
+  const sinceDate = new Date(since);
+  if (!since || Number.isNaN(sinceDate.getTime())) {
+    return res.status(400).json({ message: 'Choose a valid time for checking new ticket alerts.' });
+  }
+
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('notifications')
+      .select('id, title, message, created_at')
+      .eq('user_id', req.user.id)
+      .eq('icon', 'confirmation_number')
+      .gt('created_at', sinceDate.toISOString())
+      .order('created_at', { ascending: true })
+      .limit(50);
+    if (error) throw error;
+    res.set('Cache-Control', 'no-store');
+    res.json({ notifications: data || [] });
+  } catch (error) {
+    console.error('[Tickets] Could not load staff alerts:', error.message);
+    res.status(500).json({ message: 'New ticket alerts could not be checked right now.' });
   }
 });
 

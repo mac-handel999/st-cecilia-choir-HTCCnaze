@@ -932,6 +932,7 @@ document.addEventListener('DOMContentLoaded', () => {
       navigator.serviceWorker.register('/service-worker.js', { updateViaCache: 'none' })
         .then((reg) => {
           console.log('ServiceWorker registered:', reg.scope);
+          reg.update().catch(error => console.warn('ServiceWorker update check failed:', error.message));
         })
         .catch((error) => {
           console.error('ServiceWorker registration failed:', error);
