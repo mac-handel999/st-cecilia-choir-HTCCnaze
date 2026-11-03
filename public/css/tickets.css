@@ -321,6 +321,58 @@
   align-items: center;
 }
 
+.ticket-admin-heading-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.ticket-admin-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin: 1.25rem 0;
+  padding: 0.4rem;
+  overflow-x: auto;
+  border: 1px solid #eadfd1;
+  border-radius: 0.85rem;
+  background: #fffdf9;
+  scrollbar-width: thin;
+}
+
+.ticket-admin-tab {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid transparent;
+  border-radius: 0.6rem;
+  background: transparent;
+  color: #514840;
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.ticket-admin-tab:hover {
+  background: #f9f4ed;
+}
+
+.ticket-admin-tab.is-active {
+  border-color: #eadfd1;
+  background: #4a0000;
+  color: #fff;
+}
+
+.ticket-admin-tab:focus-visible,
+.ticket-admin-heading-actions button:focus-visible {
+  outline: 3px solid rgb(128 81 30 / 35%);
+  outline-offset: 2px;
+}
+
+.ticket-admin-view[hidden] {
+  display: none !important;
+}
+
 .ticket-admin-heading h1 {
   margin: 0.2rem 0 0;
   font: 700 clamp(1.8rem, 5vw, 2.7rem)/1.15 "Playfair Display", Georgia, serif;
@@ -469,8 +521,13 @@
     flex-direction: column;
   }
 
-  .ticket-admin-heading .btn {
-    align-self: flex-start;
+  .ticket-admin-heading-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ticket-admin-heading-actions .btn {
+    width: 100%;
   }
 }
 

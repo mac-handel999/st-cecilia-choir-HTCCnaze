@@ -33,7 +33,10 @@
         <p class="ticket-eyebrow">Staff access · Admin and Exco</p>
         <h1>Music Boom ticket desk</h1>
       </div>
-      <button id="refresh-ticket-data" class="btn btn-outline" type="button">Refresh</button>
+      <div class="ticket-admin-heading-actions">
+        <button id="ticket-push-test" class="btn btn-outline" type="button">Test push alert</button>
+        <button id="refresh-ticket-data" class="btn btn-outline" type="button">Refresh</button>
+      </div>
     </div>
     <div id="ticket-admin-alert" class="ticket-alert" role="status" aria-live="polite" hidden></div>
 
@@ -42,7 +45,14 @@
       <div id="ticket-sales-summary" class="ticket-stats"><p>Loading sales…</p></div>
     </section>
 
-    <section class="ticket-panel" aria-labelledby="orders-heading">
+    <nav class="ticket-admin-tabs" role="tablist" aria-label="Ticket desk sections">
+      <button id="tab-online-orders" class="ticket-admin-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="view-online-orders" data-ticket-tab="online-orders">Online Orders</button>
+      <button id="tab-physical-sale" class="ticket-admin-tab" type="button" role="tab" aria-selected="false" aria-controls="view-physical-sale" data-ticket-tab="physical-sale">Record a Physical Ticket</button>
+      <button id="tab-door-checkin" class="ticket-admin-tab" type="button" role="tab" aria-selected="false" aria-controls="view-door-checkin" data-ticket-tab="door-checkin">Door Check-in</button>
+      <button id="tab-ticket-activity" class="ticket-admin-tab" type="button" role="tab" aria-selected="false" aria-controls="view-ticket-activity" data-ticket-tab="ticket-activity">Recent Ticket Activities</button>
+    </nav>
+
+    <section id="view-online-orders" class="ticket-panel ticket-admin-view" role="tabpanel" aria-labelledby="tab-online-orders" data-ticket-view="online-orders">
       <div class="ticket-section-heading">
         <h2 id="orders-heading">Online orders</h2>
         <label>Show
@@ -58,9 +68,9 @@
       <div id="ticket-orders"><p>Loading orders…</p></div>
     </section>
 
-    <section class="ticket-panel" aria-labelledby="physical-heading">
+    <section id="view-physical-sale" class="ticket-panel ticket-admin-view" role="tabpanel" aria-labelledby="tab-physical-sale" data-ticket-view="physical-sale" hidden>
       <h2 id="physical-heading">Record a physical ticket sale</h2>
-      <p>Enter the printed serial number for each ticket sold. One serial is required per ticket.</p>
+      <p>Record the ticket package and quantity sold at the event desk. No buyer details or ticket numbers are needed for physical sales.</p>
       <form id="physical-sale-form" class="ticket-form">
         <label>Ticket package
           <select name="package_id" required><option value="">Loading…</option></select>
@@ -76,33 +86,19 @@
           <label>Seller name
             <input name="seller_name" type="text" list="ticket-seller-options" maxlength="120" autocomplete="off" placeholder="Choose a member or type a name" required>
             <datalist id="ticket-seller-options"></datalist>
-            <small>Select a choir member or enter a name, such as a cadet choir seller.</small>
+            <small>Enter the choir member who handled the sale.</small>
           </label>
         </div>
-        <label>Buyer name
-          <input name="buyer_name" type="text" maxlength="120" required>
-        </label>
-        <div class="ticket-field-row">
-          <label>Buyer phone
-            <input name="phone" type="tel" inputmode="tel" required>
-          </label>
-          <label>Buyer email (optional)
-            <input name="email" type="email">
-          </label>
-        </div>
-        <label>Printed serial numbers
-          <textarea name="serials" rows="3" placeholder="Enter one serial per line" required></textarea>
-        </label>
         <button class="btn btn-primary" type="submit">Record sale</button>
       </form>
       <div id="physical-sale-result" class="ticket-order-result" aria-live="polite"></div>
     </section>
 
-    <section class="ticket-panel" aria-labelledby="checkin-heading">
+    <section id="view-door-checkin" class="ticket-panel ticket-admin-view" role="tabpanel" aria-labelledby="tab-door-checkin" data-ticket-view="door-checkin" hidden>
       <h2 id="checkin-heading">Door check-in</h2>
-      <p>Focus the field and scan a QR code with a keyboard-enabled scanner, or type the printed serial number.</p>
+      <p>Scan the QR code or enter the ticket ID printed in the buyer’s confirmation email. Physical ticket sales are recorded by quantity and do not have individual IDs.</p>
       <form id="checkin-form" class="ticket-form ticket-lookup-form">
-        <label>Ticket QR code or serial
+        <label>Ticket QR code or ticket ID
           <input name="code" type="text" autocomplete="off" required>
         </label>
         <button class="btn btn-primary" type="submit">Check in ticket</button>
@@ -110,7 +106,7 @@
       <div id="checkin-result" class="ticket-checkin-result" aria-live="assertive"></div>
     </section>
 
-    <section class="ticket-panel" aria-labelledby="audit-heading">
+    <section id="view-ticket-activity" class="ticket-panel ticket-admin-view" role="tabpanel" aria-labelledby="tab-ticket-activity" data-ticket-view="ticket-activity" hidden>
       <h2 id="audit-heading">Recent ticket activity</h2>
       <div id="ticket-audit"><p>Loading recent activity…</p></div>
     </section>

@@ -74,7 +74,10 @@ if (webPushConfigured) {
 }
 
 async function sendPushToUsers(notification) {
-  if (!webPushConfigured) return;
+  if (!webPushConfigured) {
+    console.warn('[Push] Delivery skipped because VAPID settings are incomplete.');
+    return { sent: 0, failed: 0, reason: 'vapid_not_configured' };
+  }
 
   try {
     const settingsQuery = supabaseAdmin
@@ -86,26 +89,39 @@ async function sendPushToUsers(notification) {
     const { data: settings, error: settingsError } = await settingsQuery;
     if (settingsError) throw settingsError;
     const enabledUserIds = (settings || []).map(setting => setting.user_id);
-    if (enabledUserIds.length === 0) return;
+    if (enabledUserIds.length === 0) {
+      console.info('[Push] No recipients have enabled push notifications.');
+      return { sent: 0, failed: 0, reason: 'push_not_enabled' };
+    }
 
     const { data: subscriptions, error: subscriptionsError } = await supabaseAdmin
       .from('push_subscriptions')
       .select('endpoint, user_id, subscription')
       .in('user_id', enabledUserIds);
     if (subscriptionsError) throw subscriptionsError;
+    if (!subscriptions?.length) {
+      console.info('[Push] No active browser subscriptions found for opted-in recipients.');
+      return { sent: 0, failed: 0, reason: 'no_subscriptions' };
+    }
 
     const payload = JSON.stringify({
       title: notification.title || 'St. Cecilia Choir',
       body: notification.message || 'There is a new update from the choir.',
-      url: '/notifications.html'
+      url: notification.url || (notification.icon === 'confirmation_number'
+        ? '/ticket-admin.html'
+        : '/notifications.html')
     });
 
+    let sent = 0;
+    let failed = 0;
     for (let index = 0; index < (subscriptions || []).length; index += 10) {
       const batch = subscriptions.slice(index, index + 10);
       await Promise.all(batch.map(async (entry) => {
         try {
           await webpush.sendNotification(entry.subscription, payload);
+          sent++;
         } catch (error) {
+          failed++;
           console.error('[Push] Delivery failed:', {
             statusCode: error.statusCode,
             message: error.message
@@ -122,8 +138,10 @@ async function sendPushToUsers(notification) {
         }
       }));
     }
+    return { sent, failed };
   } catch (error) {
     console.error('[Push] Could not prepare notification delivery:', error.message);
+    return { sent: 0, failed: 1, reason: 'delivery_error' };
   }
 }
 
@@ -164,7 +182,9 @@ async function notifyTicketManagers(title, message) {
       .select();
     if (notificationError) throw notificationError;
 
-    await Promise.all((notifications || []).map(notification => sendPushToUsers(notification)));
+    const results = await Promise.all((notifications || []).map(notification => sendPushToUsers(notification)));
+    const totalSent = results.reduce((total, result) => total + result.sent, 0);
+    if (!totalSent) console.warn('[Tickets] Saved staff alerts, but no browser push was delivered.');
   } catch (error) {
     console.error('[Tickets] Staff alert could not be delivered:', error.message);
   }
@@ -390,7 +410,7 @@ async function deliverTicketEmail(order, tickets, packageName) {
           data: {
             amount: `₦${amount}`,
             name: order.buyer_name,
-            product: `Music Boom ${packageName} x ${order.quantity} · order ${order.code}. Ticket QR codes are attached.`
+            product: `Music Boom ${packageName} x ${order.quantity} · order ${order.code} · ${tickets.map((ticket, index) => `Ticket ID ${index + 1}: ${ticket.code}`).join(' · ')}. QR code PNGs are attached.`
           },
           attachments: attachments.map(attachment => ({
             filename: attachment.filename,
@@ -2205,6 +2225,76 @@ app.get('/api/tickets/admin/notifications', authMiddleware, adminOrExco, async (
   }
 });
 
+app.get('/api/tickets/admin/push-status', authMiddleware, adminOrExco, async (req, res) => {
+  try {
+    const [{ data: settings, error: settingsError }, { count, error: subscriptionsError }] = await Promise.all([
+      supabaseAdmin
+        .from('user_settings')
+        .select('push_notifications')
+        .eq('user_id', req.user.id)
+        .maybeSingle(),
+      supabaseAdmin
+        .from('push_subscriptions')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', req.user.id)
+    ]);
+    if (settingsError) throw settingsError;
+    if (subscriptionsError) throw subscriptionsError;
+
+    res.set('Cache-Control', 'no-store');
+    res.json({
+      configured: webPushConfigured,
+      enabled: settings?.push_notifications === true,
+      subscriptions: count || 0
+    });
+  } catch (error) {
+    console.error('[Tickets] Could not check push readiness:', error.message);
+    res.status(503).json({ message: 'Push notification setup could not be checked. Please try again.' });
+  }
+});
+
+app.post('/api/tickets/admin/push-test', authMiddleware, adminOrExco, async (req, res) => {
+  if (!webPushConfigured) {
+    return res.status(503).json({ message: 'Ticket push alerts need VAPID keys in the server settings. Add them and redeploy.' });
+  }
+  try {
+    const [{ data: settings, error: settingsError }, { count, error: subscriptionsError }] = await Promise.all([
+      supabaseAdmin
+        .from('user_settings')
+        .select('push_notifications')
+        .eq('user_id', req.user.id)
+        .maybeSingle(),
+      supabaseAdmin
+        .from('push_subscriptions')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', req.user.id)
+    ]);
+    if (settingsError) throw settingsError;
+    if (subscriptionsError) throw subscriptionsError;
+    if (settings?.push_notifications !== true) {
+      return res.status(409).json({ message: 'Turn on browser push notifications in Settings for this account first.' });
+    }
+    if (!count) {
+      return res.status(409).json({ message: 'This browser is not subscribed yet. Enable push notifications in Settings on this device.' });
+    }
+
+    const delivery = await sendPushToUsers({
+      user_id: req.user.id,
+      title: 'Ticket desk test alert',
+      message: 'Push alerts are working on this device.',
+      icon: 'confirmation_number',
+      url: '/ticket-admin.html'
+    });
+    if (!delivery.sent) {
+      return res.status(503).json({ message: 'The test alert could not be delivered. Check the Vercel logs and refresh this browser’s push subscription.' });
+    }
+    res.json({ message: 'Test push alert sent to this device.' });
+  } catch (error) {
+    console.error('[Tickets] Push test failed:', error.message);
+    res.status(503).json({ message: 'The test push alert could not be sent. Please try again.' });
+  }
+});
+
 app.get('/api/tickets/admin/sellers', authMiddleware, adminOrExco, async (req, res) => {
   try {
     const { data, error } = await supabaseAdmin
@@ -2357,23 +2447,12 @@ app.post('/api/tickets/admin/orders/:id/resend', authMiddleware, adminOrExco, se
 app.post('/api/tickets/admin/physical-sales', authMiddleware, adminOrExco, async (req, res) => {
   const packageId = Number(req.body.package_id);
   const quantity = Number(req.body.quantity);
-  const buyerName = String(req.body.buyer_name || '').trim();
-  const email = String(req.body.email || '').trim().toLowerCase();
-  const phone = normalizeTicketPhone(req.body.phone);
   const requestedSellerName = String(req.body.seller_name || '').trim();
-  const serials = Array.isArray(req.body.serials)
-    ? req.body.serials.map(serial => String(serial).trim().toUpperCase())
-    : String(req.body.serials || '').split(/[\s,]+/).filter(Boolean).map(serial => serial.toUpperCase());
   const sellerId = req.body.seller_id ? String(req.body.seller_id) : null;
   if (!Number.isInteger(packageId) || !Number.isInteger(quantity) || quantity < 1 || quantity > 20
-      || buyerName.length < 2 || buyerName.length > 120
       || requestedSellerName.length < 2 || requestedSellerName.length > 120
-      || (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-      || !/^\+?\d{10,15}$/.test(phone)
-      || serials.length !== quantity
-      || serials.some(serial => !/^[A-Z0-9-]{3,40}$/.test(serial))
-      || new Set(serials).size !== serials.length) {
-    return res.status(400).json({ message: 'Check the buyer details, quantity, and provide one unique printed serial number per ticket.' });
+     ) {
+    return res.status(400).json({ message: 'Choose a ticket package, enter a quantity from 1 to 20, and provide the seller name.' });
   }
   try {
     let sellerName = requestedSellerName;
@@ -2387,58 +2466,39 @@ app.post('/api/tickets/admin/physical-sales', authMiddleware, adminOrExco, async
       sellerName = seller.full_name || seller.username || requestedSellerName;
     }
 
-    const codes = ticketCodes(quantity);
+    const { data: ticketPackage, error: packageError } = await supabaseAdmin
+      .from('ticket_packages')
+      .select('name')
+      .eq('id', packageId)
+      .eq('active', true)
+      .single();
+    if (packageError || !ticketPackage) {
+      return res.status(400).json({ message: 'Choose an active ticket package and try again.' });
+    }
+
     const { data, error } = await supabaseAdmin.rpc('record_physical_ticket_sale', {
       p_package_id: packageId,
       p_quantity: quantity,
-      p_buyer_name: buyerName,
-      p_email: email || null,
-      p_phone: phone,
+      p_buyer_name: null,
+      p_email: null,
+      p_phone: null,
       p_seller_id: sellerId,
       p_seller_name: sellerName,
       p_actor: req.user.id,
       p_order_code: createTicketCode(12),
-      p_ticket_codes: codes,
-      p_serials: serials
+      p_ticket_codes: [],
+      p_serials: []
     });
     if (error) {
       console.error('[Tickets] Physical sale recording failed:', error.message);
       return res.status(409).json({ message: 'This sale could not be recorded. Check the package and make sure the ticket serials have not already been sold.' });
     }
 
-    let emailStatus = 'not_sent';
-    let emailErrorMessage = null;
-    if (email) {
-      try {
-        const { data: ticketPackage } = await supabaseAdmin
-          .from('ticket_packages').select('name').eq('id', packageId).single();
-        emailStatus = await deliverTicketEmail(data.order, data.tickets || [], ticketPackage?.name || 'Choir event');
-      } catch (emailError) {
-        emailStatus = 'failed';
-        emailErrorMessage = ticketEmailFailureMessage(emailError);
-        console.error('[Tickets] Physical ticket email failed:', {
-          status: emailError.status || null,
-          message: emailError.message
-        });
-      }
-      const { error: updateEmailError } = await supabaseAdmin
-        .from('ticket_orders')
-        .update({
-          email_status: emailStatus,
-          email_error: emailStatus === 'failed' ? emailErrorMessage : null
-        })
-        .eq('id', data.order.id)
-        .eq('status', 'paid');
-      if (updateEmailError) console.error('[Tickets] Physical sale email status update failed:', updateEmailError.message);
-    }
-
     res.status(201).json({
-      message: emailStatus === 'sent'
-        ? 'Physical sale recorded and tickets emailed.'
-        : `Physical sale recorded. ${email ? `${emailErrorMessage || 'The email was not sent; retry it from the ticket desk.'}` : 'Give the printed tickets to the buyer.'}`,
+      message: 'Physical ticket sale recorded.',
       order: data.order,
-      tickets: data.tickets || [],
-      email_status: emailStatus
+      package_name: ticketPackage.name,
+      tickets: []
     });
   } catch (error) {
     console.error('[Tickets] Physical sale error:', error.message);

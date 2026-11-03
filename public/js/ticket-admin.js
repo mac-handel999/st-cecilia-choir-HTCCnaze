@@ -17,6 +17,7 @@
   const checkinForm = document.getElementById('checkin-form');
   const checkinResult = document.getElementById('checkin-result');
   const refreshButton = document.getElementById('refresh-ticket-data');
+  const pushTestButton = document.getElementById('ticket-push-test');
   const packagePreview = document.getElementById('ticket-package-preview');
   const packageImage = document.getElementById('ticket-package-image');
   const packageCaption = document.getElementById('ticket-package-caption');
@@ -51,6 +52,18 @@
     packageImage.alt = `${selected.textContent.split(' — ')[0]} Music Boom ticket`;
     packageCaption.textContent = selected.textContent.split(' · ')[0];
     packagePreview.hidden = false;
+  }
+
+  function showTicketView(viewName) {
+    document.querySelectorAll('[data-ticket-tab]').forEach(button => {
+      const selected = button.dataset.ticketTab === viewName;
+      button.classList.toggle('is-active', selected);
+      button.setAttribute('aria-selected', String(selected));
+      button.tabIndex = selected ? 0 : -1;
+    });
+    document.querySelectorAll('[data-ticket-view]').forEach(view => {
+      view.hidden = view.dataset.ticketView !== viewName;
+    });
   }
 
   async function loadSummary() {
@@ -115,7 +128,7 @@
 
     orderContainer.innerHTML = `<div class="ticket-orders-list">${orders.map(order => {
       const tickets = order.issued_tickets?.length
-        ? `<p>Ticket codes: ${order.issued_tickets.map(ticket => `<code>${escapeHtml(ticket.serial || ticket.code)}</code>`).join(', ')}</p>`
+        ? `<p>Ticket IDs: ${order.issued_tickets.map(ticket => `<code>${escapeHtml(ticket.code)}</code>`).join(', ')}</p>`
         : '';
       const proof = order.proof_url
         ? `<p><a href="${escapeHtml(order.proof_url)}" target="_blank" rel="noopener">View payment receipt (link expires in 5 minutes)</a></p>`
@@ -161,10 +174,12 @@
     )).join('');
     updatePackagePreview();
     document.getElementById('ticket-seller-options').innerHTML = sellers
-      .map(seller => seller.full_name || seller.username || '')
-      .filter(Boolean)
-      .filter((name, index, names) => names.indexOf(name) === index)
-      .map(name => `<option value="${escapeHtml(name)}"></option>`)
+      .filter(seller => seller.full_name || seller.username)
+      .filter((seller, index, all) => all.findIndex(item =>
+        (item.full_name || item.username || '').toLocaleLowerCase()
+          === (seller.full_name || seller.username || '').toLocaleLowerCase()
+      ) === index)
+      .map(seller => `<option value="${escapeHtml(seller.full_name || seller.username)}" data-user-id="${escapeHtml(seller.id)}"></option>`)
       .join('');
     if (!physicalForm.elements.seller_name.value && user.full_name) {
       physicalForm.elements.seller_name.value = user.full_name;
@@ -262,24 +277,18 @@
     const payload = {
       package_id: Number(values.get('package_id')),
       quantity: Number(values.get('quantity')),
-      seller_id: matchedSeller?.id || null,
       seller_name: sellerName,
-      buyer_name: values.get('buyer_name'),
-      phone: values.get('phone'),
-      email: values.get('email'),
-      serials: String(values.get('serials')).split(/[\s,]+/).filter(Boolean)
+      seller_id: matchedSeller?.id || null
     };
     try {
       const result = await api.post('/tickets/admin/physical-sales', payload);
       saleResult.innerHTML = `<div class="ticket-order-card">
         <p>${escapeHtml(result.message)}</p>
-        <p>Order code: <strong>${escapeHtml(result.order.code)}</strong></p>
-        <p>Printed tickets: ${result.tickets.map(ticket => `<code>${escapeHtml(ticket.serial)}</code>`).join(', ')}</p>
+        <p>Sale recorded: <strong>${escapeHtml(result.order.quantity)} ${escapeHtml(result.package_name)} ticket(s)</strong> · Total: <strong>${money(result.order.amount_ngn)}</strong></p>
       </div>`;
-      showAlert('Physical sale recorded.', 'success');
+      showAlert(result.message, 'success');
       physicalForm.reset();
       updatePackagePreview();
-      if (user.full_name) physicalForm.elements.seller_name.value = user.full_name;
       physicalForm.elements.seller_name.focus();
       await Promise.all([loadSummary(), loadOrders()]);
     } catch (error) {
@@ -315,6 +324,32 @@
   statusFilter.addEventListener('change', () => loadOrders().catch(error => showAlert(error.message, 'error')));
   physicalForm.elements.package_id.addEventListener('change', updatePackagePreview);
   refreshButton.addEventListener('click', refreshAll);
+  document.querySelectorAll('[data-ticket-tab]').forEach(button => {
+    button.addEventListener('click', () => showTicketView(button.dataset.ticketTab));
+    button.addEventListener('keydown', event => {
+      if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+      event.preventDefault();
+      const tabs = [...document.querySelectorAll('[data-ticket-tab]')];
+      const currentIndex = tabs.indexOf(button);
+      const nextIndex = event.key === 'Home' ? 0
+        : event.key === 'End' ? tabs.length - 1
+          : (currentIndex + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+      tabs[nextIndex].focus();
+      showTicketView(tabs[nextIndex].dataset.ticketTab);
+    });
+  });
+  pushTestButton.addEventListener('click', async () => {
+    pushTestButton.disabled = true;
+    try {
+      const result = await api.post('/tickets/admin/push-test', {});
+      showAlert(result.message, 'success');
+    } catch (error) {
+      showAlert(error.message || 'Push notification test failed. Check notification settings for this device.', 'error');
+    } finally {
+      pushTestButton.disabled = false;
+    }
+  });
+  showTicketView('online-orders');
   api.get('/auth/me').then(currentUser => {
     if (!currentUser || !['admin', 'exco'].includes(currentUser.role)) {
       window.location.replace(loginUrl);

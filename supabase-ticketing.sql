@@ -48,7 +48,9 @@ create table if not exists public.ticket_orders (
 );
 
 alter table public.ticket_orders
-  add column if not exists seller_name text;
+  add column if not exists seller_name text,
+  alter column buyer_name drop not null,
+  alter column phone drop not null;
 
 create unique index if not exists ticket_orders_payment_reference_unique
   on public.ticket_orders (lower(payment_reference))
@@ -463,11 +465,6 @@ begin
   if p_seller_id is not null and not exists (
     select 1 from public.users where id = p_seller_id
   ) then raise exception 'Choose a valid choir member as the ticket seller'; end if;
-  if array_length(p_ticket_codes, 1) is distinct from p_quantity
-     or array_length(p_serials, 1) is distinct from p_quantity then
-    raise exception 'Each physical ticket needs one code and printed serial number';
-  end if;
-
   select * into selected_package
   from public.ticket_packages
   where id = p_package_id and active
@@ -496,11 +493,17 @@ begin
   )
   returning * into new_order;
 
-  insert into public.issued_tickets (order_id, code, serial)
-  select new_order.id, codes.code, serials.serial
-  from unnest(p_ticket_codes) with ordinality as codes(code, position)
-  join unnest(p_serials) with ordinality as serials(serial, position)
-    using (position);
+  if coalesce(array_length(p_ticket_codes, 1), 0) = p_quantity
+     and coalesce(array_length(p_serials, 1), 0) = p_quantity then
+    insert into public.issued_tickets (order_id, code, serial)
+    select new_order.id, codes.code, serials.serial
+    from unnest(p_ticket_codes) with ordinality as codes(code, position)
+    join unnest(p_serials) with ordinality as serials(serial, position)
+      using (position);
+  elsif coalesce(array_length(p_ticket_codes, 1), 0) <> 0
+     or coalesce(array_length(p_serials, 1), 0) <> 0 then
+    raise exception 'Provide one ticket ID and serial per physical ticket, or leave both lists empty';
+  end if;
 
   select coalesce(jsonb_agg(to_jsonb(t) order by t.created_at), '[]'::jsonb)
   into ticket_rows
@@ -514,8 +517,7 @@ begin
       'code', new_order.code,
       'amount_ngn', new_order.amount_ngn,
       'ticket_count', new_order.quantity,
-      'seller_name', new_order.seller_name,
-      'serials', p_serials
+      'seller_name', new_order.seller_name
     )
   );
 
