@@ -7,7 +7,7 @@ const { createClient } = require('@supabase/supabase-js');
 const Groq = require('groq-sdk');
 const multer = require('multer');
 const readXlsxFile = require('read-excel-file/node');
-const { PDFParse } = require('pdf-parse');
+const pdfParse = require('pdf-parse');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
@@ -1217,16 +1217,6 @@ function tableToImportRows(rows, headers = null) {
   };
 }
 
-function parsePdfTableRows(tables) {
-  const rows = [];
-  for (const table of tables || []) {
-    for (const row of table || []) {
-      if (Array.isArray(row)) rows.push(row);
-    }
-  }
-  return rows;
-}
-
 async function parseDebtLedgerFile(file) {
   const extension = path.extname(file.originalname || '').toLowerCase();
   if (extension === '.pdf' && file.buffer.subarray(0, 5).toString() !== '%PDF-') {
@@ -1275,31 +1265,24 @@ async function parseDebtLedgerFile(file) {
     const headers = [...new Set(rows.flatMap(row => Object.keys(row)))].slice(0, 60);
     parsed = tableToImportRows(rows.map(row => headers.map(header => row[header])), headers);
   } else if (extension === '.pdf') {
-    const parser = new PDFParse({ data: file.buffer });
     try {
-      const tableResult = await parser.getTable();
-      const tableRows = parsePdfTableRows((tableResult.pages || []).flatMap(page => page.tables || []));
-      if (tableRows.length > 1) {
-        parsed = tableToImportRows(tableRows);
-      } else {
-        const textResult = await parser.getText();
-        const text = String(textResult.text || '').trim();
-        if (!text) {
-          throw new Error('No selectable text or table could be read from this PDF. It may be a scanned image; try a text-based PDF or enter the records manually.');
-        }
-        const lines = text.split(/\r?\n/)
-          .map(line => line.trim())
-          .filter(line => line && !/^--\s+\d+\s+of\s+\d+\s+--$/.test(line));
-        const delimitedRows = lines.map(line => {
-          if (line.includes('|')) return line.split('|').map(cell => cell.trim());
-          if (line.includes('\t')) return line.split(/\t+/).map(cell => cell.trim());
-          return line.split(/\s{2,}/).map(cell => cell.trim());
-        });
-        if (delimitedRows.length > 1 && delimitedRows.every(row => row.length === 1)) {
-          throw new Error('This PDF contains readable text, but its columns could not be separated. Use a table-based PDF, CSV, Excel file, or enter the rows manually.');
-        }
-        parsed = tableToImportRows(delimitedRows);
+      const textResult = await pdfParse(file.buffer);
+      const text = String(textResult.text || '').trim();
+      if (!text) {
+        throw new Error('No selectable text or table could be read from this PDF. It may be a scanned image; try a text-based PDF or enter the records manually.');
       }
+      const lines = text.split(/\r?\n/)
+        .map(line => line.trim())
+        .filter(line => line);
+      const delimitedRows = lines.map(line => {
+        if (line.includes('|')) return line.split('|').map(cell => cell.trim());
+        if (line.includes('\t')) return line.split(/\t+/).map(cell => cell.trim());
+        return line.split(/\s{2,}/).map(cell => cell.trim());
+      });
+      if (delimitedRows.length > 1 && delimitedRows.every(row => row.length === 1)) {
+        throw new Error('This PDF contains readable text, but its columns could not be separated. Use a table-based PDF, CSV, Excel file, or enter the rows manually.');
+      }
+      parsed = tableToImportRows(delimitedRows);
     } catch (error) {
       if (error.message.startsWith('No selectable text')
           || error.message.startsWith('This PDF contains readable text')
@@ -1307,8 +1290,6 @@ async function parseDebtLedgerFile(file) {
         throw error;
       }
       throw new Error('This PDF could not be opened. Use an unlocked PDF with selectable text and try again.');
-    } finally {
-      await parser.destroy();
     }
   } else {
     throw new Error('Please choose a CSV, PDF, Excel, TXT, or JSON file.');
