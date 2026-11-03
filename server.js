@@ -309,6 +309,9 @@ function escapeEmailHtml(value) {
 
 function ticketEmailFailureMessage(error) {
   if (error?.status === 401 || error?.status === 403) {
+    if (/disconnected|reconnect/i.test(error.providerMessage || '')) {
+      return 'Sendliberty’s connected Gmail account is disconnected. Reconnect it in Sendliberty, then retry the ticket email.';
+    }
     return 'Sendliberty did not accept the API key or connected sender. Check the key and sender address in the server settings.';
   }
   if (error?.status === 400) {
@@ -398,11 +401,22 @@ async function deliverTicketEmail(order, tickets, packageName) {
         signal: controller.signal
       });
       if (!response.ok) {
+        const responseBody = await response.text();
+        let providerMessage = '';
+        try {
+          const errorBody = JSON.parse(responseBody);
+          providerMessage = String(errorBody.message || errorBody.error || '').slice(0, 300);
+        } catch {
+          providerMessage = '';
+        }
+        const accountDisconnected = /disconnected|reconnect/i.test(providerMessage);
         console.error('[Tickets] Sendliberty rejected ticket email:', {
-          status: response.status
+          status: response.status,
+          reason: accountDisconnected ? 'connected Gmail account is disconnected' : 'provider rejected request'
         });
         const error = new Error(`Sendliberty email request failed with status ${response.status}.`);
         error.status = response.status;
+        error.providerMessage = accountDisconnected ? 'connected Gmail account is disconnected' : '';
         throw error;
       }
     } finally {
@@ -2281,7 +2295,7 @@ app.post('/api/tickets/admin/orders/:id/reject', authMiddleware, adminOrExco, as
   }
 });
 
-app.post('/api/tickets/admin/orders/:id/send', authMiddleware, adminOrExco, async (req, res) => {
+async function sendConfirmedTicketEmail(req, res) {
   let emailErrorMessage = null;
   try {
     const { data: order, error: orderError } = await supabaseAdmin
@@ -2335,7 +2349,10 @@ app.post('/api/tickets/admin/orders/:id/send', authMiddleware, adminOrExco, asyn
         : 'Ticket email is not configured. Add the Sendliberty or SMTP settings before retrying.'
     });
   }
-});
+}
+
+app.post('/api/tickets/admin/orders/:id/send', authMiddleware, adminOrExco, sendConfirmedTicketEmail);
+app.post('/api/tickets/admin/orders/:id/resend', authMiddleware, adminOrExco, sendConfirmedTicketEmail);
 
 app.post('/api/tickets/admin/physical-sales', authMiddleware, adminOrExco, async (req, res) => {
   const packageId = Number(req.body.package_id);

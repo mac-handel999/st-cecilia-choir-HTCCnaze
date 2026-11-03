@@ -234,7 +234,7 @@
       path = `/tickets/admin/orders/${encodeURIComponent(id)}/reject`;
       body = { reason };
     } else if (action === 'resend') {
-      path = `/tickets/admin/orders/${encodeURIComponent(id)}/resend`;
+      path = `/tickets/admin/orders/${encodeURIComponent(id)}/send`;
     }
 
     button.disabled = true;
@@ -321,6 +321,8 @@
       return;
     }
     user = currentUser;
+    document.querySelector('.site-header').hidden = false;
+    document.querySelector('.ticket-admin-page').hidden = false;
     refreshAll();
     checkForTicketAlerts();
     window.setInterval(checkForTicketAlerts, 10000);
