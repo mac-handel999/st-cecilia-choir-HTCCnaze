@@ -1,0 +1,233 @@
+{
+  "title": "Benediction of the Blessed Sacrament / Ofufe Ngozi nke Yukaristia Dị Nsọ",
+  "languages": [
+    "Igbo",
+    "English",
+    "Latin"
+  ],
+  "sections": [
+    {
+      "id": "exposition_hymn",
+      "name": {
+        "igbo": "Leenụ Achịcha Na-enye Ndụ",
+        "english": "O Saving Victim (O Salutaris Hostia)",
+        "latin": "O Salutaris Hostia"
+      },
+      "content": {
+        "igbo": {
+          "rubric": "As the Blessed Sacrament is being brought to, or placed on the altar, the following or another Eucharistic hymn is sung:",
+          "title": "LEENỤ ACHỊCHA NA-ENYE NDỤ (\"O Salutaris Hostia\")",
+          "verses": [
+            {
+              "number": 1,
+              "text": "Leenụ achicha na-enye ndụ,\nNke na-emeghe onuuzo eliugwe,\nNdị iro ji iwe sodo anyị.\nNye anyị ike, nyere anyị aka"
+            },
+            {
+              "number": 2,
+              "text": "Otito okpụ dịịrị Dinwenụ\nOnye dị otu, dịrikwo ato,\nOnye na-enye ndụ na-enweghị ube,\nN'eluigwe, obodo anyị. Amen."
+            }
+          ]
+        },
+        "english": {
+          "rubric": "As the Blessed Sacrament is being brought to, or placed on the altar, the following or another Eucharistic hymn is sung.",
+          "title": "O SAVING VICTIM",
+          "verses": [
+            {
+              "number": 1,
+              "text": "O Saving Victim opening wide\nThe gate of heaven to man below;\nOur foes on from every side; Your\naid supply, your strength bestow."
+            },
+            {
+              "number": 2,
+              "text": "To your great name be endless praise.\nImmortal Godhead, one in three;\nO grant us endless length of days.\nIn our true native land with thee. Amen."
+            }
+          ]
+        },
+        "latin": {
+          "rubric": "The Blessed Sacrament is being brought to, or placed on the altar, the following or another Eucharistic hymn is sung:",
+          "title": "SALUTARIS",
+          "verses": [
+            {
+              "number": 1,
+              "text": "O SALUTARIS hostria,\nQuae caeli pandis ostium,\nBella premunt hostillia,\nDa robur, fer auxilium."
+            },
+            {
+              "number": 2,
+              "text": "Uni trinoque Domnio\nSit sempiterna Gloria,\nQui vitam sine termino\nMobis donet in patria. Amen."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "tantum_ergo",
+      "name": {
+        "igbo": "Isiala Ikpereala",
+        "english": "Therefore We, Before Him Bending",
+        "latin": "Tantum Ergo"
+      },
+      "content": {
+        "igbo": {
+          "title": "ISIALA IKPEREALA (\"Tantum Ergo\")",
+          "verses": [
+            {
+              "number": 1,
+              "text": "Isiala ikpereala,\nKa anyj na-etiri Sakramenti ukwu.\nMa emume nke dị phụrụ,\nNochiri anya aja nke ochie\nOkwukwe na-enye\nIhe nke nti na anya enweghị\nIke inye."
+            },
+            {
+              "number": 2,
+              "text": "Otito na ngozi dịrị Nna na Nwa,\nNgozi, ndụ, ike na ebube\nDirikwara ya;\nOtito di elu dikwasiri ya,\nOnye si na Nna na Nwa puta.\nAmen."
+            }
+          ],
+          "prayer": {
+            "prompt": "Ka anyị rịo aririo:",
+            "text": "O Dinwenu, onye hapuurụ anyị na Sakramenti nke a dị įtunaanya, ncheta nke ahụhụ gị. nye anyị, anyị na-ario gị nsopurụ nke ihe omimi nke ahu na obara gị, nke ga-eme ka anyi nweta ire nzoputa gị, onye dị ndụ na-achị ebighebi, ebighebi.",
+            "response": "A zaa: Amen."
+          }
+        },
+        "english": {
+          "rubric": "Another Eucharistic hymn is sung, for example the following:",
+          "title": "TANTUM ERGO",
+          "verses": [
+            {
+              "number": 1,
+              "text": "Therefore we, before him bending;\nThis great Sacrament revere;\nTypes and shadows have their ending;\nFor the newer rite is here;\nFaith, our outward sense befriending;\nMakes the inward vision clear."
+            },
+            {
+              "number": 2,
+              "text": "Glory let us give, and blessing\nTo the Father and the Son;\nHonour, Might and Praise addressing;\nWhile eternal ages run;\nEver too his love confessing,\nwho, from both, with both is one. Amen."
+            }
+          ],
+          "versicle_response": {
+            "versicle": "You have given your people bread from heaven, (Alleluia)",
+            "response": "The bread which is full of all goodness. (Alleluia)"
+          },
+          "prayer": {
+            "title": "Let us Pray",
+            "text": "O God, who in this wonderful sacrament has left us a memorial of your passion; help us so to reverence the sacred mysteries of your Body and Blood, that we may always experience in our lives the effects of your redemption: who live and reign for ever and ever. Amen."
+          }
+        },
+        "latin": {
+          "rubric": "Towards the end of exposition the priest or deacon goes to the altar and kneels. Another Eucharistic hymn is sung, for example the following:",
+          "title": "TANTUM ERGO",
+          "verses": [
+            {
+              "number": 1,
+              "text": "Tantum ergo sacramentum\nVeneremur cernui:\nEt antiquum documentum.\nNovo cedat ritui;\nPraestet fides supplementum\nSensuum defetui."
+            },
+            {
+              "number": 2,
+              "text": "Genitori, Genitoque\nLaus et jubilatio,\nSalus, honor, virtus quoque\nSit et benedictio:\nProcedenti ab utroque\nCompar sit laudatio. Amen."
+            }
+          ],
+          "versicle_response": {
+            "versicle": "Panem de caeló praestitisti eis: (Alleluia.)",
+            "response": "Omne delectamentum in se habentem. (Alleluia)."
+          },
+          "prayer": {
+            "title": "Oremus",
+            "text": "Deus, qui nobis sub Sacramento mirabili passionis tuae memoriam reliquisti: tribue, quaesumus, ita nos corporis sanguinis tui sacra mysteria venerari, ut redemptionis tuae fructum in nobis jugiter sentiamus. Qui vivis, &c."
+          }
+        }
+      }
+    },
+    {
+      "id": "divine_praises",
+      "name": {
+        "igbo": "Ngozi Dịịrị Chukwu",
+        "english": "The Divine Praises",
+        "latin": "Laudes Divinae"
+      },
+      "content": {
+        "igbo": {
+          "title": "NGOZI DỊIRỊ CHUKWU",
+          "praises": [
+            "Ngozi dịirị Chukwu.",
+            "Ngọzị dịirị Aha nsọ nke Chukwu.",
+            "Ngọzị dịirị Jesu Kristi bụ Chukwu Ezie burukwa mmadụ ezie",
+            "Ngọzị dịirị aha nsọ nke Jesu.",
+            "Ngozi dịirị obi Jesu dịkasirị nsọ.",
+            "Ngozi dịirị obara ya kacha oke onụ.",
+            "Ngozi dịirị Jesu, na Sakramenti dikasiri nsọ nọ n'Olta.",
+            "Ngọzị dịirị Chukwu Mmụọ Nsọ onye nkasiobi",
+            "Ngozi diiri nne nke Chukwu di ebube Maria dikasirị nsọ.",
+            "Ngozi dịirị ịtụ ime ya dị nso na-ejighị njo.",
+            "Ngọzị dịirị mbugo n'eluigwe ya dị otito.",
+            "Ngọzị dịirị aha nke Maria bụ, Vejin na Nne.",
+            "Ngọzị dịirị Josef dịkachara obi ocha bụ di ya.",
+            "Ngọzị dịirị Chukwu n'ebe ndị Mmụọoma ya na ndị nsọ ya nọ."
+          ]
+        },
+        "english": {
+          "title": "THE DIVINE PRAISES",
+          "praises": [
+            "Blessed be God.",
+            "Blessed be His Holy Name,",
+            "Blessed be Jesus Christ, true God and true Man.",
+            "Blessed be the name of Jesus",
+            "Blessed be His most Sacred Heart.",
+            "Blessed be His most Precious Blood.",
+            "Blessed be Jesus in the most Holy Sacrament of the Altar.",
+            "Blessed be the Holy Spirit, the Paraclete.",
+            "Blessed be the great Mother of God, Mary most Holy.",
+            "Blessed be Her Holy and Immaculate Conception,",
+            "Blessed be Her Glorious Assumption.",
+            "Blessed be the Name of Mary, Virgin and Mother.",
+            "Blessed be St. Joseph, Her Spouse Most Chaste.",
+            "Blessed be God in His Angels and in His Saints."
+          ]
+        }
+      }
+    },
+    {
+      "id": "recession_psalm",
+      "name": {
+        "igbo": "Tobenụ Dinwenu (Adoremus)",
+        "english": "Let Us Adore For Ever (Adoremus / Psalm 116/117)",
+        "latin": "Adoremus in aeternum"
+      },
+      "content": {
+        "igbo": {
+          "title": "TOBENŲ DINWENŲ (\"Adoremus\")",
+          "intro": [
+            "Tobenụ Dinwenu, mbaniile,",
+            "Mmadụ niile tobe Dinwenu,",
+            "Makana o gosiri ebere ya N'ebe anyị nọ;",
+            "Eziokwu nke Dinwenụ ga-adi okpụ",
+            "Otito dirị Nna na Nwa na Mmụọ Nsọ,",
+            "Etu ọ dị n'izizi, na kitaa, na Mgbe niile n'uwa ebighebi."
+          ],
+          "refrain": [
+            "Kristi emerigo,",
+            "Kristi na-achi.",
+            "Kristi bu eze"
+          ],
+          "second_part": [
+            "Ka anyị sekpuoronụ ebighebi,",
+            "Sakramenti nke kachasi nso."
+          ]
+        },
+        "english": {
+          "title": "BENEDICTION REPOSITION PSALM",
+          "antiphon": "Let us adore for ever the Most Holy Sacrament.",
+          "psalm": {
+            "verse_1": "O Praise the Lord all you nations; praise Him, all you people.",
+            "verse_2": "For His mercy is confirmed upon us; and the truth of the Lord remains for ever.",
+            "doxology": "Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be world without end. Amen."
+          },
+          "antiphon_repeat": "Let us adore for ever the most Holy Sacrament."
+        },
+        "latin": {
+          "title": "ADOREMUS IN AETERNUM",
+          "antiphon": "Adoremus in aeternum Sanctissimum Sacramentum.",
+          "psalm": {
+            "title": "Laudate",
+            "verse_1": "Laudate Dominum omnes gentes; laudate eum omnes populi",
+            "verse_2": "Quoniam confirmata est super nos misericordia ejus: et veritas Domini manet in aeternum.",
+            "doxology": "Gloria Patri, et Filio, et Spiritui Sancto. Sicut erat in principio, et nunc, et semper, in saecula saeculorum. Amen."
+          },
+          "antiphon_repeat": "Adoremus in aeternum Sanctissimum Sacramentum."
+        }
+      }
+    }
+  ]
+}
