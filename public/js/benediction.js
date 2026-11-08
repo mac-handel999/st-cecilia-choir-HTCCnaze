@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderBenediction('en');
 
 
+  function renderBlock(container, data) {
     if (!data) return;
     if (typeof data === 'string') {
       const p = document.createElement('p');
