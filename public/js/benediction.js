@@ -11,6 +11,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   let benedictionData = {};
 
+  const langKey = { en: 'english', la: 'latin', ig: 'igbo' };
+
   try {
     const res = await fetch('data/benediction.json');
     if (!res.ok) throw new Error('Failed to load Benediction data');
@@ -30,9 +32,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   renderBenediction('en');
 
-  const langKey = { en: 'english', la: 'latin', ig: 'igbo' };
 
-  function renderBlock(container, data) {
     if (!data) return;
     if (typeof data === 'string') {
       const p = document.createElement('p');
